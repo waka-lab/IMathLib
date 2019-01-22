@@ -1,0 +1,52 @@
+﻿#ifndef _IMATH_MATH_HPP
+#define _IMATH_MATH_HPP
+
+
+#include "IMathLib/math/math/abs.hpp"
+#include "IMathLib/math/math/acos.hpp"
+#include "IMathLib/math/math/acosh.hpp"
+#include "IMathLib/math/math/apery_constant.hpp"
+#include "IMathLib/math/math/asinh.hpp"
+#include "IMathLib/math/math/atan.hpp"
+#include "IMathLib/math/math/atanh.hpp"
+#include "IMathLib/math/math/bernoulli_number.hpp"
+#include "IMathLib/math/math/beta.hpp"
+#include "IMathLib/math/math/conj.hpp"
+#include "IMathLib/math/math/cos.hpp"
+#include "IMathLib/math/math/cosh.hpp"
+#include "IMathLib/math/math/dirichlet_eta.hpp"
+#include "IMathLib/math/math/e.hpp"
+#include "IMathLib/math/math/elliptic_int.hpp"
+#include "IMathLib/math/math/erf.hpp"
+#include "IMathLib/math/math/euler_constant.hpp"
+#include "IMathLib/math/math/exp.hpp"
+#include "IMathLib/math/math/exp_int.hpp"
+#include "IMathLib/math/math/factorial.hpp"
+#include "IMathLib/math/math/fresnel_int.hpp"
+#include "IMathLib/math/math/frexp.hpp"
+#include "IMathLib/math/math/gamma.hpp"
+#include "IMathLib/math/math/ipow.hpp"
+#include "IMathLib/math/math/log.hpp"
+#include "IMathLib/math/math/log_int.hpp"
+#include "IMathLib/math/math/loge_2.hpp"
+#include "IMathLib/math/math/math_comstant.hpp"
+#include "IMathLib/math/math/math_traits.hpp"
+#include "IMathLib/math/math/numerical_correction.hpp"
+#include "IMathLib/math/math/orthogonal_polynomials.hpp"
+#include "IMathLib/math/math/pi.hpp"
+#include "IMathLib/math/math/pow.hpp"
+#include "IMathLib/math/math/real.hpp"
+#include "IMathLib/math/math/riemann_zeta.hpp"
+#include "IMathLib/math/math/sgn.hpp"
+#include "IMathLib/math/math/sin.hpp"
+#include "IMathLib/math/math/sinh.hpp"
+#include "IMathLib/math/math/sqrt.hpp"
+#include "IMathLib/math/math/stirling_number.hpp"
+#include "IMathLib/math/math/tan.hpp"
+#include "IMathLib/math/math/tanh.hpp"
+#include "IMathLib/math/math/triangle_int.hpp"
+
+
+
+
+#endif

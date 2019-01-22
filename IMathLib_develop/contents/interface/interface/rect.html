@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<title>IMathLibリファレンス-&lt;IMathLib/interface/interface.hpp&gt;-</title>
+<meta name="keywords" content="リファレンス" />
+
+<script type="text/javascript" src="../../path.js"></script>
+<script>draw_path();</script>
+
+</head>
+
+<body onload="cpp_code_replace(); create_path();">
+
+<script>draw_frame();</script>
+
+<div id="main" name="main">
+
+<header>
+<p>Iroha Math Library for C++ リファレンス  [ホーム]</p>
+</header>
+
+<h4>struct</h4>
+<h1>iml::i_f::rect</h1>
+
+<h2>概要</h2>
+<p>
+<code>iml::i_f::rect</code>は矩形領域を取り扱うための構造体であり、ビューボート領域の選択やカメラの設定等で用いる。<br>
+また、デフォルトのコンストラクタでは全てが0となる。
+</p>
+<pre class="cpp_code"><code>
+namespace iml {
+	namespace iml {
+		template &lt;class T&gt;
+		struct rect {
+			T left, right, bottom, top;
+			constexpr rect();
+			constexpr rect(const T&amp; l, const T&amp; r, const T&amp; b, const T&amp; t);
+		};
+	}
+}
+</code></pre>
+
+<h2>メンバ</h2>
+<h3>構築</h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>(constructor)</code></td>
+<td>コンストラクタ</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h3>メンバ変数</h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>left</code></td>
+<td>左端</td>
+<td></td>
+</tr>
+<tr>
+<td><code>right</code></td>
+<td>右端</td>
+<td></td>
+</tr>
+<tr>
+<td><code>bottom</code></td>
+<td>下端</td>
+<td></td>
+</tr>
+<tr>
+<td><code>top</code></td>
+<td>上端</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<br><br><br>
+
+</div>
+
+</body>
+
+
+</html>

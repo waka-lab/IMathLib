@@ -1,0 +1,105 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<title>IMathLibリファレンス-&lt;IMathLib/math/math.hpp&gt;-</title>
+<meta name="keywords" content="リファレンス" />
+
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script type="text/javascript" src="../../path.js"></script>
+<script>draw_path();</script>
+
+</head>
+
+<body onload="cpp_code_replace(); create_path();">
+
+<script>draw_frame();</script>
+
+<div id="main" name="main">
+
+<header>
+<p>Iroha Math Library for C++ リファレンス  [ホーム]</p>
+</header>
+
+<h4>function</h4>
+<h1>iml::beta</h1>
+
+<h2>概要</h2>
+<p>
+<code>iml::beta</code>はベータ関数もしくは不完全ベータ関数を返す。
+</p>
+<pre class="cpp_code"><code>
+namespace iml {
+	template &lt;class T&gt;
+	T beta(const T&amp; a, const T&amp; b);
+	template &lt;class T&gt;
+	T beta(const T&amp; a, const T&amp; b, const T&amp; x);
+	template &lt;class T&gt;
+	iml::complex&lt;T&gt; beta(const iml::complex&lt;T&gt;&amp; a, const iml::complex&lt;T&gt;&amp; b);
+	template &lt;class T&gt;
+	iml::complex&lt;T&gt; beta(const iml::complex&lt;T&gt;&amp; a, const iml::complex&lt;T&gt;&amp; b, const T&amp; x);
+}
+</code></pre>
+
+<h2>実装</h2>
+<p>
+　ベータ関数は
+\[
+B(a,b)=\int_{0}^{1}t^{a-1}(1-x)^{b-1}dt
+\]
+と定義される。積分形式は計算が困難なため、ガンマ関数との関係式により
+\[
+B(a,b)=\frac{\Gamma(a)\Gamma(b)}{\Gamma(a+b)}
+\]
+とあらわされ、自然に定義域が拡張される。<br>
+　また、不完全ベータ関数は
+\[
+B_{x}(a,b)=\int_{0}^{x}t^{a-1}(1-x)^{b-1}dt
+\]
+と定義され、このとき\(x\in{\mathbb R}\)で\(0\lt x\lt 1\)である必要がある。<br>
+　これをテイラー展開することにより
+\[
+B_{x}(a,b)=x^{a}\sum_{k=0}^{\infty}\frac{(-1)^{k}\prod_{n=1}^{k}(b-n)}{k!(k+a)}x^{k}
+\]
+とあらわされ、\(|x|<1\)で収束する。<br>
+　\(x\)が\(1\)に十分近いときは収束が遅くなるが、
+\[
+B(a,b)=B_{x}(a,b)+B_{1-x}(b,a)
+\]
+を用いることで収束性の改善をしている。
+</p>
+
+
+<h2>規約</h2>
+
+　ベータ関数および不完全ベータ関数の定義より\(a,b> 0\)および\(0\leq|x|\leq 1\)で動作が保証される。
+
+
+<h2>サンプルコード</h2>
+<h3>入力</h3>
+<pre class="cpp_code"><code>
+
+</code></pre>
+<h3>出力</h3>
+<pre><code><span>
+
+</span></code></pre>
+
+
+<h2>関連</h2>
+<ul>
+<li>ガンマ関数　<code>iml::gamma</code></li>
+<li>正規化ベータ関数　<code>iml::beta_i</code></li>
+</ul>
+
+
+<br><br><br>
+
+</div>
+
+</body>
+
+
+</html>

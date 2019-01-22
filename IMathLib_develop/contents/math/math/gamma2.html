@@ -1,0 +1,77 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<title>IMathLibリファレンス-&lt;IMathLib/math/math.hpp&gt;-</title>
+<meta name="keywords" content="リファレンス" />
+
+<script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+
+<script type="text/javascript" src="../../path.js"></script>
+<script>draw_path();</script>
+
+</head>
+
+<body onload="cpp_code_replace(); create_path();">
+
+<script>draw_frame();</script>
+
+<div id="main" name="main">
+
+<header>
+<p>Iroha Math Library for C++ リファレンス  [ホーム]</p>
+</header>
+
+<h4>function</h4>
+<h1>iml::gamma2</h1>
+
+<h2>概要</h2>
+<p>
+<code>iml::gamma2</code>は第二種不完全ガンマ関数を返す。
+</p>
+<pre class="cpp_code"><code>
+namespace iml {
+	template &lt;class T&gt;
+	T gamma2(const T&amp; a, const T&amp; x);
+	template &lt;class T&gt;
+	iml::complex&lt;T&gt; gamma2(const iml::complex&lt;T&gt;&amp; a, const T&amp; x);
+}
+</code></pre>
+
+<h2>実装</h2>
+<p>
+この関数は以下の積分によって定義される。<br>
+\[
+\begin{align*}
+\Gamma(a,x)=\int_{x}^{\infty}t^{a-1}e^{-t}dt
+\end{align*}
+\]
+これを\(x\)のまわりでテイラー展開をして変形をすることで以下の式が導かれる。
+\[
+\begin{align*}
+\Gamma(a,x)=e^{-x}x^{a}\sum_{k=0}^{\infty}\frac{\prod_{n=1}^{k}(n-a)}{(1+k)!L_{k}^{-a}(-x)L_{1+k}^{-a}(-x)}
+\end{align*}
+\]
+この級数は絶対収束であるが、\(a\)より\(x\)の方が小さいとき収束が遅くなる。このときは\(\Gamma(a)=\gamma(a,x)+\Gamma(a,x)\)の関係式を用いて第一種不完全ガンマ関数に切り替えている。<br>
+また、\(L_{k}^{-a}(-x)\)は一般化されたラゲール陪多項式である。
+</p>
+
+<h2>サンプルコード</h2>
+<h3>入力</h3>
+<pre class="cpp_code"><code>
+
+</code></pre>
+<h3>出力</h3>
+<pre><code><span>
+
+</span></code></pre>
+
+<br><br><br>
+
+</div>
+
+</body>
+
+
+</html>

@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="Content-Style-Type" content="text/css" />
+<title>IMathLibリファレンス-&lt;IMathLib/IMathLib_config.hpp&gt;-</title>
+<meta name="keywords" content="リファレンス" />
+
+<script type="text/javascript" src="path.js"></script>
+<script>draw_path();</script>
+
+</head>
+
+<body onload="cpp_code_replace(); create_path();">
+
+<script>draw_frame();</script>
+
+<div id="main" name="main">
+
+<header>
+<p>Iroha Math Library for C++ リファレンス  [ホーム]</p>
+</header>
+
+<h4>header</h4>
+<h1>&lt;IMathLib/IMathLib_config.hpp&gt;</h1>
+
+<h2>概要</h2>
+<p>
+<code>&lt;IMathLib/IMathLib_config.hpp&gt;</code>ヘッダではユーザー定義マクロによる各種ライブラリの設定がされている。<br>
+この設定を行うことで演算の効率性が変わる。
+</p>
+
+<h2 id="integral">整数型</h2>
+<p>
+このフラグを立てることにより、符号付き整数<code>iml::imint</code>と符号無し整数<code>iml::imsize_t</code>が定義される。これは環境依存の部分をプログラマが正しく選択する必要がある。
+</p>
+<h3>マクロ</h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>_IMATH_INT_32_BIT_</code></td>
+<td>32ビット整数を用いた演算を行う(デフォルト)</td>
+<td></td>
+</tr>
+<tr>
+<td><code>_IMATH_INT_64_BIT_</code></td>
+<td>64ビット整数を用いた演算を行う</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+<h3>型</h3>
+<table>
+<thead>
+<tr>
+<th>名前</th>
+<th>説明</th>
+<th>対応バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>iml::imint</code></td>
+<td>上記マクロによって定義される符号付き整数</td>
+<td></td>
+</tr>
+<tr>
+<td><code>iml::imsize_t</code></td>
+<td>上記マクロによって定義される符号無し整数</td>
+<td></td>
+</tr>
+<tr>
+<td><code>iml::ptrdiff_t</code></td>
+<td>上記マクロによって定義される2つのポインタの減算結果の型</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+
+<br><br><br>
+
+</div>
+
+</body>
+
+
+</html>
