@@ -21,7 +21,7 @@ namespace iml {
 	//簡略にかくためのエイリアス
 	template <class Base, class T>
 	using _Dual_numbers_base_base_type = _Dual_numbers_base<Base, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, T>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, class T>
 	using _Dual_numbers_base_type = _Dual_numbers_base<Base, T
 		, is_algebraic_structure<T>::value, is_same<Base, T>::value>;
@@ -35,10 +35,8 @@ namespace iml {
 		Base x[2];
 	public:
 		constexpr _Dual_numbers_base() : x{} {}
-		template <class... Args, class = typename enable_if<is_all_inclusion<arg_tuple<Args...>, Base>::value && (sizeof...(Args) == 2)>::type>
-		constexpr _Dual_numbers_base(const Args&... x) : x{ static_cast<Base>(x)... } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr _Dual_numbers_base(const Base& re) : x{ re } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Dual_numbers_base operator-() const { return _Dual_numbers_base(-this->x[0], -this->x[1]); }
@@ -137,10 +135,12 @@ namespace iml {
 		Base x[2];
 	public:
 		constexpr _Dual_numbers_base() : x{} {}
-		template <class... Args, class = typename enable_if<is_all_inclusion<arg_tuple<Args...>, Base>::value && (sizeof...(Args) == 2)>::type>
-		constexpr _Dual_numbers_base(const Args&... x) : x{ static_cast<Base>(x)... } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr _Dual_numbers_base(const Base& re) : x{ re } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Dual_numbers_base operator-() const { return _Dual_numbers_base(-this->x[0], -this->x[1]); }
@@ -353,6 +353,12 @@ namespace iml {
 		//コンストラクタの継承
 		using _Dual_numbers_base_base_type<Base, T>::_Dual_numbers_base;
 
+		constexpr _Dual_numbers_base() : _Dual_numbers_base_base_type<Base, T>() {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
+
 		//単項演算の継承
 		using _Dual_numbers_base_base_type<Base, T>::operator+;
 		using _Dual_numbers_base_base_type<Base, T>::operator-;
@@ -483,7 +489,7 @@ namespace iml {
 			: _Dual_numbers_base_type<T, T>(n.x[0], n.x[1]) {}
 
 		//コンストラクタの継承
-		using _Dual_numbers_base_type<T, T>::_Dual_numbers_base_type;
+		using _Dual_numbers_base_type<T, T>::_Dual_numbers_base;
 
 		using algebraic_type = T;
 		using iterator = array_iterator<T>;
@@ -567,11 +573,11 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator==(const _Dual_numbers_base_type<T1, U1>& n1, const _Dual_numbers_base_type<T2, U2>& n2) {
 		return (n1[0] == n2[0]) && (n1[1] == n2[1]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator!=(const _Dual_numbers_base_type<T1, U1>& n1, const _Dual_numbers_base_type<T2, U2>& n2) {
 		return !(n1 == n2);
 	}
@@ -606,6 +612,17 @@ namespace iml {
 		//吸収元
 		static dual_numbers<T> absorbing_element() {
 			return dual_numbers<T>();
+		}
+	};
+}
+
+namespace iml {
+
+	//誤差評価
+	template <class T>
+	struct _Error_evaluation<dual_numbers<T>> {
+		static bool __error_evaluation(const dual_numbers<T>& n1, const dual_numbers<T>& n2) {
+			return error_evaluation(n1[0], n2[0]) && error_evaluation(n1[1], n2[1]);
 		}
 	};
 }

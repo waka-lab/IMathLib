@@ -18,7 +18,7 @@ namespace iml {
 	//簡略にかくためのエイリアス
 	template <class Base, class T>
 	using _Octonion_base_base_type = _Octonion_base<Base, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, T>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, class T>
 	using _Octonion_base_type = _Octonion_base<Base, T
 		, is_algebraic_structure<T>::value, is_same<Base, T>::value>;
@@ -32,14 +32,9 @@ namespace iml {
 		Base x[8];
 	public:
 		constexpr _Octonion_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Octonion_base(const _T& x1, const _T& x2, const _T& x3, const _T& x4, const _T& x5, const _T& x6, const _T& x7, const _T& x8)
-			: x{ static_cast<Base>(x1),static_cast<Base>(x2)
-			,static_cast<Base>(x3),static_cast<Base>(x4)
-			,static_cast<Base>(x5),static_cast<Base>(x6)
-			,static_cast<Base>(x7),static_cast<Base>(x8) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Octonion_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Octonion_base(const Base& re, const Base& im1, const Base& im2, const Base& im3, const Base& im4, const Base& im5, const Base& im6, const Base& im7)
+			: x{ re,im1,im2,im3,im4,im5,im6,im7 } {}
+		constexpr _Octonion_base(const Base& re) : x{ re } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Octonion_base operator-() const {
@@ -196,14 +191,17 @@ namespace iml {
 		Base x[8];
 	public:
 		constexpr _Octonion_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Octonion_base(const _T& x1, const _T& x2, const _T& x3, const _T& x4, const _T& x5, const _T& x6, const _T& x7, const _T& x8)
-			: x{ static_cast<Base>(x1),static_cast<Base>(x2)
-			,static_cast<Base>(x3),static_cast<Base>(x4)
-			,static_cast<Base>(x5),static_cast<Base>(x6)
-			,static_cast<Base>(x7),static_cast<Base>(x8) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Octonion_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Octonion_base(const Base& re, const Base& im1, const Base& im2, const Base& im3, const Base& im4, const Base& im5, const Base& im6, const Base& im7)
+			: x{ re,im1,im2,im3,im4,im5,im6,im7 } {}
+		constexpr _Octonion_base(const Base& re) : x{ re } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Octonion_base(const T& re, const T& im1, const T& im2, const T& im3, const T& im4, const T& im5, const T& im6, const T& im7)
+			: x{ static_cast<Base>(re),static_cast<Base>(im1),
+			static_cast<Base>(im2),static_cast<Base>(im3),
+			static_cast<Base>(im4),static_cast<Base>(im5),
+			static_cast<Base>(im6),static_cast<Base>(im7) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Octonion_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Octonion_base operator-() const {
@@ -546,6 +544,16 @@ namespace iml {
 		//コンストラクタの継承
 		using _Octonion_base_base_type<Base, T>::_Octonion_base;
 
+		constexpr _Octonion_base() : _Octonion_base_base_type<Base, T>() {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Octonion_base(const T& re, const T& im1, const T& im2, const T& im3, const T& im4, const T& im5, const T& im6, const T& im7)
+			: x{ static_cast<Base>(re),static_cast<Base>(im1),
+			static_cast<Base>(im2),static_cast<Base>(im3),
+			static_cast<Base>(im4),static_cast<Base>(im5),
+			static_cast<Base>(im6),static_cast<Base>(im7) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Octonion_base(const T& re) : x{ static_cast<Base>(re) } {}
+
 		//単項演算の継承
 		using _Octonion_base_base_type<Base, T>::operator+;
 		using _Octonion_base_base_type<Base, T>::operator-;
@@ -743,7 +751,7 @@ namespace iml {
 		}
 	public:
 		//コンストラクタの継承
-		using _Octonion_base_type<T, T>::_Octonion_base_type;
+		using _Octonion_base_type<T, T>::_Octonion_base;
 
 		constexpr octonion() : _Octonion_base_type<T, T>() {}
 		constexpr octonion(const octonion& n)
@@ -836,7 +844,7 @@ namespace iml {
 	};
 
 
-	//四元数の判定
+	//八元数の判定
 	template <class T>
 	struct _Is_octonion : false_type {};
 	template <class T>
@@ -844,7 +852,7 @@ namespace iml {
 	template <class T>
 	struct is_octonion : _Is_octonion<typename remove_cv<T>::type> {};
 
-	//四元数の除去
+	//八元数の除去
 	template <class T>
 	struct remove_octonion {
 		using type = T;
@@ -854,7 +862,7 @@ namespace iml {
 		using type = T;
 	};
 
-	//全ての四元数の除去
+	//全ての八元数の除去
 	template <class T>
 	struct remove_all_octonion {
 		using type = T;
@@ -864,14 +872,14 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator==(const _Octonion_base_type<T1, U1>& n1, const _Octonion_base_type<T2, U2>& n2) {
 		return (n1[0] == n2[0]) && (n1[1] == n2[1])
 			&& (n1[2] == n2[2]) && (n1[3] == n2[3])
 			&& (n1[4] == n2[4]) && (n1[5] == n2[5])
 			&& (n1[6] == n2[6]) && (n1[7] == n2[7]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator!=(const _Octonion_base_type<T1, U1>& n1, const _Octonion_base_type<T2, U2>& n2) {
 		return !(n1 == n2);
 	}

@@ -21,7 +21,7 @@ namespace iml {
 	//簡略にかくためのエイリアス
 	template <class Base, class T>
 	using _Split_complex_base_base_type = _Split_complex_base<Base, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, T>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, class T>
 	using _Split_complex_base_type = _Split_complex_base<Base, T
 		, is_algebraic_structure<T>::value, is_same<Base, T>::value>;
@@ -35,10 +35,8 @@ namespace iml {
 		Base x[2];
 	public:
 		constexpr _Split_complex_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Split_complex_base(const _T& x1, const _T& x2) : x{ static_cast<Base>(x1),static_cast<Base>(x2) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Split_complex_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Split_complex_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr _Split_complex_base(const Base& re) : x{ re } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Split_complex_base operator-() const { return _Split_complex_base(-this->x[0], -this->x[1]); }
@@ -137,10 +135,12 @@ namespace iml {
 		Base x[2];
 	public:
 		constexpr _Split_complex_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Split_complex_base(const _T& x1, const _T& x2) : x{ static_cast<Base>(x1),static_cast<Base>(x2) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Split_complex_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Split_complex_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr _Split_complex_base(const Base& re) : x{ re } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Split_complex_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Split_complex_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Split_complex_base operator-() const { return _Split_complex_base(-this->x[0], -this->x[1]); }
@@ -353,6 +353,12 @@ namespace iml {
 		//コンストラクタの継承
 		using _Split_complex_base_base_type<Base, T>::_Split_complex_base;
 
+		constexpr _Split_complex_base() : _Split_complex_base_base_type<Base, T>() {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Split_complex_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Split_complex_base(const T& re) : x{ static_cast<Base>(re) } {}
+
 		//単項演算の継承
 		using _Split_complex_base_base_type<Base, T>::operator+;
 		using _Split_complex_base_base_type<Base, T>::operator-;
@@ -475,7 +481,7 @@ namespace iml {
 		}
 	public:
 		//コンストラクタの継承
-		using _Split_complex_base_type<T, T>::_Split_complex_base_type;
+		using _Split_complex_base_type<T, T>::_Split_complex_base;
 
 		constexpr split_complex(const split_complex& n)
 			: _Split_complex_base_type<T, T>(n.x[0], n.x[1]) {}
@@ -544,7 +550,7 @@ namespace iml {
 	};
 
 
-	//複素数の判定
+	//分解型複素数の判定
 	template <class T>
 	struct _Is_split_complex : false_type {};
 	template <class T>
@@ -572,11 +578,11 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator==(const _Split_complex_base_type<T1, U1>& n1, const _Split_complex_base_type<T2, U2>& n2) {
 		return (n1[0] == n2[0]) && (n1[1] == n2[1]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator!=(const _Split_complex_base_type<T1, U1>& n1, const _Split_complex_base_type<T2, U2>& n2) {
 		return !(n1 == n2);
 	}

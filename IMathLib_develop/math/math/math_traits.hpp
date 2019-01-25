@@ -81,6 +81,11 @@ namespace iml {
 		template <class _T1, class _T2> static auto sub_eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() -= declval<_T2>(), true_type());
 		template <class _T1, class _T2> static auto mul_eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() *= declval<_T2>(), true_type());
 		template <class _T1, class _T2> static auto div_eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() /= declval<_T2>(), true_type());
+		template <class _T1, class _T2> static auto eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() == declval<_T2>(), true_type());
+		template <class _T1, class _T2> static auto lt_tester(_T1*, _T2*) ->decltype(declval<_T1>() < declval<_T2>(), true_type());
+		template <class _T1, class _T2> static auto lt_eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() <= declval<_T2>(), true_type());
+		template <class _T1, class _T2> static auto gt_tester(_T1*, _T2*) ->decltype(declval<_T1>() > declval<_T2>(), true_type());
+		template <class _T1, class _T2> static auto gt_eq_tester(_T1*, _T2*) ->decltype(declval<_T1>() >= declval<_T2>(), true_type());
 
 		template <class _T1, class _T2> static false_type add_tester(...);
 		template <class _T1, class _T2> static false_type sub_tester(...);
@@ -90,6 +95,11 @@ namespace iml {
 		template <class _T1, class _T2> static false_type sub_eq_tester(...);
 		template <class _T1, class _T2> static false_type mul_eq_tester(...);
 		template <class _T1, class _T2> static false_type div_eq_tester(...);
+		template <class _T1, class _T2> static false_type eq_tester(...);
+		template <class _T1, class _T2> static false_type lt_tester(...);
+		template <class _T1, class _T2> static false_type lt_eq_tester(...);
+		template <class _T1, class _T2> static false_type gt_tester(...);
+		template <class _T1, class _T2> static false_type gt_eq_tester(...);
 	public:
 		static constexpr bool add_value = decltype(add_tester<T1, T2>(nullptr, nullptr))::value;
 		static constexpr bool sub_value = decltype(sub_tester<T1, T2>(nullptr, nullptr))::value;
@@ -99,6 +109,11 @@ namespace iml {
 		static constexpr bool sub_eq_value = decltype(sub_eq_tester<T1, T2>(nullptr, nullptr))::value;
 		static constexpr bool mul_eq_value = decltype(mul_eq_tester<T1, T2>(nullptr, nullptr))::value;
 		static constexpr bool div_eq_value = decltype(div_eq_tester<T1, T2>(nullptr, nullptr))::value;
+		static constexpr bool eq_value = decltype(eq_tester<T1, T2>(nullptr, nullptr))::value;
+		static constexpr bool lt_value = decltype(lt_tester<T1, T2>(nullptr, nullptr))::value;
+		static constexpr bool lt_eq_value = decltype(lt_eq_tester<T1, T2>(nullptr, nullptr))::value;
+		static constexpr bool gt_value = decltype(gt_tester<T1, T2>(nullptr, nullptr))::value;
+		static constexpr bool gt_eq_value = decltype(gt_eq_tester<T1, T2>(nullptr, nullptr))::value;
 	};
 	template <class T1, class T2>
 	struct _Is_calcable<true, T1, T2> {
@@ -112,6 +127,11 @@ namespace iml {
 		static constexpr bool sub_eq_value = is_inclusion<type, T1>::value && is_signed<type>::value;
 		static constexpr bool mul_eq_value = is_inclusion<type, T1>::value;
 		static constexpr bool div_eq_value = is_floating_point<T1>::value;
+		static constexpr bool eq_value = true;
+		static constexpr bool lt_value = true;
+		static constexpr bool lt_eq_value = true;
+		static constexpr bool gt_value = true;
+		static constexpr bool gt_eq_value = true;
 	};
 	template <class T1, class T2>
 	struct is_calcable :_Is_calcable<(is_arithmetic<T1>::value && is_arithmetic<T2>::value), T1, T2> {};

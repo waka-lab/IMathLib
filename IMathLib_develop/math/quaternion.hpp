@@ -17,7 +17,7 @@ namespace iml {
 	//簡略にかくためのエイリアス
 	template <class Base, class T>
 	using _Quaternion_base_base_type = _Quaternion_base<Base, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, T>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, class T>
 	using _Quaternion_base_type = _Quaternion_base<Base, T
 		, is_algebraic_structure<T>::value, is_same<Base, T>::value>;
@@ -31,11 +31,9 @@ namespace iml {
 		Base x[4];
 	public:
 		constexpr _Quaternion_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Quaternion_base(const _T& x1, const _T& x2, const _T& x3, const _T& x4)
-			: x{ static_cast<Base>(x1),static_cast<Base>(x2),static_cast<Base>(x3),static_cast<Base>(x4) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Quaternion_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Quaternion_base(const Base& re, const Base& im1, const Base& im2, const Base& im3)
+			: x{ re,im1,im2,im3 } {}
+		constexpr _Quaternion_base(const Base& re) : x{ re } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Quaternion_base operator-() const { return _Quaternion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
@@ -165,11 +163,15 @@ namespace iml {
 		Base x[4];
 	public:
 		constexpr _Quaternion_base() : x{} {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Quaternion_base(const _T& x1, const _T& x2, const _T& x3, const _T& x4)
-			: x{ static_cast<Base>(x1),static_cast<Base>(x2),static_cast<Base>(x3),static_cast<Base>(x4) } {}
-		template <class _T, class = typename enable_if<is_inclusion<_T, Base>::value>::type>
-		constexpr _Quaternion_base(const _T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Quaternion_base(const Base& re, const Base& im1, const Base& im2, const Base& im3)
+			: x{ re,im1,im2,im3 } {}
+		constexpr _Quaternion_base(const Base& re) : x{ re } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Quaternion_base(const T& re, const T& im1, const T& im2, const T& im3)
+			: x{ static_cast<Base>(re),static_cast<Base>(im1),
+			static_cast<Base>(im2),static_cast<Base>(im3) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Quaternion_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
 		_Quaternion_base operator-() const { return _Quaternion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
@@ -452,6 +454,14 @@ namespace iml {
 		//コンストラクタの継承
 		using _Quaternion_base_base_type<Base, T>::_Quaternion_base;
 
+		constexpr _Quaternion_base() : _Quaternion_base_base_type<Base, T>() {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Quaternion_base(const T& re, const T& im1, const T& im2, const T& im3)
+			: x{ static_cast<Base>(re),static_cast<Base>(im1),
+			static_cast<Base>(im2),static_cast<Base>(im3) } {}
+		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
+		constexpr _Quaternion_base(const T& re) : x{ static_cast<Base>(re) } {}
+
 		//単項演算の継承
 		using _Quaternion_base_base_type<Base, T>::operator+;
 		using _Quaternion_base_base_type<Base, T>::operator-;
@@ -614,7 +624,7 @@ namespace iml {
 		}
 	public:
 		//コンストラクタの継承
-		using _Quaternion_base_type<T, T>::_Quaternion_base_type;
+		using _Quaternion_base_type<T, T>::_Quaternion_base;
 
 		constexpr quaternion(const quaternion& n)
 			: _Quaternion_base_type<T, T>(n.x[0], n.x[1], n.x[2], n.x[3]) {}
@@ -724,12 +734,12 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator==(const _Quaternion_base_type<T1, U1>& n1, const _Quaternion_base_type<T2, U2>& n2) {
 		return (n1[0] == n2[0]) && (n1[1] == n2[1])
 			&& (n1[2] == n2[2]) && (n1[3] == n2[3]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
 	inline bool operator!=(const _Quaternion_base_type<T1, U1>& n1, const _Quaternion_base_type<T2, U2>& n2) {
 		return !(n1 == n2);
 	}
