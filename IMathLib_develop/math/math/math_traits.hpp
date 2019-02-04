@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_MATH_HPP
-#define _IMATH_MATH_MATH_HPP
+﻿#ifndef IMATH_MATH_MATH_MATH_TRAITS_HPP
+#define IMATH_MATH_MATH_MATH_TRAITS_HPP
 
 #include "IMathLib/IMathLib_config.hpp"
 #include "IMathLib/utility/utility.hpp"
@@ -35,7 +35,7 @@ namespace iml {
 	//算術型の場合(N⊂Z⊂R)
 	template <class From, class To>
 	struct _Is_inclusion<true, From, To> :
-		_Cat_base<is_same<From, To>::value ||
+		cat_bool<is_same<From, To>::value ||
 		(is_unsigned<From>::value && is_signed<To>::value) ||
 		(is_unsigned<From>::value && is_floating_point<To>::value) ||
 		(is_signed<From>::value && is_floating_point<To>::value)> {};
@@ -46,17 +46,17 @@ namespace iml {
 	template <class, class, bool>
 	struct _Is_all_inclusion;
 	template <class To, bool f>
-	struct _Is_all_inclusion<arg_tuple<>, To, f> {
+	struct _Is_all_inclusion<type_tuple<>, To, f> {
 		static constexpr bool value = f;
 	};
 	template <class First, class... Types, class To, bool f>
-	struct _Is_all_inclusion<arg_tuple<First, Types...>, To, f>
-		: _Is_all_inclusion<arg_tuple<Types...>, To, is_inclusion<First, To>::value && f> {};
+	struct _Is_all_inclusion<type_tuple<First, Types...>, To, f>
+		: _Is_all_inclusion<type_tuple<Types...>, To, is_inclusion<First, To>::value && f> {};
 	template <class From, class To>
 	struct is_all_inclusion;
 	template <class... Types, class To>
-	struct is_all_inclusion<arg_tuple<Types...>, To>
-		: _Is_all_inclusion<arg_tuple<Types...>, To, sizeof...(Types) != 0> {};
+	struct is_all_inclusion<type_tuple<Types...>, To>
+		: _Is_all_inclusion<type_tuple<Types...>, To, sizeof...(Types) != 0> {};
 
 
 	//包含関係で上位のものを選択(選択できなければvoid)
@@ -498,15 +498,10 @@ namespace iml {
 	};
 
 	//代数的構造上の代数的構造である(algebraic_typeが内部で定義されている)ことの判定
-	template<class T>
-	struct is_algebraic_structure {
-	private:
-		template <class _T> static auto tester(_T*) ->decltype(declval<typename _T::algebraic_type>(), true_type());
-		template <class _T> static false_type tester(...);
-	public:
-		static constexpr bool value = decltype(tester<T>(nullptr))::value;
-	};
-
+	template <class, class = void>
+	struct is_algebraic_structure : false_type {};
+	template <class T>
+	struct is_algebraic_structure<T, void_t<typename T::algebraic_type>> : true_type {};
 
 	//数値型に対する極限や不定形の定義
 	template <class T>
@@ -711,25 +706,25 @@ namespace iml {
 	template <class, class>
 	struct _Math_function_type_bind;
 	template <class T>
-	struct _Math_function_type_bind<T, arg_tuple<>> {
+	struct _Math_function_type_bind<T, type_tuple<>> {
 		using type = T;
 	};
 	template <class T, class First, class... Types>
-	struct _Math_function_type_bind<T, arg_tuple<First, Types...>>
-		: _Math_function_type_bind<typename First::template rebind<T>::other, arg_tuple<Types...>> {};
+	struct _Math_function_type_bind<T, type_tuple<First, Types...>>
+		: _Math_function_type_bind<typename First::template rebind<T>::other, type_tuple<Types...>> {};
 
 	//数学関数用の型
 	template <bool, class, class>
 	struct _Math_function_type;
 	template <class T, class... Types>
-	struct _Math_function_type<false, T, arg_tuple<Types...>>
+	struct _Math_function_type<false, T, type_tuple<Types...>>
 		//_Math_function_type_bindによるrebindの展開
-		: _Math_function_type_bind<typename conditional<!is_floating_point<T>::value, _IMATH_DEFAULT_TYPE, T>::type, arg_tuple<Types...>> {};
+		: _Math_function_type_bind<typename conditional<!is_floating_point<T>::value, _IMATH_DEFAULT_TYPE, T>::type, type_tuple<Types...>> {};
 	template <class T, class... Types>
-	struct _Math_function_type<true, T, arg_tuple<Types...>>
-		: _Math_function_type<is_algebraic_structure<typename T::algebraic_type>::value, typename T::algebraic_type, arg_tuple<T, Types...>> {};
+	struct _Math_function_type<true, T, type_tuple<Types...>>
+		: _Math_function_type<is_algebraic_structure<typename T::algebraic_type>::value, typename T::algebraic_type, type_tuple<T, Types...>> {};
 	template <class T>
-	struct math_function_type : _Math_function_type<is_algebraic_structure<T>::value, T, arg_tuple<>> {};
+	struct math_function_type : _Math_function_type<is_algebraic_structure<T>::value, T, type_tuple<>> {};
 }
 
 
@@ -1142,9 +1137,8 @@ namespace iml {
 		//二項係数
 		static result_type __comb(imsize_t n, imsize_t k) {
 			result_type result = 1;
-			if (k > n) return 0;
-			for (imsize_t i = 1; i <= k; ++i)
-				result *= result_type(n - i + 1) / i;
+			if (k < (n / 2)) for (imsize_t i = 1; i <= k; ++i) result *= result_type(n - i + 1) / i;
+			else for (imsize_t i = 1, end = n - k; i <= end; ++i) result *= result_type(n - i + 1) / i;
 			return result;
 		}
 		//ベルヌーイ数

@@ -11,6 +11,7 @@
 #include "IMathLib/math/math/atanh.hpp"
 #include "IMathLib/math/math/bernoulli_number.hpp"
 #include "IMathLib/math/math/beta.hpp"
+#include "IMathLib/math/math/binom.hpp"
 #include "IMathLib/math/math/conj.hpp"
 #include "IMathLib/math/math/cos.hpp"
 #include "IMathLib/math/math/cosh.hpp"

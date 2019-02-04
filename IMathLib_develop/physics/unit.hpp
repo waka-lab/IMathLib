@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_PHYSICS_UNIT_HPP
-#define _IMATH_PHYSICS_UNIT_HPP
+﻿#ifndef IMATH_PHYSICS_UNIT_HPP
+#define IMATH_PHYSICS_UNIT_HPP
 
 #include "IMathLib/math/math.hpp"
 
@@ -61,24 +61,24 @@ namespace iml {
 
 		//SI単位の組み立て
 		//ニュートンN(kg m / s^2)
-		using newton = arg_tuple<kilogram, meter, rsecond, rsecond>;
+		using newton = type_tuple<kilogram, meter, rsecond, rsecond>;
 		//速度v(m / s)
-		using velocity = arg_tuple<meter, rsecond>;
+		using velocity = type_tuple<meter, rsecond>;
 		//加速度a(m / s^2)
-		using acceleration = arg_tuple<meter, rsecond, rsecond>;
+		using acceleration = type_tuple<meter, rsecond, rsecond>;
 		//運動量p(N s)
-		using momentum = arg_tuple<newton, second>;
+		using momentum = type_tuple<newton, second>;
 		//仕事J(N m)
-		using joule = arg_tuple<newton, meter>;
-		using energy = arg_tuple<newton, meter>;
+		using joule = type_tuple<newton, meter>;
+		using energy = type_tuple<newton, meter>;
 		//仕事率W(J / s)
-		using watt = arg_tuple<joule, rsecond>;
-		using power = arg_tuple<joule, rsecond>;
+		using watt = type_tuple<joule, rsecond>;
+		using power = type_tuple<joule, rsecond>;
 
 
 		//型がSI単位系であるか
 		template <class T>
-		struct is_si_unit : _Cat_base<
+		struct is_si_unit : cat_bool<
 			is_same<T, meter>::value
 			|| is_same<T, rmeter>::value
 			|| is_same<T, kilogram>::value
@@ -95,25 +95,32 @@ namespace iml {
 		template <class, bool>
 		struct _Is_si_unit;
 		template <bool f>
-		struct _Is_si_unit<arg_tuple<>, f> : _Cat_base<f> {};
+		struct _Is_si_unit<type_tuple<>, f> : cat_bool<f> {};
 		template <class First, class... Types, bool f>
-		struct _Is_si_unit<arg_tuple<First, Types...>, f>
-			: _Is_si_unit<arg_tuple<Types...>, is_si_unit<First>::value && f> {};
+		struct _Is_si_unit<type_tuple<First, Types...>, f>
+			: _Is_si_unit<type_tuple<Types...>, is_si_unit<First>::value && f> {};
 		template <class... Types>
-		struct is_si_unit<arg_tuple<Types...>> : _Is_si_unit<arg_tuple<Types...>, sizeof...(Types) != 0> {};
+		struct is_si_unit<type_tuple<Types...>> : _Is_si_unit<type_tuple<Types...>, sizeof...(Types) != 0> {};
 
 
 		//SI単位系本体
 		template <class T, class = typename enable_if<is_si_unit<T>::value>::type>
 		class _Si_unit;
 		template <class... Types>
-		class _Si_unit<arg_tuple<Types...>> {
-
+		class _Si_unit<type_tuple<Types...>> {
 		public:
-
+			//各単位の次元
+			/*static constexpr imint_t meter_dim;
+			static constexpr imint_t kilogram_dim;
+			static constexpr imint_t second_dim;
+			static constexpr imint_t ampere_dim;
+			static constexpr imint_t kelvin_dim;
+			static constexpr imint_t mole_dim;
+			static constexpr imint_t candela_dim;
+			*/
 		};
 		template <class... Types>
-		class si_unit : _Si_unit<arg_tuple<Types...>> {};
+		class si_unit : _Si_unit<type_tuple<Types...>> {};
 
 
 		//リテラルの列挙と演算の定義

@@ -1,5 +1,5 @@
-﻿#ifndef _FUNCTIONAL_HPP
-#define _FUNCTIONAL_HPP
+﻿#ifndef IMATH_UTILITY_FUNCTIONAL_HPP
+#define IMATH_UTILITY_FUNCTIONAL_HPP
 
 #include "IMathLib/utility/smart_ptr.hpp"
 #include "IMathLib/utility/utility.hpp"

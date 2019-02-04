@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
-#define _IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
+﻿#ifndef IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
+#define IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
 
 #include "IMathLib/utility/utility.hpp"
 #include "IMathLib/utility/tuple.hpp"
@@ -16,28 +16,28 @@ namespace iml {
 
 	//多重構造の演算に対応させるための補助型
 	//継承コンストラクタと継承オペレータオーバーロードにより多数定義可能となる
-	template <class, imsize_t, class, bool, class, class, class, bool>
+	template <class, imsize_t, class, bool, class, bool>
 	class _Bottomup_ad_base;
 
 	//簡略にかくためのエイリアス
 	template <class Base, imsize_t N, class T>
 	using _Bottomup_ad_base_base_type = _Bottomup_ad_base<Base, N, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_range<1, N>::type, typename same_arg_tuple<Base, N>::type, typename same_arg_tuple<typename T::algebraic_type, N>::type, is_same<Base, typename T::algebraic_type>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_range<1, N>::type, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, imsize_t N, class T>
 	using _Bottomup_ad_base_type = _Bottomup_ad_base<Base, N, T
-		, is_algebraic_structure<T>::value, typename index_range<1, N>::type, typename same_arg_tuple<Base, N>::type, typename same_arg_tuple<T, N>::type, is_same<Base, T>::value>;
+		, is_algebraic_structure<T>::value, typename index_range<1, N>::type, is_same<Base, T>::value>;
 
 	//下に階層が存在しないかつBase == T
-	template <class Base, imsize_t N, class T, imsize_t... Indices, class... Bases, class Types>
-	class _Bottomup_ad_base<Base, N, T, false, index_tuple<Indices...>, arg_tuple<Bases...>, Types, true> {
+	template <class Base, imsize_t N, class T, imsize_t... Indices>
+	class _Bottomup_ad_base<Base, N, T, false, index_tuple<Indices...>, true> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, bool, class, class, class, bool> friend class _Bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	protected:
 		Base x[N];
 	public:
 		constexpr _Bottomup_ad_base() : x{} {}
 		constexpr _Bottomup_ad_base(const Base& re) : x{ re } {}
-		constexpr _Bottomup_ad_base(const Bases&... x) : x{ x... } {}
+		constexpr _Bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
 		template <class U>
 		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
 
@@ -255,20 +255,20 @@ namespace iml {
 		}
 	};
 	//下に階層が存在しないかつBase != T
-	template <class Base, imsize_t N, class T, imsize_t... Indices, class... Bases, class... Types>
-	class _Bottomup_ad_base<Base, N, T, false, index_tuple<Indices...>, arg_tuple<Bases...>, arg_tuple<Types...>, false> {
+	template <class Base, imsize_t N, class T, imsize_t... Indices>
+	class _Bottomup_ad_base<Base, N, T, false, index_tuple<Indices...>, false> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, bool, class, class, class, bool> friend class _Bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	protected:
 		Base x[N];
 	public:
 		constexpr _Bottomup_ad_base() : x{} {}
 		constexpr _Bottomup_ad_base(const Base& re) : x{ re } {}
-		constexpr _Bottomup_ad_base(const Bases&... x) : x{ x... } {}
+		constexpr _Bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr _Bottomup_ad_base(const T& re) : x{ static_cast<Base>(re) } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Bottomup_ad_base(const Types&... x) : x{ static_cast<Base>(x)... } {}
+		constexpr _Bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(re),static_cast<Base>(x)... } {}
 		template <class U>
 		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
@@ -548,10 +548,10 @@ namespace iml {
 		}
 	};
 	//下に階層が存在するかつBase == T
-	template <class Base, imsize_t N, class T, imsize_t... Indices, class Bases, class Types>
-	class _Bottomup_ad_base<Base, N, T, true, index_tuple<Indices...>, Bases, Types, true> : public _Bottomup_ad_base_base_type<Base, N, T> {
+	template <class Base, imsize_t N, class T, imsize_t... Indices>
+	class _Bottomup_ad_base<Base, N, T, true, index_tuple<Indices...>, true> : public _Bottomup_ad_base_base_type<Base, N, T> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, bool, class, class, class, bool> friend class _Bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	public:
 		//コンストラクタの継承
 		using _Bottomup_ad_base_base_type<Base, N, T>::_Bottomup_ad_base;
@@ -775,10 +775,10 @@ namespace iml {
 		}
 	};
 	//下に階層が存在するかつBase != T
-	template <class Base, imsize_t N, class T, imsize_t... Indices, class Bases, class... Types>
-	class _Bottomup_ad_base<Base, N, T, true, index_tuple<Indices...>, Bases, arg_tuple<Types...>, false> : public _Bottomup_ad_base_base_type<Base, N, T> {
+	template <class Base, imsize_t N, class T, imsize_t... Indices>
+	class _Bottomup_ad_base<Base, N, T, true, index_tuple<Indices...>, false> : public _Bottomup_ad_base_base_type<Base, N, T> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, bool, class, class, class, bool> friend class _Bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	public:
 		//コンストラクタの継承
 		using _Bottomup_ad_base_base_type<Base, N, T>::_Bottomup_ad_base;
@@ -787,7 +787,7 @@ namespace iml {
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr _Bottomup_ad_base(const T& re) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(re)) {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Bottomup_ad_base(const Types&... x) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(x)...) {}
+		constexpr _Bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(re), static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<T, N, U>& n) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])...) {}
 
@@ -1073,7 +1073,7 @@ namespace iml {
 	template <class T, imsize_t N>
 	class bottomup_ad : public _Bottomup_ad_base_type<T, N, T>, public value_list_input<array_iterator<T>> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, bool, class, class, class, bool> friend class _Bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 
 		static_assert(N > 0, "number of array elements must greater than 0");
 

@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_BETA_HPP
-#define _IMATH_MATH_BETA_HPP
+﻿#ifndef IMATH_MATH_MATH_BETA_HPP
+#define IMATH_MATH_MATH_BETA_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/gamma.hpp"

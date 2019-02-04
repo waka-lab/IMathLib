@@ -1,5 +1,5 @@
-﻿#ifndef _CONTAINER_HPP
-#define _CONTAINER_HPP
+﻿#ifndef IMATH_CONTAINER_CONTAINER_HPP
+#define IMATH_CONTAINER_CONTAINER_HPP
 
 #include "IMathLib/utility/iterator.hpp"
 

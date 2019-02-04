@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_LINER_ALGEBRA_MATRIX_HPP
-#define _IMATH_MATH_LINER_ALGEBRA_MATRIX_HPP
+﻿#ifndef IMATH_MATH_LINER_ALGEBRA_MATRIX_HPP
+#define IMATH_MATH_LINER_ALGEBRA_MATRIX_HPP
 
 #include "IMathLib/utility/utility.hpp"
 #include "IMathLib/utility/tuple.hpp"
@@ -15,29 +15,29 @@ namespace iml {
 
 	//多重構造の演算に対応させるための補助型
 	//継承コンストラクタと継承オペレータオーバーロードにより多数定義可能となる
-	template <class, imsize_t, imsize_t, class, bool, class, class, class, bool>
+	template <class, imsize_t, imsize_t, class, bool, class, bool>
 	class _Matrix_base;
 
 	//簡略にかくためのエイリアス
 	template <class Base, imsize_t M, imsize_t N, class T>
 	using _Matrix_base_base_type = _Matrix_base<Base, M, N, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_range<0, dimension<M, N>::value>::type, typename same_arg_tuple<Base, dimension<M, N>::value>::type, typename same_arg_tuple<typename T::algebraic_type, dimension<M, N>::value>::type, is_same<Base, typename T::algebraic_type>::value>;
+		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_range<0, dimension<M, N>::value>::type, is_same<Base, typename T::algebraic_type>::value>;
 	template <class Base, imsize_t M, imsize_t N, class T>
 	using _Matrix_base_type = _Matrix_base<Base, M, N, T
-		, is_algebraic_structure<T>::value, typename index_range<0, dimension<M, N>::value>::type, typename same_arg_tuple<Base, dimension<M, N>::value>::type, typename same_arg_tuple<T, dimension<M, N>::value>::type, is_same<Base, T>::value>;
+		, is_algebraic_structure<T>::value, typename index_range<0, dimension<M, N>::value>::type, is_same<Base, T>::value>;
 
 
 	//下に階層が存在しないかつBase == T
-	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices, class... Bases, class Types>
-	class _Matrix_base<Base, M, N, T, false, index_tuple<Indices...>, arg_tuple<Bases...>, Types, true> {
+	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices>
+	class _Matrix_base<Base, M, N, T, false, index_tuple<Indices...>, true> {
 		template <class, imsize_t, imsize_t> friend class matrix;
-		template <class, imsize_t, imsize_t, class, bool, class, class, class, bool> friend class _Matrix_base;
+		template <class, imsize_t, imsize_t, class, bool, class, bool> friend class _Matrix_base;
 	protected:
 		typename multi_array<Base, M, N>::type x;
 	public:
 		//Base == TとなるためTypesによるコンストラクタは作成しない
 		constexpr _Matrix_base() : x{} {}
-		constexpr _Matrix_base(const Bases&... x) : x{ x... } {}
+		constexpr _Matrix_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
 		template <class U>
 		constexpr _Matrix_base(const _Matrix_base_type<Base, M, N, U>& ma) : x{ ma.x[Indices]... } {}
 
@@ -105,17 +105,17 @@ namespace iml {
 		}
 	};
 	//下に階層が存在しないかつBase != T
-	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices, class... Bases, class... Types>
-	class _Matrix_base<Base, M, N, T, false, index_tuple<Indices...>, arg_tuple<Bases...>, arg_tuple<Types...>, false> {
+	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices>
+	class _Matrix_base<Base, M, N, T, false, index_tuple<Indices...>, false> {
 		template <class, imsize_t, imsize_t> friend class matrix;
-		template <class, imsize_t, imsize_t, class, bool, class, class, class, bool> friend class _Matrix_base;
+		template <class, imsize_t, imsize_t, class, bool, class, bool> friend class _Matrix_base;
 	protected:
 		typename multi_array<Base, M, N>::type x;
 	public:
 		constexpr _Matrix_base() : x{} {}
-		constexpr _Matrix_base(const Bases&... x) : x{ x... } {}
+		constexpr _Matrix_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Matrix_base(const Types&... x) : x{ static_cast<Base>(x)... } {}
+		constexpr _Matrix_base(const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(x)... } {}
 		template <class U>
 		constexpr _Matrix_base(const _Matrix_base_type<Base, M, N, U>& ma) : x{ ma.x[Indices]... } {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
@@ -188,10 +188,10 @@ namespace iml {
 		}
 	};
 	//下に階層が存在するかつBase == T
-	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices, class Bases, class Types>
-	class _Matrix_base<Base, M, N, T, true, index_tuple<Indices...>, Bases, Types, true> : public _Matrix_base_base_type<Base, M, N, T> {
+	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices>
+	class _Matrix_base<Base, M, N, T, true, index_tuple<Indices...>, true> : public _Matrix_base_base_type<Base, M, N, T> {
 		template <class, imsize_t, imsize_t> friend class matrix;
-		template <class, imsize_t, imsize_t, class, bool, class, class, class, bool> friend class _Matrix_base;
+		template <class, imsize_t, imsize_t, class, bool, class, bool> friend class _Matrix_base;
 	public:
 		//コンストラクタの継承
 		using _Matrix_base_base_type<Base, M, N, T>::_Matrix_base;
@@ -267,16 +267,16 @@ namespace iml {
 		}
 	};
 	//下に階層が存在するかつBase != T
-	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices, class Bases, class... Types>
-	class _Matrix_base<Base, M, N, T, true, index_tuple<Indices...>, Bases, arg_tuple<Types...>, false> : public _Matrix_base_base_type<Base, M, N, T> {
+	template <class Base, imsize_t M, imsize_t N, class T, imsize_t... Indices>
+	class _Matrix_base<Base, M, N, T, true, index_tuple<Indices...>, false> : public _Matrix_base_base_type<Base, M, N, T> {
 		template <class, imsize_t, imsize_t> friend class matrix;
-		template <class, imsize_t, imsize_t, class, bool, class, class, class, bool> friend class _Matrix_base;
+		template <class, imsize_t, imsize_t, class, bool, class, bool> friend class _Matrix_base;
 	public:
 		//コンストラクタの継承
 		using _Matrix_base_base_type<Base, M, N, T>::_Matrix_base;
 
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Matrix_base(const Types&... x) : _Matrix_base_base_type<Base, M, N, T>(static_cast<Base>(x)...) {}
+		constexpr _Matrix_base(const typename identity_type<T, Indices>::type&... x) : _Matrix_base_base_type<Base, M, N, T>(static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr _Matrix_base(const _Matrix_base_type<T, M, N, U>& ma) : x{ static_cast<Base>(ma.x[Indices])... } {}
 

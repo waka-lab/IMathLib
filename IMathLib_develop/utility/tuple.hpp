@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_UTILITIY_TUPLE_HPP
-#define _IMATH_UTILITIY_TUPLE_HPP
+﻿#ifndef IMATH_UTILITIY_TUPLE_HPP
+#define IMATH_UTILITIY_TUPLE_HPP
 
 #include "IMathLib/IMathLib_config.hpp"
 #include "IMathLib/utility/utility.hpp"
@@ -83,57 +83,12 @@ namespace iml {
 //タプル
 namespace iml {
 
-	//インデックスのシーケンス
-	template<imsize_t... Indices>
-	struct index_tuple {
-		static constexpr imsize_t value = sizeof...(Indices);
-	};
-	//index_tupleを逆順にする
-	template <class, class>
-	struct _Reverse_index_tuple;
-	template <imsize_t... Inv, imsize_t First, imsize_t... Indices>
-	struct _Reverse_index_tuple<index_tuple<Inv...>, index_tuple<First, Indices...>>
-		: public _Reverse_index_tuple<index_tuple<First, Inv...>, index_tuple<Indices...>> {};
-	template <imsize_t... Inv>
-	struct _Reverse_index_tuple<index_tuple<Inv...>, index_tuple<>> {
-		using type = index_tuple<Inv...>;
-	};
-	template <class>
-	struct reverse_index_tuple;
-	template <imsize_t... Indices>
-	struct reverse_index_tuple<index_tuple<Indices...>>
-		:_Reverse_index_tuple<index_tuple<>, index_tuple<Indices...>> {};
-	//2つのシーケンスの結合
-	template<class, class>
-	struct cat_index_tuple;
-	template<imsize_t... Indices1, imsize_t... Indices2>
-	struct cat_index_tuple<index_tuple<Indices1...>, index_tuple<Indices2...>> {
-		using type = index_tuple<Indices1..., Indices2...>;
-	};
-	//N個の同じ要素で構築
-	template <imsize_t Index, imsize_t N, imsize_t... Indices>
-	struct same_index_tuple : same_index_tuple<Index, N - 1, Index, Indices...> {};
-	template <imsize_t Index, imsize_t... Indices>
-	struct same_index_tuple<Index, 0, Indices...> {
-		using type = index_tuple<Indices...>;
-	};
-	
-
-	//index_tupleの生成([First,Last)の範囲)
-	template<imsize_t First, imsize_t Last, class result = index_tuple<>, bool flag = !(First < Last)>
-	struct index_range {
-		using type = result;
-	};
-	template<imsize_t Step, imsize_t Last, imsize_t... Indices>
-	struct index_range<Step, Last, index_tuple<Indices...>, false>
-		: index_range<Step + 1, Last, index_tuple<Indices..., Step>> {};
-
 
 	//変数ホルダー
 	template <class T, imsize_t N>
 	class _Value_holder {
 		template <class, class...>
-		friend class _Tuple_base;
+		friend class tuple_base;
 
 		T value;
 	public:
@@ -143,9 +98,9 @@ namespace iml {
 	};
 	//タプルの基底
 	template <class Indices, class... Types>
-	class _Tuple_base;
+	class tuple_base;
 	template <imsize_t... Indices, class... Types>
-	class _Tuple_base<index_tuple<Indices...>, Types...> : public _Value_holder<Types, Indices>... {
+	class tuple_base<index_tuple<Indices...>, Types...> : public _Value_holder<Types, Indices>... {
 
 		//要素取得のため
 		template <imsize_t N, class T>
@@ -154,12 +109,12 @@ namespace iml {
 		static T& get_impl(_Value_holder<T, N>& t) { return t.value; }
 
 	public:
-		constexpr _Tuple_base() : _Value_holder<Types, Indices>()... {}
-		constexpr explicit _Tuple_base(const Types&... args) : _Value_holder<Types, Indices>(args)... {}
+		constexpr tuple_base() : _Value_holder<Types, Indices>()... {}
+		constexpr explicit tuple_base(const Types&... args) : _Value_holder<Types, Indices>(args)... {}
 		template <class... UTypes>
-		constexpr explicit _Tuple_base(UTypes&&... args) : _Value_holder<Types, Indices>(args)... {}
-		_Tuple_base(const _Tuple_base&) = default;
-		_Tuple_base(_Tuple_base&&) = default;
+		constexpr explicit tuple_base(UTypes&&... args) : _Value_holder<Types, Indices>(args)... {}
+		tuple_base(const tuple_base&) = default;
+		tuple_base(tuple_base&&) = default;
 
 		using sequence_type = index_tuple<Indices...>;
 
@@ -171,37 +126,37 @@ namespace iml {
 		//要素型の数
 		static constexpr imsize_t size() { return sizeof...(Types); }
 
-		_Tuple_base& operator=(const _Tuple_base&) = default;
-		_Tuple_base& operator=(_Tuple_base&& im) noexcept = default;
+		tuple_base& operator=(const tuple_base&) = default;
+		tuple_base& operator=(tuple_base&& im) noexcept = default;
 
-		void swap(_Tuple_base& t) { iml::swap(*this, t); }
+		void swap(tuple_base& t) { iml::swap(*this, t); }
 	};
 	template <class... Types>
-	class tuple : public _Tuple_base<typename index_range<0, sizeof...(Types)>::type, Types...> {
+	class tuple : public tuple_base<typename index_range<0, sizeof...(Types)>::type, Types...> {
 	public:
-		using _Tuple_base<typename index_range<0, sizeof...(Types)>::type, Types...>::_Tuple_base;
+		using tuple_base<typename index_range<0, sizeof...(Types)>::type, Types...>::tuple_base;
 	};
 
 
 	//多次元配列の構築
 	template <class T, class Indices>
-	struct _Multi_array;
+	struct multi_array_impl;
 	template <class T, imsize_t N>
-	struct _Multi_array<T, index_tuple<N>> {
+	struct multi_array_impl<T, index_tuple<N>> {
 		using type = T[N];
 	};
 	template <class T, imsize_t First, imsize_t... Indices>
-	struct _Multi_array<T, index_tuple<First, Indices...>> : _Multi_array<T[First], index_tuple<Indices...>> {};
+	struct multi_array_impl<T, index_tuple<First, Indices...>> : multi_array_impl<T[First], index_tuple<Indices...>> {};
 	template <class T, imsize_t First, imsize_t... Indices>
-	struct multi_array : _Multi_array<T, typename reverse_index_tuple<index_tuple<First, Indices...>>::type> {};
+	struct multi_array : multi_array_impl<T, typename reverse_index_tuple<index_tuple<First, Indices...>>::type> {};
 
 	//配列の次元の取得
 	template <imsize_t, class>
 	struct _Dimension;
-	template <imsize_t Dim, imsize_t N>
-	struct _Dimension<Dim, index_tuple<N>> {
-		static_assert(Dim*N > 0, "0 parameter should not exist.");
-		static constexpr imsize_t value = Dim * N;
+	template <imsize_t Dim>
+	struct _Dimension<Dim, index_tuple<>> {
+		static_assert(Dim > 0, "0 parameter should not exist.");
+		static constexpr imsize_t value = Dim;
 	};
 	template <imsize_t Dim, imsize_t First, imsize_t... Indices>
 	struct _Dimension<Dim, index_tuple<First, Indices...>> : _Dimension<Dim*First, index_tuple<Indices...>> {};
@@ -210,8 +165,8 @@ namespace iml {
 
 	//元の型でのタプルの構築
 	template <class... Types>
-	inline constexpr tuple<typename _Unrefwrap<Types>::type...> make_tuple(Types&&... args) {
-		return tuple<typename _Unrefwrap<Types>::type...>(forward<Types>(args)...);
+	inline constexpr tuple<typename reference_unwrapper<Types>::type...> make_tuple(Types&&... args) {
+		return tuple<typename reference_unwrapper<Types>::type...>(forward<Types>(args)...);
 	}
 	//参照でのタプルの構築
 	template<class... Types>

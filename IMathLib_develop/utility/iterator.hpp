@@ -1,10 +1,9 @@
-﻿#ifndef _ITERATOR_HPP
-#define _ITERATOR_HPP
-
-//イテレータの実装
-
+﻿#ifndef IMATH_UTILITY_ITERATOR_HPP
+#define IMATH_UTILITY_ITERATOR_HPP
 
 #include "IMathLib/utility/utility.hpp"
+#include "IMathLib/utility/type_traits.hpp"
+
 
 //ポインタ情報
 namespace iml {
@@ -26,9 +25,9 @@ namespace iml {
 	template <class T>
 	struct _Get_element_type {
 		template <class S>
-		static auto tester(int)->_Identity<typename S::element_type> {}
+		static auto tester(int)->identity_type<typename S::element_type> {}
 		template <class S>
-		static auto tester(_Wrap_int)->_Identity<typename _Get_first_parameter<S>::type> {}
+		static auto tester(_Wrap_int)->identity_type<typename _Get_first_parameter<S>::type> {}
 
 		using Decltype = decltype(tester<T>(0));			//戻り値型が欲しいだけ
 		using type = typename Decltype::type;
@@ -36,9 +35,9 @@ namespace iml {
 	template <class T>
 	struct _Get_ptr_difference_type {
 		template <class S>
-		static auto tester(int)->_Identity<typename S::difference_type> {}
+		static auto tester(int)->identity_type<typename S::difference_type> {}
 		template <class S>
-		static auto tester(_Wrap_int)->_Identity<ptrdiff_t> {}
+		static auto tester(_Wrap_int)->identity_type<ptrdiff_t> {}
 
 		using Decltype = decltype(tester<T>(0));			//戻り値型が欲しいだけ
 		using type = typename Decltype::type;
@@ -46,9 +45,9 @@ namespace iml {
 	template <class T, class _Other>
 	struct _Get_rebind_type {
 		template <class S>
-		static auto tester(int)->_Identity<typename S::template rebind<_Other>::other> {}
+		static auto tester(int)->identity_type<typename S::template rebind<_Other>::other> {}
 		template <class S>
-		static auto tester(_Wrap_int)->_Identity<typename _Replace_first_parameter<_Other, S>::type> {}
+		static auto tester(_Wrap_int)->identity_type<typename _Replace_first_parameter<_Other, S>::type> {}
 
 		using Decltype = decltype(tester<T>(0));			//戻り値型が欲しいだけ
 		using type = typename Decltype::type;

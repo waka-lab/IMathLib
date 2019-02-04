@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_UTILITY_SMART_PTR_HPP
-#define _IMATH_UTILITY_SMART_PTR_HPP
+﻿#ifndef IMATH_UTILITY_SMART_PTR_HPP
+#define IMATH_UTILITY_SMART_PTR_HPP
 
 #include "IMathLib/container/container.hpp"
 

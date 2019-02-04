@@ -1,5 +1,5 @@
-﻿#ifndef _ALGORITHM_HPP
-#define _ALGORITHM_HPP
+﻿#ifndef IMATH_UTILITY_ALGORITHM_HPP
+#define IMATH_UTILITY_ALGORITHM_HPP
 
 //イテレータアルゴリズム
 

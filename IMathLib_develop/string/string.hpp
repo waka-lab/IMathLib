@@ -1,5 +1,5 @@
-﻿#ifndef _STRING_HPP
-#define _STRING_HPP
+﻿#ifndef IMATH_STRING_STRING_HPP
+#define IMATH_STRING_STRING_HPP
 
 #include "IMathLib/container/array.hpp"
 #include "IMathLib/utility/smart_ptr.hpp"
