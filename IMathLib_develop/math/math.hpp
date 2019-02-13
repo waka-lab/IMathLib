@@ -32,6 +32,8 @@
 #include "IMathLib/math/math/loge_2.hpp"
 #include "IMathLib/math/math/math_comstant.hpp"
 #include "IMathLib/math/math/math_traits.hpp"
+#include "IMathLib/math/math/max.hpp"
+#include "IMathLib/math/math/min.hpp"
 #include "IMathLib/math/math/numerical_correction.hpp"
 #include "IMathLib/math/math/orthogonal_polynomials.hpp"
 #include "IMathLib/math/math/pi.hpp"

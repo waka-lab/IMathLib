@@ -16,9 +16,6 @@ namespace iml {
 		static constexpr bool eq(const T& v1, const T& v2) { return v1 == v2; }
 		//小なり比較
 		static constexpr bool lt(const T& v1, const T& v2) { return v1 < v2; }
-
-		//任意の述語
-		static constexpr bool pred(const T&) { return true; }
 	};
 	template <>
 	struct type_comparison<void> {
@@ -32,10 +29,6 @@ namespace iml {
 		static constexpr auto lt(T1&& v1, T2&& v2)  -> decltype(forward<T1>(v1) < forward<T2>(v2)) {
 			return forward<T1>(v1) < forward<T2>(v2);
 		}
-
-		//任意の述語
-		template <class T>
-		static constexpr auto pred(T&&) { return true; }
 	};
 }
 

@@ -1,8 +1,8 @@
 ﻿#ifndef IMATH_MATH_LINER_ALGEBRA_VECTOR_HPP
 #define IMATH_MATH_LINER_ALGEBRA_VECTOR_HPP
 
-#include "IMathLib/utility/utility.hpp"
-#include "IMathLib/utility/tuple.hpp"
+#include "IMathLib/utility/type_traits.hpp"
+#include "IMathLib/utility/utility/tuple_type.hpp"
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/container/array.hpp"
 
@@ -11,56 +11,47 @@ namespace iml {
 	template<class, imsize_t>
 	class vector;
 
-	//多重構造の演算に対応させるための補助型
-	//継承コンストラクタと継承オペレータオーバーロードにより多数定義可能となる
-	template <class, imsize_t, class, bool, class, bool>
-	class _Vector_base;
 
-	//簡略にかくためのエイリアス
-	template <class Base, imsize_t N, class T>
-	using _Vector_base_base_type = _Vector_base<Base, N, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_range<0, N>::type, is_same<Base, typename T::algebraic_type>::value>;
-	template <class Base, imsize_t N, class T>
-	using _Vector_base_type = _Vector_base<Base, N, T
-		, is_algebraic_structure<T>::value, typename index_range<0, N>::type, is_same<Base, T>::value>;
+	template <class Base, imsize_t N, class T, class = typename index_imu_range<0, N>::type, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
+	class vector_base;
 
 
 	//下に階層が存在しないかつBase == T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class _Vector_base<Base, N, T, false, index_tuple<Indices...>, true> {
+	class vector_base<Base, N, T, index_imu_tuple<Indices...>, false, true> {
 		template <class, imsize_t> friend class vector;
-		template <class, imsize_t, class, bool, class, bool> friend class _Vector_base;
+		template <class, imsize_t, class, class, bool, bool> friend class vector_base;
 	protected:
 		Base x[N];
 	public:
 		//Base == TとなるためTypesによるコンストラクタは作成しない
-		constexpr _Vector_base() : x{} {}
-		constexpr _Vector_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
+		constexpr vector_base() : x{} {}
+		constexpr vector_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
 		template <class U>
-		constexpr _Vector_base(const _Vector_base_type<Base, N, U>& v) : x{ v.x[Indices]... } {}
+		constexpr vector_base(const vector_base<Base, N, U>& v) : x{ v.x[Indices]... } {}
 
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		_Vector_base operator-() const { return _Vector_base(-this->x[Indices]...); }
-		_Vector_base operator+() const { return _Vector_base(*this); }
+		vector_base operator-() const { return vector_base(-this->x[Indices]...); }
+		vector_base operator+() const { return vector_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Vector_base& operator+=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator+=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += v.x[i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Vector_base& operator-=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator-=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= v.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Vector_base& operator*=(const T& k) {
+		vector_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Vector_base& operator/=(const T& k) {
+		vector_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
@@ -72,65 +63,65 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const _Vector_base& v) {
+		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
 			return vector<Base, N>((k*v[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] / k)...);
 		}
 	};
 	//下に階層が存在しないかつBase != T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class _Vector_base<Base, N, T, false, index_tuple<Indices...>, false> {
+	class vector_base<Base, N, T, index_imu_tuple<Indices...>, false, false> {
 		template <class, imsize_t> friend class vector;
-		template <class, imsize_t, class, bool, class, bool> friend class _Vector_base;
+		template <class, imsize_t, class, class, bool, bool> friend class vector_base;
 	protected:
 		Base x[N];
 	public:
-		constexpr _Vector_base() : x{} {}
-		constexpr _Vector_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
+		constexpr vector_base() : x{} {}
+		constexpr vector_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Vector_base(const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(x)... } {}
+		constexpr vector_base(const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(x)... } {}
 		template <class U>
-		constexpr _Vector_base(const _Vector_base_type<Base, N, U>& v) : x{ v.x[Indices]... } {}
+		constexpr vector_base(const vector_base<Base, N, U>& v) : x{ v.x[Indices]... } {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Vector_base(const _Vector_base_type<T, N, U>& v) : x{ static_cast<Base>(v.x[Indices])... } {}
+		constexpr vector_base(const vector_base<T, N, U>& v) : x{ static_cast<Base>(v.x[Indices])... } {}
 
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		_Vector_base operator-() const { return _Vector_base(-this->x[Indices]...); }
-		_Vector_base operator+() const { return _Vector_base(*this); }
+		vector_base operator-() const { return vector_base(-this->x[Indices]...); }
+		vector_base operator+() const { return vector_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Vector_base& operator+=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator+=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += v.x[i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Vector_base& operator-=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator-=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= v.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Vector_base& operator*=(const T& k) {
+		vector_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Vector_base& operator/=(const T& k) {
+		vector_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
@@ -142,186 +133,186 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base_type<T, N, U>& v1, const _Vector_base& v2) {
+		friend vector<Base, N> operator+(const vector_base<T, N, U>& v1, const vector_base& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base_type<T, N, U>& v1, const _Vector_base& v2) {
+		friend vector<Base, N> operator-(const vector_base<T, N, U>& v1, const vector_base& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const _Vector_base& v) {
+		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
 			return vector<Base, N>((k*v[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] / k)...);
 		}
 	};
 	//下に階層が存在するかつBase == T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class _Vector_base<Base, N, T, true, index_tuple<Indices...>, true> : public _Vector_base_base_type<Base, N, T> {
+	class vector_base<Base, N, T, index_imu_tuple<Indices...>, true, true> : public vector_base<Base, N, typename T::algebraic_type> {
 		template <class, imsize_t> friend class vector;
-		template <class, imsize_t, class, bool, class, bool> friend class _Vector_base;
+		template <class, imsize_t, class, class, bool, bool> friend class vector_base;
 	public:
 		//コンストラクタの継承
-		using _Vector_base_base_type<Base, N, T>::_Vector_base;
+		using vector_base<Base, N, typename T::algebraic_type>::vector_base;
 
 		//Base == TとなるためTypesによるコンストラクタは作成しない
 
 		//単項演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator+;
-		using _Vector_base_base_type<Base, N, T>::operator-;
+		using vector_base<Base, N, typename T::algebraic_type>::operator+;
+		using vector_base<Base, N, typename T::algebraic_type>::operator-;
 
 		//代入演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator+=;
-		using _Vector_base_base_type<Base, N, T>::operator-=;
-		using _Vector_base_base_type<Base, N, T>::operator*=;
-		using _Vector_base_base_type<Base, N, T>::operator/=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator+=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator-=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator*=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Vector_base& operator+=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator+=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += v.x[i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Vector_base& operator-=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator-=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= v.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Vector_base& operator*=(const T& k) {
+		vector_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Vector_base& operator/=(const T& k) {
+		vector_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator[];
+		using vector_base<Base, N, typename T::algebraic_type>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const _Vector_base& v) {
+		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
 			return vector<Base, N>((k*v[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] / k)...);
 		}
 	};
 	//下に階層が存在するかつBase != T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class _Vector_base<Base, N, T, true, index_tuple<Indices...>, false> : public _Vector_base_base_type<Base, N, T> {
+	class vector_base<Base, N, T, index_imu_tuple<Indices...>, true, false> : public vector_base<Base, N, typename T::algebraic_type> {
 		template <class, imsize_t> friend class vector;
-		template <class, imsize_t, class, bool, class, bool> friend class _Vector_base;
+		template <class, imsize_t, class, class, bool, bool> friend class vector_base;
 	public:
 		//コンストラクタの継承
-		using _Vector_base_base_type<Base, N, T>::_Vector_base;
+		using vector_base<Base, N, typename T::algebraic_type>::vector_base;
 
-		constexpr _Vector_base() : _Vector_base_base_type<Base, N, T>() {}
+		constexpr vector_base() : vector_base<Base, N, typename T::algebraic_type>() {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Vector_base(const typename identity_type<T, Indices>::type&... x) : _Vector_base_base_type<Base, N, T>(static_cast<Base>(x)...) {}
+		constexpr vector_base(const typename identity_type<T, Indices>::type&... x) : vector_base<Base, N, typename T::algebraic_type>(static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Vector_base(const _Vector_base_type<T, N, U>& v) : _Vector_base_base_type<Base, N, T>(static_cast<Base>(v.x[Indices])...) {}
+		constexpr vector_base(const vector_base<T, N, U>& v) : vector_base<Base, N, typename T::algebraic_type>(static_cast<Base>(v.x[Indices])...) {}
 
 		//単項演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator+;
-		using _Vector_base_base_type<Base, N, T>::operator-;
+		using vector_base<Base, N, typename T::algebraic_type>::operator+;
+		using vector_base<Base, N, typename T::algebraic_type>::operator-;
 
 		//代入演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator+=;
-		using _Vector_base_base_type<Base, N, T>::operator-=;
-		using _Vector_base_base_type<Base, N, T>::operator*=;
-		using _Vector_base_base_type<Base, N, T>::operator/=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator+=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator-=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator*=;
+		using vector_base<Base, N, typename T::algebraic_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Vector_base& operator+=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator+=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += v.x[i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Vector_base& operator-=(const _Vector_base_type<T, N, U>& v) {
+		vector_base& operator-=(const vector_base<T, N, U>& v) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= v.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Vector_base& operator*=(const T& k) {
+		vector_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Vector_base& operator/=(const T& k) {
+		vector_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using _Vector_base_base_type<Base, N, T>::operator[];
+		using vector_base<Base, N, typename T::algebraic_type>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const _Vector_base_type<T, N, U>& v1, const _Vector_base& v2) {
+		friend vector<Base, N> operator+(const vector_base<T, N, U>& v1, const vector_base& v2) {
 			return vector<Base, N>((v1[Indices] + v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base& v1, const _Vector_base_type<T, N, U>& v2) {
+		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const _Vector_base_type<T, N, U>& v1, const _Vector_base& v2) {
+		friend vector<Base, N> operator-(const vector_base<T, N, U>& v1, const vector_base& v2) {
 			return vector<Base, N>((v1[Indices] - v2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const _Vector_base& v) {
+		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
 			return vector<Base, N>((k*v[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const _Vector_base& v, const T& k) {
+		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
 			return vector<Base, N>((v[Indices] / k)...);
 		}
 	};
 
 	//ベクトル型
 	template <class T, imsize_t N>
-	class vector : public _Vector_base_type<T, N, T>, public value_list_input<array_iterator<T>> {
+	class vector : public vector_base<T, N, T>, public value_list_input<array_iterator<T>> {
 		template <class, imsize_t> friend class vector;
 
 		//代入演算の補助
@@ -334,7 +325,7 @@ namespace iml {
 		}
 	public:
 		//コンストラクタの継承
-		using _Vector_base_type<T, N, T>::_Vector_base;
+		using vector_base<T, N, T>::vector_base;
 		
 		using algebraic_type = T;
 		using iterator = array_iterator<T>;
@@ -351,13 +342,13 @@ namespace iml {
 		const_iterator end() const noexcept { return const_iterator(&x[N - 1] + 1); }
 
 		//単項演算の継承
-		using _Vector_base_type<T, N, T>::operator-;
-		using _Vector_base_type<T, N, T>::operator+;
+		using vector_base<T, N, T>::operator-;
+		using vector_base<T, N, T>::operator+;
 		//代入演算の継承
-		using _Vector_base_type<T, N, T>::operator+=;
-		using _Vector_base_type<T, N, T>::operator-=;
-		using _Vector_base_type<T, N, T>::operator*=;
-		using _Vector_base_type<T, N, T>::operator/=;
+		using vector_base<T, N, T>::operator+=;
+		using vector_base<T, N, T>::operator-=;
+		using vector_base<T, N, T>::operator*=;
+		using vector_base<T, N, T>::operator/=;
 		//二項演算の継承
 		using value_list_input<array_iterator<T>>::operator<<;
 
@@ -365,14 +356,14 @@ namespace iml {
 		vector& operator=(const vector& v) { return *vector_copy(this, v); }
 		template <class _T>
 		vector& operator=(const vector<_T, N>& v) { return *vector_copy(this, v); }
-		vector& operator=(const _Vector_base_type<T, N, T>& v) { return *vector_copy(this, v); }
+		vector& operator=(const vector_base<T, N, T>& v) { return *vector_copy(this, v); }
 		template <class U>
-		vector& operator=(const _Vector_base_type<T, N, U>& v) { return *vector_copy(this, v); }
+		vector& operator=(const vector_base<T, N, U>& v) { return *vector_copy(this, v); }
 		template <class U, class _T, class = typename enable_if<is_inclusion<_T, T>::value>::type>
-		vector& operator=(const _Vector_base_type<_T, N, U>& v) { return *vector_copy(this, v); }
+		vector& operator=(const vector_base<_T, N, U>& v) { return *vector_copy(this, v); }
 
 		//添え字演算の継承
-		using _Vector_base_type<T, N, T>::operator[];
+		using vector_base<T, N, T>::operator[];
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const vector& v) {
@@ -390,11 +381,11 @@ namespace iml {
 
 	//ベクトルの判定
 	template <class T>
-	struct _Is_vector : false_type {};
+	struct is_vector_impl : false_type {};
 	template <class T, imsize_t N>
-	struct _Is_vector<vector<T, N>> : true_type {};
+	struct is_vector_impl<vector<T, N>> : true_type {};
 	template <class T>
-	struct is_vector : _Is_vector<typename remove_cv<T>::type> {};
+	struct is_vector : is_vector_impl<typename remove_cv<T>::type> {};
 
 	//ベクトルの除去
 	template <class T>
@@ -418,7 +409,7 @@ namespace iml {
 	//内積(T1×T2→Sが加法についてマグマ)
 	template <class U1, class U2, class T1, class T2, imsize_t N
 		, class = typename enable_if<is_calcable<T1, T2>::mul_value && is_magma<typename calculation_result<T1, T2>::mul_type>::add_value>::type>
-	inline typename calculation_result<T1, T2>::mul_type operator*(const _Vector_base_type<T1, N, U1>& v1, const _Vector_base_type<T2, N, U2>& v2) {
+	inline typename calculation_result<T1, T2>::mul_type operator*(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
 		//加法単位元で初期化
 		typename calculation_result<T1, T2>::mul_type temp(addition<typename calculation_result<T1, T2>::mul_type>::identity_element());
 		for (imsize_t i = 0; i < N; ++i) temp += v1[i] * conj(v2[i]);
@@ -427,18 +418,18 @@ namespace iml {
 	//外積(T1×T2→Sが加法についてループ)
 	template <class U1, class U2, class T1, class T2
 		, class = typename enable_if<is_calcable<T1, T2>::mul_value && is_loop<typename calculation_result<T1, T2>::mul_type>::add_value>::type>
-	inline vector<typename calculation_result<T1, T2>::mul_type, 3> operator%(const _Vector_base_type<T1, 3, U1>& v1, const _Vector_base_type<T2, 3, U2>& v2) {
+	inline vector<typename calculation_result<T1, T2>::mul_type, 3> operator%(const vector_base<T1, 3, U1>& v1, const vector_base<T2, 3, U2>& v2) {
 		return vector<typename calculation_result<T1, T2>::mul_type, 3>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 	}
 
 	//比較演算
 	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
-	inline bool operator==(const _Vector_base_type<T1, N, U1>& v1, const _Vector_base_type<T2, N, U2>& v2) {
+	inline bool operator==(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
 		for (imsize_t i = 0; i < N; ++i) if (v1[i] != v2[i]) return false;
 		return true;
 	}
 	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
-	inline bool operator!=(const _Vector_base_type<T1, N, U1>& v1, const _Vector_base_type<T2, N, U2>& v2) {
+	inline bool operator!=(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
 		return !(v1 == v2);
 	}
 
@@ -483,7 +474,7 @@ namespace iml {
 
 	//誤差評価
 	template <class T, imsize_t N>
-	struct _Error_evaluation<vector<T, N>> {
+	struct Error_evaluation<vector<T, N>> {
 		static bool __error_evaluation(const vector<T, N>& x1, const vector<T, N>& x2) {
 			for (imsize_t i = 0; i < N; ++i) if (!error_evaluation(x1[i], x2[i])) return false;
 			return true;

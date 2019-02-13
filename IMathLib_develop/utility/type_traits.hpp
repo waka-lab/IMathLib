@@ -17,6 +17,7 @@
 #include "IMathLib/utility/type_traits/is_convertible.hpp"
 #include "IMathLib/utility/type_traits/is_type.hpp"
 #include "IMathLib/utility/type_traits/remove_decoration.hpp"
+#include "IMathLib/utility/type_traits/subscript_access.hpp"
 #include "IMathLib/utility/type_traits/type_comparison.hpp"
 #include "IMathLib/utility/type_traits/wrapper.hpp"
 

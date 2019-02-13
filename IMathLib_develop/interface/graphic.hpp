@@ -492,7 +492,7 @@ namespace iml {
 			enable_array_state<SecondVtxIndex, VtxIndex...>();
 		}
 		template <imsize_t... VtxIndex>
-		inline void _Enable_array_state(index_tuple<VtxIndex...>) { enable_array_state<VtxIndex...>(); }
+		inline void _Enable_array_state(index_imu_tuple<VtxIndex...>) { enable_array_state<VtxIndex...>(); }
 		//配列のステート無効
 		template <imsize_t FirstVtxIndex>
 		inline void disable_array_state() {
@@ -504,7 +504,7 @@ namespace iml {
 			disable_array_state<SecondVtxIndex, VtxIndex...>();
 		}
 		template <imsize_t... VtxIndex>
-		inline void _Disable_array_state(index_tuple<VtxIndex...>) { disable_array_state<VtxIndex...>(); }
+		inline void _Disable_array_state(index_imu_tuple<VtxIndex...>) { disable_array_state<VtxIndex...>(); }
 
 		//テクスチャの描画(VtxIndexTupleは有効にするステート)
 		template <imsize_t Mode, class VtxIndexTuple>
@@ -618,19 +618,19 @@ namespace iml {
 		template <class T, imsize_t N>
 		inline void draw_point(const vector<T, N>& p, imsize_t size = 1) {
 			glPointSize(size);
-			draw_figure<GL_POINTS, index_tuple<GL_VERTEX_ARRAY>, 0>(N, &p[0], 0, 1);
+			draw_figure<GL_POINTS, index_imu_tuple<GL_VERTEX_ARRAY>, 0>(N, &p[0], 0, 1);
 		}
 		//線の描画
 		template <class T, imsize_t N>
 		inline void draw_line(const vector<T, N>& start, const vector<T, N>& end) {
 			vector<T, N> temp[2] = { start,end };
-			draw_figure<GL_LINES, index_tuple<GL_VERTEX_ARRAY>, sizeof(vector<T, N>)>(N, &temp[0][0], 0, 2);
+			draw_figure<GL_LINES, index_imu_tuple<GL_VERTEX_ARRAY>, sizeof(vector<T, N>)>(N, &temp[0][0], 0, 2);
 		}
 		//三角形ポリゴンの描画
 		template <class T, imsize_t N>
 		inline void draw_triangle(const vector<T, N>& v1, const vector<T, N>& v2, const vector<T, N>& v3) {
 			vector<T, N> temp[3] = { v1,v2,v3 };
-			draw_figure<GL_TRIANGLES, index_tuple<GL_VERTEX_ARRAY>, sizeof(vector<T, N>)>(N, &temp[0][0], 0, 3);
+			draw_figure<GL_TRIANGLES, index_imu_tuple<GL_VERTEX_ARRAY>, sizeof(vector<T, N>)>(N, &temp[0][0], 0, 3);
 		}
 	}
 }

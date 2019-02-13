@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_LINER_ALGEBRA_EXP_HPP
-#define _IMATH_LINER_ALGEBRA_EXP_HPP
+﻿#ifndef IMATH_MATH_LINER_ALGEBRA_EXP_HPP
+#define IMATH_MATH_LINER_ALGEBRA_EXP_HPP
 
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/math/liner_algebra/matrix.hpp"
@@ -10,7 +10,7 @@ namespace iml {
 
 	//行列指数関数
 	template <class T, imsize_t N>
-	struct _Exp<matrix<T, N, N>> {
+	struct Exp<matrix<T, N, N>> {
 		using result_type = typename math_function_type<matrix<T, N, N>>::type;
 		using type = typename math_function_type<T>::type;
 

@@ -1,5 +1,5 @@
-﻿#ifndef _IMATHLIB_HPP
-#define _IMATHLIB_HPP
+﻿#ifndef IMATH_IMATHLIB_HPP
+#define IMATH_IMATHLIB_HPP
 
 //これをインクルードすることで全ての機能を利用可能となる
 
@@ -15,6 +15,9 @@
 
 //ユーザー定義マクロ
 #include "IMathLib/IMathLib_config.hpp"
+
+#include "IMathLib/utility/template_algorithm.hpp"
+#include "IMathLib/physics/si_unit_wrapper.hpp"
 
 //コンテナライブラリ
 #include "IMathLib/container/array.hpp"

@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_EXP_HPP
-#define _IMATH_MATH_EXP_HPP
+﻿#ifndef IMATH_MATH_MATH_EXP_HPP
+#define IMATH_MATH_MATH_EXP_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/e.hpp"
@@ -9,48 +9,48 @@ namespace iml {
 
 	//指数関数
 	template <class T>
-	struct _Exp {
+	struct Exp {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __ipow(result_type x, imsize_t y) {
+		static constexpr result_type _ipow_(result_type x, imsize_t y) {
 			//yが2の冪であることから最適化
 			while (y > 1) { x *= x; y /= 2; }
 			return x;
 		}
 
-		static constexpr result_type __exp_impl(result_type x) {
+		static constexpr result_type _exp_impl_(result_type x) {
 			result_type x1 = 1, x2 = 1, x3 = 0;
 			//これ超えたときは無限大になるけどそれでいい?
 			imint_t index = static_cast<imint_t>(x);
 
 			x -= index;
 			x /= 256;			//0 < x < 1/256=0.00390625
-			//収束条件は単調増加が崩れる
+			//収束条件は和の単調増加が崩れる(xは十分に小さいためError_evaluation<result_type>::epsを加算するコストにあわない)
 			for (imsize_t i = 1; x3 < x2; ++i) {
 				x3 = x2;
 				x1 *= (x / i);
 				x2 += x1;
 			}
-			return __ipow(x2, 256)*ipow(_E_<result_type>::e, index);
+			return _ipow_(x2, 256)*ipow(_E_<result_type>::e, index);
 		}
-		static constexpr result_type __exp(const T& x) {
-			return (x < 0) ? 1 / __exp_impl(-x) : __exp_impl(x);
+		static constexpr result_type _exp_(const T& x) {
+			return (x < 0) ? 1 / _exp_impl_(-x) : _exp_impl_(x);
 		}
 	};
 	template <>
-	struct _Exp<imsize_t> {
+	struct Exp<imsize_t> {
 		using result_type = typename math_function_type<imsize_t>::type;
 
-		static constexpr result_type __exp(imsize_t x) { return ipow(_E_<result_type>::e, x); }
+		static constexpr result_type _exp_(imsize_t x) { return ipow(_E_<result_type>::e, x); }
 	};
 	template <>
-	struct _Exp<imint_t> {
+	struct Exp<imint_t> {
 		using result_type = typename math_function_type<imint_t>::type;
 
-		static constexpr result_type __exp(imint_t x) { return ipow(_E_<result_type>::e, x); }
+		static constexpr result_type _exp_(imint_t x) { return ipow(_E_<result_type>::e, x); }
 	};
 	template <class T>
-	inline constexpr auto exp(const T& x) { return _Exp<T>::__exp(x); }
+	inline constexpr auto exp(const T& x) { return Exp<T>::_exp_(x); }
 
 	//シグモイド関数
 	template <class T>

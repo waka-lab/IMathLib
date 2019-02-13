@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_SQRT_HPP
-#define _IMATH_MATH_SQRT_HPP
+﻿#ifndef IMATH_MATH_MATH_SQRT_HPP
+#define IMATH_MATH_MATH_SQRT_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 
@@ -10,25 +10,25 @@ namespace iml {
 
 	//平方根の整数近似
 	template <class T>
-	struct _Isqrt {
+	struct Isqrt {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __isqrt(const T& x) {
+		static constexpr result_type _isqrt_(const T& x) {
 			result_type	i = 1, a = static_cast<result_type>(x) / 2;
 			for (; a > 0; ++i) a -= i;
 			return i - 1;
 		}
 	};
 	template <class T>
-	inline constexpr auto isqrt(const T& x) { return _Isqrt<T>::__isqrt(x); }
+	inline constexpr auto isqrt(const T& x) { return Isqrt<T>::_isqrt_(x); }
 
 
 	//平方根
 	template <class T>
-	struct _Sqrt {
+	struct Sqrt {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __sqrt(const T& x) {
+		static constexpr result_type _sqrt_(const T& x) {
 
 			if ((x == 0) || (x == 1)) return x;
 
@@ -55,7 +55,7 @@ namespace iml {
 		}
 	};
 	template <class T>
-	inline constexpr auto sqrt(const T& x) { return _Sqrt<T>::__sqrt(x); }
+	inline constexpr auto sqrt(const T& x) { return Sqrt<T>::_sqrt_(x); }
 }
 
 

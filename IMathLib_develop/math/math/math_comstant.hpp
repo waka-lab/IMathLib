@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_MATH_CONSTANT_HPP
-#define _IMATH_MATH_MATH_CONSTANT_HPP
+﻿#ifndef IMATH_MATH_MATH_CONSTANT_HPP
+#define IMATH_MATH_MATH_CONSTANT_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 

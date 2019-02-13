@@ -1,63 +1,72 @@
 ﻿#ifndef IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
 #define IMATH_MATH_AUTOMATIC_DIFFERENTIATION_HPP
 
-#include "IMathLib/utility/utility/tuple_type.hpp"
+#include "IMathLib/utility/utility.hpp"
+#include "IMathLib/utility/tuple.hpp"
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/container/array.hpp"
+//#include "IMathLib/math/liner_algebra/vector.hpp"
 
-
-//二重数を利用した自動微分
+//二重数を利用した自動微分(関数値が不定であるときは結果は保証されない)
 
 namespace iml {
 
 	template<class, imsize_t>
 	class bottomup_ad;
 
+	//多重構造の演算に対応させるための補助型
+	//継承コンストラクタと継承オペレータオーバーロードにより多数定義可能となる
+	template <class, imsize_t, class, bool, class, bool>
+	class _Bottomup_ad_base;
 
-	template <class Base, imsize_t N, class T, class = typename index_imu_range<1, N>::type, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
-	class bottomup_ad_base;
-
+	//簡略にかくためのエイリアス
+	template <class Base, imsize_t N, class T>
+	using _Bottomup_ad_base_base_type = _Bottomup_ad_base<Base, N, typename T::algebraic_type
+		, is_algebraic_structure<typename T::algebraic_type>::value, typename index_imu_range<1, N>::type, is_same<Base, typename T::algebraic_type>::value>;
+	template <class Base, imsize_t N, class T>
+	using _Bottomup_ad_base_type = _Bottomup_ad_base<Base, N, T
+		, is_algebraic_structure<T>::value, typename index_imu_range<1, N>::type, is_same<Base, T>::value>;
 
 	//下に階層が存在しないかつBase == T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class bottomup_ad_base<Base, N, T, index_imu_tuple<Indices...>, false, true> {
+	class _Bottomup_ad_base<Base, N, T, false, index_imu_tuple<Indices...>, true> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, class, bool, bool> friend class bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	protected:
 		Base x[N];
 	public:
-		constexpr bottomup_ad_base() : x{} {}
-		constexpr bottomup_ad_base(const Base& re) : x{ re } {}
-		constexpr bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
+		constexpr _Bottomup_ad_base() : x{} {}
+		constexpr _Bottomup_ad_base(const Base& re) : x{ re } {}
+		constexpr _Bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
 		template <class U>
-		constexpr bottomup_ad_base(const bottomup_ad_base<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
+		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		bottomup_ad_base operator-() const { return bottomup_ad_base(-this->x[0], (-this->x[Indices])...); }
-		bottomup_ad_base operator+() const { return bottomup_ad_base(*this); }
+		_Bottomup_ad_base operator-() const { return _Bottomup_ad_base(-this->x[0], (-this->x[Indices])...); }
+		_Bottomup_ad_base operator+() const { return _Bottomup_ad_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator+=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const T& n) {
+		_Bottomup_ad_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator-=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const T& n) {
+		_Bottomup_ad_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator*=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			Base result[N] = { this->x[0] * n.x[0] };
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -71,16 +80,27 @@ namespace iml {
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const T& k) {
+		_Bottomup_ad_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const bottomup_ad_base<T, N, U>& n) {
-			return *this *= multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+		_Bottomup_ad_base& operator/=(const _Bottomup_ad_base_type<T, N, U>& n) {
+			Base result[N] = { this->x[0] / n.x[0] };
+			auto temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = this->x[0] * temp1.x[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * this->x[j] * temp1.x[i - j];
+				}
+			}
+			for (imsize_t i = 0; i < N; ++i) this->x[i] = result[i];
+			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const T& k) {
+		_Bottomup_ad_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
@@ -92,31 +112,31 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] + k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator+(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k + n[0], n[Indices]...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] - k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator-(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k - n[0], (-n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -129,112 +149,158 @@ namespace iml {
 			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] * k, (n[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator*(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k*n[0], (k*n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
-			return n1 * multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] / k, (n[Indices] / k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const T& k, const bottomup_ad_base& n) {
-			return k * multiplicative<bottomup_ad<Base, N>>::inverse_element(n);
+		friend bottomup_ad<Base, N> operator/(const T& k, const _Bottomup_ad_base& n) {
+			return multiplicative<bottomup_ad<Base, N>>::inverse_element(k*n);
 		}
 
 
 		//比較演算
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const T& n2) { return n1[0] == n2; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] == n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& n1, const bottomup_ad_base& n2) { return n1 == n2[0]; }
+		friend bool operator==(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const T& n2) { return n1[0] != n2; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] != n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& n1, const bottomup_ad_base& n2) { return n1 != n2[0]; }
+		friend bool operator!=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const T& n2) { return n1[0] < n2; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] < n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& n1, const bottomup_ad_base& n2) { return n1 < n2[0]; }
+		friend bool operator<(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const T& n2) { return n1[0] <= n2; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] <= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const T& n1, const bottomup_ad_base& n2) { return n1 <= n2[0]; }
+		friend bool operator<=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const T& n2) { return n1[0] > n2; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] > n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& n1, const bottomup_ad_base& n2) { return n1 > n2[0]; }
+		friend bool operator>(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const T& n2) { return n1[0] >= n2; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] >= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const T& n1, const bottomup_ad_base& n2) { return n1 >= n2[0]; }
+		friend bool operator>=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 >= n2[0];
+		}
 	};
 	//下に階層が存在しないかつBase != T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class bottomup_ad_base<Base, N, T, index_imu_tuple<Indices...>, false, false> {
+	class _Bottomup_ad_base<Base, N, T, false, index_imu_tuple<Indices...>, false> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, class, bool, bool> friend class bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	protected:
 		Base x[N];
 	public:
-		constexpr bottomup_ad_base() : x{} {}
-		constexpr bottomup_ad_base(const Base& re) : x{ re } {}
-		constexpr bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
+		constexpr _Bottomup_ad_base() : x{} {}
+		constexpr _Bottomup_ad_base(const Base& re) : x{ re } {}
+		constexpr _Bottomup_ad_base(const Base& re, const typename identity_type<Base, Indices>::type&... x) : x{ re,x... } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re) : x{ static_cast<Base>(re) } {}
+		constexpr _Bottomup_ad_base(const T& re) : x{ static_cast<Base>(re) } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(re),static_cast<Base>(x)... } {}
+		constexpr _Bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(re),static_cast<Base>(x)... } {}
 		template <class U>
-		constexpr bottomup_ad_base(const bottomup_ad_base<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
+		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<Base, N, U>& n) : x{ n.x[0], n.x[Indices]... } {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const bottomup_ad_base<T, N, U>& n) : x{ static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])... } {}
+		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<T, N, U>& n) : x{ static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])... } {}
 
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		bottomup_ad_base operator-() const { return bottomup_ad_base(-this->x[0], (-this->x[Indices])...); }
-		bottomup_ad_base operator+() const { return bottomup_ad_base(*this); }
+		_Bottomup_ad_base operator-() const { return _Bottomup_ad_base(-this->x[0], (-this->x[Indices])...); }
+		_Bottomup_ad_base operator+() const { return _Bottomup_ad_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator+=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const T& n) {
+		_Bottomup_ad_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator-=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const T& n) {
+		_Bottomup_ad_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator*=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			Base result[N] = { this->x[0] * n.x[0] };
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -248,16 +314,27 @@ namespace iml {
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const T& k) {
+		_Bottomup_ad_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const bottomup_ad_base<T, N, U>& n) {
-			return *this *= multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+		_Bottomup_ad_base& operator/=(const _Bottomup_ad_base_type<T, N, U>& n) {
+			Base result[N] = { this->x[0] / n.x[0] };
+			auto temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = this->x[0] * temp1.x[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * this->x[j] * temp1.x[i - j];
+				}
+			}
+			for (imsize_t i = 0; i < N; ++i) this->x[i] = result[i];
+			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const T& k) {
+		_Bottomup_ad_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
@@ -269,39 +346,39 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] + k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator+(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k + n[0], n[Indices]...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] - k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator-(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k - n[0], (-n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -314,7 +391,7 @@ namespace iml {
 			return result;
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -327,122 +404,190 @@ namespace iml {
 			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] * k, (n[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator*(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k*n[0], (k*n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
-			return n1 * multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
-			return n1 * multiplicative<bottomup_ad<Base, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] / k, (n[Indices] / k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const T& k, const bottomup_ad_base& n) {
-			return k * multiplicative<bottomup_ad<Base, N>>::inverse_element(n);
+		friend bottomup_ad<Base, N> operator/(const T& k, const _Bottomup_ad_base& n) {
+			return multiplicative<bottomup_ad<Base, N>>::inverse_element(k*n);
 		}
 
 
 		//比較演算
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const T& n2) { return n1[0] == n2; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] == n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& n1, const bottomup_ad_base& n2) { return n1 == n2[0]; }
+		friend bool operator==(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const T& n2) { return n1[0] != n2; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] != n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& n1, const bottomup_ad_base& n2) { return n1 != n2[0]; }
+		friend bool operator!=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const T& n2) { return n1[0] < n2; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] < n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& n1, const bottomup_ad_base& n2) { return n1 < n2[0]; }
+		friend bool operator<(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const T& n2) { return n1[0] <= n2; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] <= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const T& n1, const bottomup_ad_base& n2) { return n1 <= n2[0]; }
+		friend bool operator<=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const T& n2) { return n1[0] > n2; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] > n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& n1, const bottomup_ad_base& n2) { return n1 > n2[0]; }
+		friend bool operator>(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const T& n2) { return n1[0] >= n2; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] >= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const T& n1, const bottomup_ad_base& n2) { return n1 >= n2[0]; }
+		friend bool operator>=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 >= n2[0];
+		}
 	};
 	//下に階層が存在するかつBase == T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class bottomup_ad_base<Base, N, T, index_imu_tuple<Indices...>, true, true> : public bottomup_ad_base<Base, N, typename T::algebraic_type> {
+	class _Bottomup_ad_base<Base, N, T, true, index_imu_tuple<Indices...>, true> : public _Bottomup_ad_base_base_type<Base, N, T> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, class, bool, bool> friend class bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	public:
 		//コンストラクタの継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::bottomup_ad_base;
+		using _Bottomup_ad_base_base_type<Base, N, T>::_Bottomup_ad_base;
 
 		//単項演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator+;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator-;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator+;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator-;
 
 		//代入演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator+=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator-=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator*=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator/=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator+=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator-=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator*=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator+=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const T& n) {
+		_Bottomup_ad_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator-=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const T& n) {
+		_Bottomup_ad_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator*=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			Base result[N] = { this->x[0] * n.x[0] };
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -456,51 +601,62 @@ namespace iml {
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const T& k) {
+		_Bottomup_ad_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const bottomup_ad_base<T, N, U>& n) {
-			return *this *= multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+		_Bottomup_ad_base& operator/=(const _Bottomup_ad_base_type<T, N, U>& n) {
+			Base result[N] = { this->x[0] / n.x[0] };
+			auto temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = this->x[0] * temp1.x[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * this->x[j] * temp1.x[i - j];
+				}
+			}
+			for (imsize_t i = 0; i < N; ++i) this->x[i] = result[i];
+			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const T& k) {
+		_Bottomup_ad_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator[];
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] + k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator+(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k + n[0], n[Indices]...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] - k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator-(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k - n[0], (-n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -513,114 +669,160 @@ namespace iml {
 			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] * k, (n[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator*(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k*n[0], (k*n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
-			return n1 * multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] / k, (n[Indices] / k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const T& k, const bottomup_ad_base& n) {
-			return k * multiplicative<bottomup_ad<Base, N>>::inverse_element(n);
+		friend bottomup_ad<Base, N> operator/(const T& k, const _Bottomup_ad_base& n) {
+			return multiplicative<bottomup_ad<Base, N>>::inverse_element(k*n);
 		}
 
 
 		//比較演算
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const T& n2) { return n1[0] == n2; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] == n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& n1, const bottomup_ad_base& n2) { return n1 == n2[0]; }
+		friend bool operator==(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const T& n2) { return n1[0] != n2; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] != n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& n1, const bottomup_ad_base& n2) { return n1 != n2[0]; }
+		friend bool operator!=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const T& n2) { return n1[0] < n2; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] < n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& n1, const bottomup_ad_base& n2) { return n1 < n2[0]; }
+		friend bool operator<(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const T& n2) { return n1[0] <= n2; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] <= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const T& n1, const bottomup_ad_base& n2) { return n1 <= n2[0]; }
+		friend bool operator<=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const T& n2) { return n1[0] > n2; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] > n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& n1, const bottomup_ad_base& n2) { return n1 > n2[0]; }
+		friend bool operator>(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const T& n2) { return n1[0] >= n2; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] >= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const T& n1, const bottomup_ad_base& n2) { return n1 >= n2[0]; }
+		friend bool operator>=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 >= n2[0];
+		}
 	};
 	//下に階層が存在するかつBase != T
 	template <class Base, imsize_t N, class T, imsize_t... Indices>
-	class bottomup_ad_base<Base, N, T, index_imu_tuple<Indices...>, true, false> : public bottomup_ad_base<Base, N, typename T::algebraic_type> {
+	class _Bottomup_ad_base<Base, N, T, true, index_imu_tuple<Indices...>, false> : public _Bottomup_ad_base_base_type<Base, N, T> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, class, bool, bool> friend class bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 	public:
 		//コンストラクタの継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::bottomup_ad_base;
+		using _Bottomup_ad_base_base_type<Base, N, T>::_Bottomup_ad_base;
 
-		constexpr bottomup_ad_base() : bottomup_ad_base<Base, N, typename T::algebraic_type>() {}
+		constexpr _Bottomup_ad_base() : _Bottomup_ad_base_base_type<Base, N, T>() {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re) : bottomup_ad_base<Base, N, typename T::algebraic_type>(static_cast<Base>(re)) {}
+		constexpr _Bottomup_ad_base(const T& re) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(re)) {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : bottomup_ad_base<Base, N, typename T::algebraic_type>(static_cast<Base>(re), static_cast<Base>(x)...) {}
+		constexpr _Bottomup_ad_base(const T& re, const typename identity_type<T, Indices>::type&... x) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(re), static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const bottomup_ad_base<T, N, U>& n) : bottomup_ad_base<Base, N, typename T::algebraic_type>(static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])...) {}
+		constexpr _Bottomup_ad_base(const _Bottomup_ad_base_type<T, N, U>& n) : _Bottomup_ad_base_base_type<Base, N, T>(static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])...) {}
 
 		//単項演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator+;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator-;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator+;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator-;
 
 		//代入演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator+=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator-=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator*=;
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator/=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator+=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator-=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator*=;
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator+=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] += n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		bottomup_ad_base& operator+=(const T& n) {
+		_Bottomup_ad_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator-=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] -= n.x[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		bottomup_ad_base& operator-=(const T& n) {
+		_Bottomup_ad_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const bottomup_ad_base<T, N, U>& n) {
+		_Bottomup_ad_base& operator*=(const _Bottomup_ad_base_type<T, N, U>& n) {
 			Base result[N] = { this->x[0] * n.x[0] };
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -634,59 +836,70 @@ namespace iml {
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		bottomup_ad_base& operator*=(const T& k) {
+		_Bottomup_ad_base& operator*=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const bottomup_ad_base<T, N, U>& n) {
-			return *this *= multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+		_Bottomup_ad_base& operator/=(const _Bottomup_ad_base_type<T, N, U>& n) {
+			Base result[N] = { this->x[0] / n.x[0] };
+			auto temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = this->x[0] * temp1.x[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * this->x[j] * temp1.x[i - j];
+				}
+			}
+			for (imsize_t i = 0; i < N; ++i) this->x[i] = result[i];
+			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		bottomup_ad_base& operator/=(const T& k) {
+		_Bottomup_ad_base& operator/=(const T& k) {
 			for (imsize_t i = 0; i < N; ++i) this->x[i] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using bottomup_ad_base<Base, N, typename T::algebraic_type>::operator[];
+		using _Bottomup_ad_base_base_type<Base, N, T>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			return bottomup_ad<Base, N>(n1[0] + n2[0], (n1[Indices] + n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator+(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] + k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend bottomup_ad<Base, N> operator+(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator+(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k + n[0], n[Indices]...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			return bottomup_ad<Base, N>(n1[0] - n2[0], (n1[Indices] - n2[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator-(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] - k, n[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend bottomup_ad<Base, N> operator-(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator-(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k - n[0], (-n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -699,7 +912,7 @@ namespace iml {
 			return result;
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
 			bottomup_ad<Base, N> result(n1[0] * n2[0]);
 			for (imsize_t i = 1; i < N; ++i) {
 				Base temp = 1;
@@ -712,87 +925,155 @@ namespace iml {
 			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator*(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] * k, (n[Indices] * k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend bottomup_ad<Base, N> operator*(const T& k, const bottomup_ad_base& n) {
+		friend bottomup_ad<Base, N> operator*(const T& k, const _Bottomup_ad_base& n) {
 			return bottomup_ad<Base, N>(k*n[0], (k*n[Indices])...);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) {
-			return n1 * multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) {
-			return n1 * multiplicative<bottomup_ad<Base, N>>::inverse_element(n2);
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			bottomup_ad<Base, N> result(n1[0] / n2[0]);
+			bottomup_ad<Base, N> temp1 = multiplicative<bottomup_ad<T, N>>::inverse_element(n2);
+			for (imsize_t i = 1; i < N; ++i) {
+				Base temp2 = 1;
+				result[i] = n1[0] * temp1[i];
+				for (imsize_t j = 1; j <= i; ++j) {
+					temp2 *= Base(i + 1 - j) / j;
+					result[i] += temp2 * n1[j] * temp1[i - j];
+				}
+			}
+			return result;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const bottomup_ad_base& n, const T& k) {
+		friend bottomup_ad<Base, N> operator/(const _Bottomup_ad_base& n, const T& k) {
 			return bottomup_ad<Base, N>(n[0] / k, (n[Indices] / k)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend bottomup_ad<Base, N> operator/(const T& k, const bottomup_ad_base& n) {
-			return k * multiplicative<bottomup_ad<Base, N>>::inverse_element(n);
+		friend bottomup_ad<Base, N> operator/(const T& k, const _Bottomup_ad_base& n) {
+			return multiplicative<bottomup_ad<Base, N>>::inverse_element(k*n);
 		}
 
 
 		//比較演算
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] == n2[0]; }
+		friend bool operator==(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] == n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad_base& n1, const T& n2) { return n1[0] == n2; }
+		friend bool operator==(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] == n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& n1, const bottomup_ad_base& n2) { return n1 == n2[0]; }
+		friend bool operator==(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 == n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] != n2[0]; }
+		friend bool operator!=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] != n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad_base& n1, const T& n2) { return n1[0] != n2; }
+		friend bool operator!=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] != n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& n1, const bottomup_ad_base& n2) { return n1 != n2[0]; }
+		friend bool operator!=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 != n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] < n2[0]; }
+		friend bool operator<(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] < n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad_base& n1, const T& n2) { return n1[0] < n2; }
+		friend bool operator<(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] < n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& n1, const bottomup_ad_base& n2) { return n1 < n2[0]; }
+		friend bool operator<(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 < n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] <= n2[0]; }
+		friend bool operator<=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] <= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::lt_eq_value>::type>
-		friend bool operator<=(const bottomup_ad_base& n1, const T& n2) { return n1[0] <= n2; }
+		friend bool operator<=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] <= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::lt_eq_value>::type>
-		friend bool operator<=(const T& n1, const bottomup_ad_base& n2) { return n1 <= n2[0]; }
+		friend bool operator<=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 <= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] > n2[0]; }
+		friend bool operator>(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] > n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad_base& n1, const T& n2) { return n1[0] > n2; }
+		friend bool operator>(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] > n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& n1, const bottomup_ad_base& n2) { return n1 > n2[0]; }
+		friend bool operator>(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 > n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const bottomup_ad_base<T, N, U>& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const _Bottomup_ad_base_type<T, N, U>& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class U, class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base<T, N, U>& n1, const bottomup_ad_base& n2) { return n1[0] >= n2[0]; }
+		friend bool operator>=(const _Bottomup_ad_base_type<T, N, U>& n1, const _Bottomup_ad_base& n2) {
+			return n1[0] >= n2[0];
+		}
 		template <class = typename enable_if<is_calcable<Base, T>::gt_eq_value>::type>
-		friend bool operator>=(const bottomup_ad_base& n1, const T& n2) { return n1[0] >= n2; }
+		friend bool operator>=(const _Bottomup_ad_base& n1, const T& n2) {
+			return n1[0] >= n2;
+		}
 		template <class = typename enable_if<is_calcable<T, Base>::gt_eq_value>::type>
-		friend bool operator>=(const T& n1, const bottomup_ad_base& n2) { return n1 >= n2[0]; }
+		friend bool operator>=(const T& n1, const _Bottomup_ad_base& n2) {
+			return n1 >= n2[0];
+		}
 	};
 
 	//ボトムアップ型N階自動微分
 	template <class T, imsize_t N>
-	class bottomup_ad : public bottomup_ad_base<T, N, T>, public value_list_input<array_iterator<T>> {
+	class bottomup_ad : public _Bottomup_ad_base_type<T, N, T>, public value_list_input<array_iterator<T>> {
 		template <class, imsize_t> friend class bottomup_ad;
-		template <class, imsize_t, class, class, bool, bool> friend class bottomup_ad_base;
+		template <class, imsize_t, class, bool, class, bool> friend class _Bottomup_ad_base;
 
 		static_assert(N > 0, "number of array elements must greater than 0");
 
@@ -806,7 +1087,7 @@ namespace iml {
 		}
 	public:
 		//コンストラクタの継承
-		using bottomup_ad_base<T, N, T>::bottomup_ad_base;
+		using _Bottomup_ad_base_type<T, N, T>::_Bottomup_ad_base;
 
 		using algebraic_type = T;
 		using iterator = array_iterator<T>;
@@ -823,13 +1104,13 @@ namespace iml {
 		const_iterator end() const noexcept { return const_iterator(&x[N - 1] + 1); }
 
 		//単項演算の継承
-		using bottomup_ad_base<T, N, T>::operator-;
-		using bottomup_ad_base<T, N, T>::operator+;
+		using _Bottomup_ad_base_type<T, N, T>::operator-;
+		using _Bottomup_ad_base_type<T, N, T>::operator+;
 		//代入演算の継承
-		using bottomup_ad_base<T, N, T>::operator+=;
-		using bottomup_ad_base<T, N, T>::operator-=;
-		using bottomup_ad_base<T, N, T>::operator*=;
-		using bottomup_ad_base<T, N, T>::operator/=;
+		using _Bottomup_ad_base_type<T, N, T>::operator+=;
+		using _Bottomup_ad_base_type<T, N, T>::operator-=;
+		using _Bottomup_ad_base_type<T, N, T>::operator*=;
+		using _Bottomup_ad_base_type<T, N, T>::operator/=;
 		//二項演算の継承
 		using value_list_input<array_iterator<T>>::operator<<;
 
@@ -837,14 +1118,14 @@ namespace iml {
 		bottomup_ad& operator=(const bottomup_ad& n) { return *bottomup_ad_copy(this, n); }
 		template <class _T>
 		bottomup_ad& operator=(const bottomup_ad<_T, N>& n) { return *bottomup_ad_copy(this, n); }
-		bottomup_ad& operator=(const bottomup_ad_base<T, N, T>& n) { return *bottomup_ad_copy(this, n); }
+		bottomup_ad& operator=(const _Bottomup_ad_base_type<T, N, T>& n) { return *bottomup_ad_copy(this, n); }
 		template <class U>
-		bottomup_ad& operator=(const bottomup_ad_base<T, N, U>& n) { return *bottomup_ad_copy(this, n); }
+		bottomup_ad& operator=(const _Bottomup_ad_base_type<T, N, U>& n) { return *bottomup_ad_copy(this, n); }
 		template <class U, class _T, class = typename enable_if<is_inclusion<_T, T>::value>::type>
-		bottomup_ad& operator=(const bottomup_ad_base<_T, N, U>& n) { return *bottomup_ad_copy(this, n); }
+		bottomup_ad& operator=(const _Bottomup_ad_base_type<_T, N, U>& n) { return *bottomup_ad_copy(this, n); }
 
 		//添え字演算の継承
-		using bottomup_ad_base<T, N, T>::operator[];
+		using _Bottomup_ad_base_type<T, N, T>::operator[];
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const bottomup_ad& n) {
@@ -981,7 +1262,7 @@ namespace iml {
 
 	//誤差評価
 	template <class T, imsize_t N>
-	struct Error_evaluation<bottomup_ad<T, N>> {
+	struct _Error_evaluation<bottomup_ad<T, N>> {
 		static bool __error_evaluation(const bottomup_ad<T, N>& n1, const bottomup_ad<T, N>& n2) {
 			return error_evaluation(n1[0], n2[0]);
 		}

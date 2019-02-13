@@ -25,38 +25,38 @@ namespace iml {
 
 			if (this->index_m > n.index_m) {
 				//指数の差
-				imint_t index_range = this->index_m - n.index_m;
+				imint_t index_imu_range = this->index_m - n.index_m;
 				result.index_m = this->index_m;
 				//キャリーアウト
-				carry_out = n.x_m[size_m - 1 - index_range] > (limits<imsize_t>::max() / 2);
+				carry_out = n.x_m[size_m - 1 - index_imu_range] > (limits<imsize_t>::max() / 2);
 				//キャリーしながら加算
-				for (imsize_t i = size_m - 1; i != index_range; --i) {
-					result.x_m[i] = this->x_m[i] + n.x_m[i - index_range] + carry_out;
+				for (imsize_t i = size_m - 1; i != index_imu_range; --i) {
+					result.x_m[i] = this->x_m[i] + n.x_m[i - index_imu_range] + carry_out;
 					carry_out = (this->x_m[i] > (limits<imsize_t>::max() - carry_out))
-						|| (n.x_m[i - index_range] > (limits<imsize_t>::max() - carry_out))
-						|| (this->x_m[i] > (limits<imsize_t>::max() - n.x_m[i - index_range]));
+						|| (n.x_m[i - index_imu_range] > (limits<imsize_t>::max() - carry_out))
+						|| (this->x_m[i] > (limits<imsize_t>::max() - n.x_m[i - index_imu_range]));
 				}
 				//(--0) == limits<imsize_t>::max()
-				for (imsize_t i = index_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
+				for (imsize_t i = index_imu_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
 					result.x_m[i] = this->x_m[i] + carry_out;
 					carry_out = this->x_m[i] > (limits<imsize_t>::max() - carry_out);
 				}
 			}
 			else {
 				//指数の差
-				imint_t index_range = n.index_m - this->index_m;
+				imint_t index_imu_range = n.index_m - this->index_m;
 				result.index_m = n.index_m;
 				//キャリーアウト(キャリーしない場合も考慮)
-				carry_out = (index_range == 0) ? 0 : (this->x_m[size_m - 1 - index_range] > (limits<imsize_t>::max() / 2));
+				carry_out = (index_imu_range == 0) ? 0 : (this->x_m[size_m - 1 - index_imu_range] > (limits<imsize_t>::max() / 2));
 				//キャリーしながら加算
-				for (imsize_t i = size_m - 1; i != index_range; --i) {
-					result.x_m[i] = this->x_m[i - index_range] + n.x_m[i] + carry_out;
-					carry_out = (this->x_m[i - index_range] > (limits<imsize_t>::max() - carry_out))
+				for (imsize_t i = size_m - 1; i != index_imu_range; --i) {
+					result.x_m[i] = this->x_m[i - index_imu_range] + n.x_m[i] + carry_out;
+					carry_out = (this->x_m[i - index_imu_range] > (limits<imsize_t>::max() - carry_out))
 						|| (n.x_m[i] > (limits<imsize_t>::max() - carry_out))
-						|| (this->x_m[i - index_range] > (limits<imsize_t>::max() - n.x_m[i]));
+						|| (this->x_m[i - index_imu_range] > (limits<imsize_t>::max() - n.x_m[i]));
 				}
 				//(--0) == limits<imsize_t>::max()
-				for (imsize_t i = index_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
+				for (imsize_t i = index_imu_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
 					result.x_m[i] = n.x_m[i] + carry_out;
 					carry_out = n.x_m[i] > (limits<imsize_t>::max() - carry_out);
 				}
@@ -80,38 +80,38 @@ namespace iml {
 
 			if (this->index_m > n.index_m) {
 				//指数の差
-				imint_t index_range = this->index_m - n.index_m;
+				imint_t index_imu_range = this->index_m - n.index_m;
 				result.index_m = this->index_m;
 				//キャリーアウト
-				carry_out = (limits<imsize_t>::max() / 2 + 1) > n.x_m[size_m - 1 - index_range];
+				carry_out = (limits<imsize_t>::max() / 2 + 1) > n.x_m[size_m - 1 - index_imu_range];
 				//キャリーしながら加算
-				for (imsize_t i = size_m - 1; i != index_range; --i) {
-					result.x_m[i] = this->x_m[i] + limits<imsize_t>::max() - n.x_m[i - index_range] + carry_out;
-					carry_out = ((this->x_m[i] + carry_out) > n.x_m[i - index_range])
-						|| (this->x_m[i] > (n.x_m[i - index_range] - carry_out))
-						|| (this->x_m[i] > (n.x_m[i - index_range]));
+				for (imsize_t i = size_m - 1; i != index_imu_range; --i) {
+					result.x_m[i] = this->x_m[i] + limits<imsize_t>::max() - n.x_m[i - index_imu_range] + carry_out;
+					carry_out = ((this->x_m[i] + carry_out) > n.x_m[i - index_imu_range])
+						|| (this->x_m[i] > (n.x_m[i - index_imu_range] - carry_out))
+						|| (this->x_m[i] > (n.x_m[i - index_imu_range]));
 				}
 				//(--0) == limits<imsize_t>::max()
-				for (imsize_t i = index_range; i != limits<imsize_t>::max(); --i) {
+				for (imsize_t i = index_imu_range; i != limits<imsize_t>::max(); --i) {
 					result.x_m[i] = this->x_m[i] + limits<imsize_t>::max() + carry_out;
 					carry_out = (this->x_m[i] > 0) || (carry_out);
 				}
 			}
 			else {
 				//指数の差
-				imint_t index_range = n.index_m - this->index_m;
+				imint_t index_imu_range = n.index_m - this->index_m;
 				result.index_m = n.index_m;
 				//キャリーアウト(キャリーしない場合も考慮)
-				carry_out = (index_range == 0) ? 1 : ((limits<imsize_t>::max() / 2 + 1) > this->x_m[size_m - 1 - index_range]);
+				carry_out = (index_imu_range == 0) ? 1 : ((limits<imsize_t>::max() / 2 + 1) > this->x_m[size_m - 1 - index_imu_range]);
 				//キャリーしながら加算
-				for (imsize_t i = size_m - 1; i != index_range; --i) {
-					result.x_m[i] = this->x_m[i - index_range] + limits<imsize_t>::max() - n.x_m[i] + carry_out;
-					carry_out = ((this->x_m[i - index_range] + carry_out) > n.x_m[i])
-						|| (this->x_m[i - index_range] > (n.x_m[i] - carry_out))
-						|| (this->x_m[i - index_range] > (n.x_m[i]));
+				for (imsize_t i = size_m - 1; i != index_imu_range; --i) {
+					result.x_m[i] = this->x_m[i - index_imu_range] + limits<imsize_t>::max() - n.x_m[i] + carry_out;
+					carry_out = ((this->x_m[i - index_imu_range] + carry_out) > n.x_m[i])
+						|| (this->x_m[i - index_imu_range] > (n.x_m[i] - carry_out))
+						|| (this->x_m[i - index_imu_range] > (n.x_m[i]));
 				}
 				//(--0) == limits<imsize_t>::max()
-				for (imsize_t i = index_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
+				for (imsize_t i = index_imu_range; (i != limits<imsize_t>::max()) && (carry_out); --i) {
 					result.x_m[i] = limits<imsize_t>::max() - n.x_m[i] + carry_out;
 					carry_out = carry_out > n.x_m[i];
 				}

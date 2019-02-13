@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_LOG_HPP
-#define _IMATH_MATH_LOG_HPP
+﻿#ifndef IMATH_MATH_MATH_LOG_HPP
+#define IMATH_MATH_MATH_LOG_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/loge_2.hpp"
@@ -8,10 +8,10 @@ namespace iml {
 
 	//対数関数
 	template <class T>
-	struct _Log {
+	struct Log {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __log_impl(const T& x) {
+		static constexpr result_type _log_impl_(const T& x) {
 
 			if (x == 2) return _Loge_2_<result_type>::loge_2;
 			else if (x == 0) return limits<result_type>::negative_infinity();
@@ -36,35 +36,35 @@ namespace iml {
 			c = (c - 1) / (1 + c);			//0 < c < 1/3
 			result_type x1 = c, x2 = c, x3 = 0;
 			c *= c;
-			//収束条件は単調増加が崩れる
-			for (imsize_t i = 2; x3 < x2; ++i) {
+			//収束条件は和の単調増加が崩れる
+			for (imsize_t i = 2; x3 + Error_evaluation<result_type>::eps < x2; ++i) {
 				x3 = x2;
 				x1 *= c;
 				x2 += x1 / (2 * i - 1);
 			}
 			return (2 * x2 + index * _Loge_2_<result_type>::loge_2);
 		}
-		static constexpr result_type __log(const T& x) {
+		static constexpr result_type _log_(const T& x) {
 			if (x == 0) return limits<result_type>::positive_infinity();
 			//xを1以上にする
-			return (x < 1) ? (-__log_impl(1 / x)) : __log_impl(x);
+			return (x < 1) ? (-_log_impl_(1 / x)) : _log_impl_(x);
 		}
 	};
 	template <class T>
-	inline constexpr auto log(const T& x) { return _Log<T>::__log(x); }
+	inline constexpr auto log(const T& x) { return Log<T>::_log_(x); }
 
 	//常用対数
 	template <class T>
-	struct _Log10 {
+	struct Log10 {
 		using result_type = typename conditional<is_arithmetic<T>::value && !is_floating_point<T>::value, double, T>::type;
 
-		static constexpr result_type __log10(const T& x) {
+		static constexpr result_type _log10_(const T& x) {
 			constexpr auto c = log<result_type>(10);
 			return log(x) / c;
 		}
 	};
 	template <class T>
-	inline constexpr auto log10(const T& x) { return _Log10<T>::__log10(x); }
+	inline constexpr auto log10(const T& x) { return Log10<T>::_log10_(x); }
 
 }
 

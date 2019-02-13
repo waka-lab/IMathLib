@@ -9,7 +9,7 @@ namespace iml {
 	template <class T>
 	inline constexpr auto _E() {
 		//浮動小数点型のみ
-		using result_type = typename conditional<is_floating_point<T>::value, T, _IMATH_DEFAULT_TYPE>::type;
+		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_TYPE>::type;
 
 		result_type a = 1, an = 1, b = 0;
 		for (imsize_t i = 1; !error_evaluation(a, b); ++i) {

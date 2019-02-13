@@ -136,14 +136,14 @@ namespace iml {
 		static constexpr bool wrap = true;
 	};
 	template<class R, class... Types>
-	struct is_function_impl<R(Types...) volatile &> {
+	struct is_function_impl<R(Types...) volatile&> {
 		using bool_type = true_type;
 		using result_type = R;
 		using arg_types = type_tuple<Types...>;
 		static constexpr bool wrap = true;
 	};
 	template<class R, class... Types>
-	struct is_function_impl<R(Types...) const volatile &> {
+	struct is_function_impl<R(Types...) const volatile&> {
 		using bool_type = true_type;
 		using result_type = R;
 		using arg_types = type_tuple<Types...>;
@@ -164,14 +164,14 @@ namespace iml {
 		static constexpr bool wrap = true;
 	};
 	template<class R, class... Types>
-	struct is_function_impl<R(Types...) volatile &&> {
+	struct is_function_impl<R(Types...) volatile&&> {
 		using bool_type = true_type;
 		using result_type = R;
 		using arg_types = type_tuple<Types...>;
 		static constexpr bool wrap = true;
 	};
 	template<class R, class... Types>
-	struct is_function_impl<R(Types...) const volatile &&> {
+	struct is_function_impl<R(Types...) const volatile&&> {
 		using bool_type = true_type;
 		using result_type = R;
 		using arg_types = type_tuple<Types...>;
@@ -235,7 +235,7 @@ namespace iml {
 		using class_type = Class;
 	};
 	template<class R, class Class, class... Types>
-	struct is_member_function_pointer_impl<R(Class::*)(Types...) && > {
+	struct is_member_function_pointer_impl<R(Class::*)(Types...) &&> {
 		using bool_type = true_type;
 		using result_type = R;
 		using class_type = Class;

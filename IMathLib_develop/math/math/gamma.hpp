@@ -28,10 +28,10 @@ namespace iml {
 			result_type x1 = 1 / x, x2 = 1 / (6 * x), x3 = 0;
 			result_type w = x * x;
 
-			for (imsize_t i = 2; !error_evaluation(x2, x3) && (_IMATH_BERNOULLI_NUMBER_TABLE >= 2 * i); ++i) {
+			for (imsize_t i = 2; !error_evaluation(x2, x3) && (IMATH_BERNOULLI_NUMBER_TABLE >= 2 * i); ++i) {
 				x3 = x2;
 				x1 /= w;
-				x2 += x1 * bernoulli_number_table<_IMATH_BERNOULLI_NUMBER_TABLE, result_type>::b[2 * i] / (i*(2 * i - 1));
+				x2 += x1 * bernoulli_number_table<IMATH_BERNOULLI_NUMBER_TABLE, result_type>::b[2 * i] / (i*(2 * i - 1));
 			}
 			//kの補正を入れる
 			return (log_const - x + (x - 0.5)*log(x) + x2 / 2 - log(k));
@@ -178,10 +178,10 @@ namespace iml {
 			//B[2]=1/6
 			result_type x1 = 1 / w, x2 = 1 / (6 * w), x3 = 0;
 
-			for (imsize_t i = 2; !error_evaluation(x2, x3) && (_IMATH_BERNOULLI_NUMBER_TABLE >= 2 * i); ++i) {
+			for (imsize_t i = 2; !error_evaluation(x2, x3) && (IMATH_BERNOULLI_NUMBER_TABLE >= 2 * i); ++i) {
 				x3 = x2;
 				x1 /= w;
-				x2 += x1*bernoulli_number_table<_IMATH_BERNOULLI_NUMBER_TABLE, result_type>::b[2 * i] / i;
+				x2 += x1*bernoulli_number_table<IMATH_BERNOULLI_NUMBER_TABLE, result_type>::b[2 * i] / i;
 			}
 			//kの補正を入れる
 			return (log(x) - 1 / (2 * x) - x2 / 2 - k);

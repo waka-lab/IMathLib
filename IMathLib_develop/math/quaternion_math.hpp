@@ -1,10 +1,10 @@
-﻿#ifndef _QUATERNION_MATH_HPP
-#define _QUATERNION_MATH_HPP
+﻿#ifndef IMATH_MATH_QUATERNION_MATH_HPP
+#define IMATH_MATH_QUATERNION_MATH_HPP
 
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/math/quaternion.hpp"
 
-namespace iml {
+/*namespace iml {
 
 	template <class T>
 	struct numerical_evaluation_function<quaternion<T>> {
@@ -45,6 +45,6 @@ namespace iml {
 	template <class T>
 	inline quaternion<T> versor(const quaternion<T>& x) { return math_function<quaternion<T>>::__versor(x); }
 }
-
+*/
 
 #endif

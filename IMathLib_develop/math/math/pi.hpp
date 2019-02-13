@@ -32,7 +32,7 @@ namespace iml {
 	template <class T>
 	inline constexpr auto _Pi(imsize_t n = 2) {
 		//浮動小数点のみ
-		using result_type = typename conditional<is_floating_point<T>::value, T, _IMATH_DEFAULT_TYPE>::type;
+		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_TYPE>::type;
 
 		result_type a = 1, b = sqrt(2) / 2, t = 0.25, p = 1;
 		result_type temp_a = (a + b) / 2;

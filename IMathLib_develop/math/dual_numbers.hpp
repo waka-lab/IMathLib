@@ -1,8 +1,7 @@
-﻿#ifndef _IMATH_MATH_DUAL_NUMBERS_HPP
-#define _IMATH_MATH_DUAL_NUMBERS_HPP
+﻿#ifndef IMATH_MATH_DUAL_NUMBERS_HPP
+#define IMATH_MATH_DUAL_NUMBERS_HPP
 
-#include "IMathLib/utility/utility.hpp"
-#include "IMathLib/utility/tuple.hpp"
+#include "IMathLib/utility/utility/tuple_type.hpp"
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/container/array.hpp"
 
@@ -13,68 +12,59 @@ namespace iml {
 	class dual_numbers;
 
 
-	//多重構造の演算に対応させるための補助型
-	//継承コンストラクタと継承オペレータオーバーロードにより多数定義可能となる
-	template <class, class, bool, bool>
-	class _Dual_numbers_base;
+	template <class Base, class T, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
+	class dual_numbers_base;
 
-	//簡略にかくためのエイリアス
-	template <class Base, class T>
-	using _Dual_numbers_base_base_type = _Dual_numbers_base<Base, typename T::algebraic_type
-		, is_algebraic_structure<typename T::algebraic_type>::value, is_same<Base, typename T::algebraic_type>::value>;
-	template <class Base, class T>
-	using _Dual_numbers_base_type = _Dual_numbers_base<Base, T
-		, is_algebraic_structure<T>::value, is_same<Base, T>::value>;
 
 	//下に階層が存在しないかつBase == T
 	template <class Base, class T>
-	class _Dual_numbers_base<Base, T, false, true> {
+	class dual_numbers_base<Base, T, false, true> {
 		template <class> friend class dual_numbers;
-		template <class, class, bool, bool> friend class _Dual_numbers_base;
+		template <class, class, bool, bool> friend class dual_numbers_base;
 	protected:
 		Base x[2];
 	public:
-		constexpr _Dual_numbers_base() : x{} {}
-		constexpr _Dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
-		constexpr _Dual_numbers_base(const Base& re) : x{ re } {}
+		constexpr dual_numbers_base() : x{} {}
+		constexpr dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr dual_numbers_base(const Base& re) : x{ re } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		_Dual_numbers_base operator-() const { return _Dual_numbers_base(-this->x[0], -this->x[1]); }
-		_Dual_numbers_base operator+() const { return _Dual_numbers_base(*this); }
+		dual_numbers_base operator-() const { return dual_numbers_base(-this->x[0], -this->x[1]); }
+		dual_numbers_base operator+() const { return dual_numbers_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator+=(const dual_numbers_base<T, U>& n) {
 			this->x[0] += n.x[0]; this->x[1] += n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const T& n) {
+		dual_numbers_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator-=(const dual_numbers_base<T, U>& n) {
 			this->x[0] -= n.x[0]; this->x[1] -= n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const T& n) {
+		dual_numbers_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator*=(const dual_numbers_base<T, U>& n) {
 			Base temp[2] = { this->x[0] * n.x[0], this->x[0] * n.x[1] + this->x[1] * n.x[0] };
 			this->x[0] = temp[0]; this->x[1] = temp[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const T& k) {
+		dual_numbers_base& operator*=(const T& k) {
 			this->x[0] *= k; this->x[1] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Dual_numbers_base& operator/=(const T& k) {
+		dual_numbers_base& operator/=(const T& k) {
 			this->x[0] /= k; this->x[1] /= k;
 			return *this;
 		}
@@ -86,99 +76,99 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] + n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator+(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n + c[0], c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] - n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator-(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n - c[0], -c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] * k, c[1] * k);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const T& k, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator*(const T& k, const dual_numbers_base& c) {
 			return dual_numbers<Base>(k * c[0], k * c[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend dual_numbers<Base> operator/(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator/(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] / k, c[1] / k);
 		}
 	};
 	//下に階層が存在しないかつBase != T
 	template <class Base, class T>
-	class _Dual_numbers_base<Base, T, false, false> {
+	class dual_numbers_base<Base, T, false, false> {
 		template <class> friend class dual_numbers;
-		template <class, class, bool, bool> friend class _Dual_numbers_base;
+		template <class, class, bool, bool> friend class dual_numbers_base;
 	protected:
 		Base x[2];
 	public:
-		constexpr _Dual_numbers_base() : x{} {}
-		constexpr _Dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
-		constexpr _Dual_numbers_base(const Base& re) : x{ re } {}
+		constexpr dual_numbers_base() : x{} {}
+		constexpr dual_numbers_base(const Base& re, const Base& im) : x{ re,im } {}
+		constexpr dual_numbers_base(const Base& re) : x{ re } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		constexpr dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
+		constexpr dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		_Dual_numbers_base operator-() const { return _Dual_numbers_base(-this->x[0], -this->x[1]); }
-		_Dual_numbers_base operator+() const { return _Dual_numbers_base(*this); }
+		dual_numbers_base operator-() const { return dual_numbers_base(-this->x[0], -this->x[1]); }
+		dual_numbers_base operator+() const { return dual_numbers_base(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator+=(const dual_numbers_base<T, U>& n) {
 			this->x[0] += n.x[0]; this->x[1] += n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const T& n) {
+		dual_numbers_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator-=(const dual_numbers_base<T, U>& n) {
 			this->x[0] -= n.x[0]; this->x[1] -= n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const T& n) {
+		dual_numbers_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator*=(const dual_numbers_base<T, U>& n) {
 			Base temp[2] = { this->x[0] * n.x[0], this->x[0] * n.x[1] + this->x[1] * n.x[0] };
 			this->x[0] = temp[0]; this->x[1] = temp[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const T& k) {
+		dual_numbers_base& operator*=(const T& k) {
 			this->x[0] *= k; this->x[1] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Dual_numbers_base& operator/=(const T& k) {
+		dual_numbers_base& operator/=(const T& k) {
 			this->x[0] /= k; this->x[1] /= k;
 			return *this;
 		}
@@ -190,284 +180,284 @@ namespace iml {
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] + n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator+(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n + c[0], c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] - n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator-(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n - c[0], -c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] * k, c[1] * k);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const T& k, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator*(const T& k, const dual_numbers_base& c) {
 			return dual_numbers<Base>(k * c[0], k * c[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend dual_numbers<Base> operator/(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator/(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] / k, c[1] / k);
 		}
 	};
 	//下に階層が存在するかつBase == T
 	template <class Base, class T>
-	class _Dual_numbers_base<Base, T, true, true> : public _Dual_numbers_base_base_type<Base, T> {
+	class dual_numbers_base<Base, T, true, true> : public dual_numbers_base<Base, typename T::algebraic_type> {
 		template <class> friend class dual_numbers;
-		template <class, class, bool, bool> friend class _Dual_numbers_base;
+		template <class, class, bool, bool> friend class dual_numbers_base;
 	public:
 		//コンストラクタの継承
-		using _Dual_numbers_base_base_type<Base, T>::_Dual_numbers_base;
+		using dual_numbers_base<Base, typename T::algebraic_type>::dual_numbers_base;
 
 		//単項演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator+;
-		using _Dual_numbers_base_base_type<Base, T>::operator-;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator+;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator-;
 
 		//代入演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator+=;
-		using _Dual_numbers_base_base_type<Base, T>::operator-=;
-		using _Dual_numbers_base_base_type<Base, T>::operator*=;
-		using _Dual_numbers_base_base_type<Base, T>::operator/=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator+=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator-=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator*=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator+=(const dual_numbers_base<T, U>& n) {
 			this->x[0] += n.x[0]; this->x[1] += n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const T& n) {
+		dual_numbers_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator-=(const dual_numbers_base<T, U>& n) {
 			this->x[0] -= n.x[0]; this->x[1] -= n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const T& n) {
+		dual_numbers_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator*=(const dual_numbers_base<T, U>& n) {
 			Base temp[2] = { this->x[0] * n.x[0], this->x[0] * n.x[1] + this->x[1] * n.x[0] };
 			this->x[0] = temp[0]; this->x[1] = temp[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const T& k) {
+		dual_numbers_base& operator*=(const T& k) {
 			this->x[0] *= k; this->x[1] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Dual_numbers_base& operator/=(const T& k) {
+		dual_numbers_base& operator/=(const T& k) {
 			this->x[0] /= k; this->x[1] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator[];
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] + n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator+(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n + c[0], c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] - n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator-(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n - c[0], -c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] * k, c[1] * k);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const T& k, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator*(const T& k, const dual_numbers_base& c) {
 			return dual_numbers<Base>(k * c[0], k * c[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend dual_numbers<Base> operator/(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator/(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] / k, c[1] / k);
 		}
 	};
 	//下に階層が存在するかつBase != T
 	template <class Base, class T>
-	class _Dual_numbers_base<Base, T, true, false> : public _Dual_numbers_base_base_type<Base, T> {
+	class dual_numbers_base<Base, T, true, false> : public dual_numbers_base<Base, typename T::algebraic_type> {
 		template <class> friend class dual_numbers;
-		template <class, class, bool, bool> friend class _Dual_numbers_base;
+		template <class, class, bool, bool> friend class dual_numbers_base;
 	public:
 		//コンストラクタの継承
-		using _Dual_numbers_base_base_type<Base, T>::_Dual_numbers_base;
+		using dual_numbers_base<Base, typename T::algebraic_type>::dual_numbers_base;
 
-		constexpr _Dual_numbers_base() : _Dual_numbers_base_base_type<Base, T>() {}
+		constexpr dual_numbers_base() : dual_numbers_base<Base, typename T::algebraic_type>() {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
+		constexpr dual_numbers_base(const T& re, const T& im) : x{ static_cast<Base>(re),static_cast<Base>(im) } {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr _Dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
+		constexpr dual_numbers_base(const T& re) : x{ static_cast<Base>(re) } {}
 
 		//単項演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator+;
-		using _Dual_numbers_base_base_type<Base, T>::operator-;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator+;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator-;
 
 		//代入演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator+=;
-		using _Dual_numbers_base_base_type<Base, T>::operator-=;
-		using _Dual_numbers_base_base_type<Base, T>::operator*=;
-		using _Dual_numbers_base_base_type<Base, T>::operator/=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator+=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator-=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator*=;
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator+=(const dual_numbers_base<T, U>& n) {
 			this->x[0] += n.x[0]; this->x[1] += n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		_Dual_numbers_base& operator+=(const T& n) {
+		dual_numbers_base& operator+=(const T& n) {
 			this->x[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator-=(const dual_numbers_base<T, U>& n) {
 			this->x[0] -= n.x[0]; this->x[1] -= n.x[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		_Dual_numbers_base& operator-=(const T& n) {
+		dual_numbers_base& operator-=(const T& n) {
 			this->x[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const _Dual_numbers_base_type<T, U>& n) {
+		dual_numbers_base& operator*=(const dual_numbers_base<T, U>& n) {
 			Base temp[2] = { this->x[0] * n.x[0], this->x[0] * n.x[1] + this->x[1] * n.x[0] };
 			this->x[0] = temp[0]; this->x[1] = temp[1];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		_Dual_numbers_base& operator*=(const T& k) {
+		dual_numbers_base& operator*=(const T& k) {
 			this->x[0] *= k; this->x[1] *= k;
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		_Dual_numbers_base& operator/=(const T& k) {
+		dual_numbers_base& operator/=(const T& k) {
 			this->x[0] /= k; this->x[1] /= k;
 			return *this;
 		}
 
 		//添え字演算の継承
-		using _Dual_numbers_base_base_type<Base, T>::operator[];
+		using dual_numbers_base<Base, typename T::algebraic_type>::operator[];
 
 
 		//二項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] + c2[0], c1[1] + c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator+(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] + n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend dual_numbers<Base> operator+(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator+(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n + c[0], c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] - c2[0], c1[1] - c2[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const _Dual_numbers_base& c, const T& n) {
+		friend dual_numbers<Base> operator-(const dual_numbers_base& c, const T& n) {
 			return dual_numbers<Base>(c[0] - n, c[1]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend dual_numbers<Base> operator-(const T& n, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator-(const T& n, const dual_numbers_base& c) {
 			return dual_numbers<Base>(n - c[0], -c[1]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c1, const _Dual_numbers_base_type<T, U>& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c1, const dual_numbers_base<T, U>& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base_type<T, U>& c1, const _Dual_numbers_base& c2) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base<T, U>& c1, const dual_numbers_base& c2) {
 			return dual_numbers<Base>(c1[0] * c2[0], c1[0] * c2[1] + c1[1] * c2[0]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator*(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] * k, c[1] * k);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend dual_numbers<Base> operator*(const T& k, const _Dual_numbers_base& c) {
+		friend dual_numbers<Base> operator*(const T& k, const dual_numbers_base& c) {
 			return dual_numbers<Base>(k * c[0], k * c[1]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend dual_numbers<Base> operator/(const _Dual_numbers_base& c, const T& k) {
+		friend dual_numbers<Base> operator/(const dual_numbers_base& c, const T& k) {
 			return dual_numbers<Base>(c[0] / k, c[1] / k);
 		}
 	};
 
 	//二重数型
 	template <class T>
-	class dual_numbers : public _Dual_numbers_base_type<T, T>, public value_list_input<array_iterator<T>> {
+	class dual_numbers : public dual_numbers_base<T, T>, public value_list_input<array_iterator<T>> {
 		template <class> friend class dual_numbers;
 
 		//代入演算の補助
@@ -480,16 +470,16 @@ namespace iml {
 			return n1;
 		}
 	public:
-		constexpr dual_numbers() : _Dual_numbers_base_type<T, T>() {}
+		constexpr dual_numbers() : dual_numbers_base<T, T>() {}
 		template <class U>
-		constexpr dual_numbers(const _Dual_numbers_base_type<T, U>& n)
-			: _Dual_numbers_base_type<T, T>(n.x[0], n.x[1]) {}
+		constexpr dual_numbers(const dual_numbers_base<T, U>& n)
+			: dual_numbers_base<T, T>(n.x[0], n.x[1]) {}
 		template <class U, class _T, class = typename enable_if<is_inclusion<_T, T>::value>::type>
-		constexpr dual_numbers(const _Dual_numbers_base_type<_T, U>& n)
-			: _Dual_numbers_base_type<T, T>(n.x[0], n.x[1]) {}
+		constexpr dual_numbers(const dual_numbers_base<_T, U>& n)
+			: dual_numbers_base<T, T>(n.x[0], n.x[1]) {}
 
 		//コンストラクタの継承
-		using _Dual_numbers_base_type<T, T>::_Dual_numbers_base;
+		using dual_numbers_base<T, T>::dual_numbers_base;
 
 		using algebraic_type = T;
 		using iterator = array_iterator<T>;
@@ -506,24 +496,24 @@ namespace iml {
 		const_iterator end() const noexcept { return const_iterator(&x[1] + 1); }
 
 		//単項演算の継承
-		using _Dual_numbers_base_type<T, T>::operator-;
-		using _Dual_numbers_base_type<T, T>::operator+;
+		using dual_numbers_base<T, T>::operator-;
+		using dual_numbers_base<T, T>::operator+;
 		//代入演算の継承
-		using _Dual_numbers_base_type<T, T>::operator+=;
-		using _Dual_numbers_base_type<T, T>::operator-=;
-		using _Dual_numbers_base_type<T, T>::operator*=;
-		using _Dual_numbers_base_type<T, T>::operator/=;
+		using dual_numbers_base<T, T>::operator+=;
+		using dual_numbers_base<T, T>::operator-=;
+		using dual_numbers_base<T, T>::operator*=;
+		using dual_numbers_base<T, T>::operator/=;
 		//二項演算の継承
 		using value_list_input<array_iterator<T>>::operator<<;
 
 		//代入演算
 		template <class U>
-		dual_numbers& operator=(const _Dual_numbers_base_type<T, U>& n) { return *dual_numbers_copy(this, n); }
+		dual_numbers& operator=(const dual_numbers_base<T, U>& n) { return *dual_numbers_copy(this, n); }
 		template <class U, class _T, class = typename enable_if<is_inclusion<_T, T>::value>::type>
-		dual_numbers& operator=(const _Dual_numbers_base_type<_T, U>& n) { return *dual_numbers_copy(this, n); }
+		dual_numbers& operator=(const dual_numbers_base<_T, U>& n) { return *dual_numbers_copy(this, n); }
 
 		//添え字演算の継承
-		using _Dual_numbers_base_type<T, T>::operator[];
+		using dual_numbers_base<T, T>::operator[];
 
 		//メンバ取得
 		template <class S, class = typename enable_if<is_inclusion<S, T>::value>::type>
@@ -574,11 +564,11 @@ namespace iml {
 
 	//比較演算
 	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator==(const _Dual_numbers_base_type<T1, U1>& n1, const _Dual_numbers_base_type<T2, U2>& n2) {
+	inline bool operator==(const dual_numbers_base<T1, U1>& n1, const dual_numbers_base<T2, U2>& n2) {
 		return (n1[0] == n2[0]) && (n1[1] == n2[1]);
 	}
 	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator!=(const _Dual_numbers_base_type<T1, U1>& n1, const _Dual_numbers_base_type<T2, U2>& n2) {
+	inline bool operator!=(const dual_numbers_base<T1, U1>& n1, const dual_numbers_base<T2, U2>& n2) {
 		return !(n1 == n2);
 	}
 
@@ -620,7 +610,7 @@ namespace iml {
 
 	//誤差評価
 	template <class T>
-	struct _Error_evaluation<dual_numbers<T>> {
+	struct Error_evaluation<dual_numbers<T>> {
 		static bool __error_evaluation(const dual_numbers<T>& n1, const dual_numbers<T>& n2) {
 			return error_evaluation(n1[0], n2[0]) && error_evaluation(n1[1], n2[1]);
 		}

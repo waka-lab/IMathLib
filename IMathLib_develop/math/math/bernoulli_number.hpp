@@ -16,9 +16,9 @@ namespace iml {
 	template <imsize_t, class, class>
 	struct _Bernoulli_number_table;
 	template <imsize_t N, class T, imsize_t... Indices>
-	struct _Bernoulli_number_table<N, T, index_tuple<Indices...>> {
+	struct _Bernoulli_number_table<N, T, index_imu_tuple<Indices...>> {
 		//浮動小数点のみ
-		using result_type = typename conditional<is_floating_point<T>::value, T, _IMATH_DEFAULT_TYPE>::type;
+		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_TYPE>::type;
 
 		static constexpr result_type __bernoulli_number(imsize_t n) {
 			result_type bn[N + 1] = {};
@@ -46,14 +46,14 @@ namespace iml {
 
 		static constexpr result_type b[N] = { __bernoulli_number(Indices)... };
 	};
-	template <imsize_t N, class T = _IMATH_DEFAULT_TYPE>
-	struct bernoulli_number_table : _Bernoulli_number_table<N, T, typename index_range<0, N>::type> {};
+	template <imsize_t N, class T = IMATH_DEFAULT_TYPE>
+	struct bernoulli_number_table : _Bernoulli_number_table<N, T, typename index_imu_range<0, N>::type> {};
 
 	//ベルヌーイ数
 	template <class T>
 	inline constexpr auto bernoulli_number(imsize_t n) {
 		//浮動小数点のみ
-		using result_type = typename conditional<is_floating_point<T>::value, T, _IMATH_DEFAULT_TYPE>::type;
+		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_TYPE>::type;
 
 		if (n == 1) return result_type(-0.5);
 		else if ((n & 1) == 1) return result_type(0);			//1でない奇数のときは0

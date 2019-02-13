@@ -25,7 +25,7 @@ namespace iml {
 	//cvを加える
 	template<class T>
 	struct add_cv {
-		using type = const volatile T;
+		using type = const T;
 	};
 
 

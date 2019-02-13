@@ -20,7 +20,7 @@ namespace iml {
 	struct _Wrap_int { _Wrap_int(int) {} };
 
 
-	//参照変数ののためのラッパー(vector<T&>とvector<reference_wrapper<T>>とするみたいな)
+	//参照変数ののためのラッパー
 	template <class T>
 	class reference_wrapper {
 		static_assert(is_object<T>::value || is_function<T>::value, "T must be object type or function type.");
@@ -32,11 +32,20 @@ namespace iml {
 
 		using type = T;
 
-		operator T&() const noexcept { return *ptr; }
-		T& get() const noexcept { return *ptr; }
+		operator T&() const noexcept { return *this->ptr; }
+
+		//参照の取得
+		constexpr T& get() const noexcept { return *this->ptr; }
+		constexpr volatile T& get() const volatile noexcept { return *this->ptr; }
+		volatile T& get() volatile noexcept { return *this->ptr; }
+		T& get() noexcept { return *this->ptr; }
+
 		//オブジェクトの呼び出し
 		template<class... Types>
 		auto operator()(Types&&... args) const { return invoke(get(), forward<Types>(args)...); }
+
+		//参照変数のリセット
+		void reset(T& val) { ptr = addressof(val); }
 	};
 
 	//reference_wrapperの構築

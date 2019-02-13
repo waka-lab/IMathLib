@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_DIFFERENTIAL_EQUATION_HPP
-#define _IMATH_DIFFERENTIAL_EQUATION_HPP
+﻿#ifndef IMATH_MATH_DIFFERENTIAL_EQUATION_HPP
+#define IMATH_MATH_DIFFERENTIAL_EQUATION_HPP
 
 #include "IMathLib/IMathLib_config.hpp"
 #include "IMathLib/utility/tuple.hpp"
@@ -12,7 +12,7 @@ namespace iml {
 	template <imsize_t N, class... Types>
 	class ode_holder {
 		template <class, class...>
-		friend class _Ode_tuple_base;
+		friend class ode_tuple_base;
 
 		using result_type = typename decay<typename at_type<N, Types...>::type>::type;
 		using type = function<result_type(Types...)>;
@@ -25,9 +25,9 @@ namespace iml {
 	};
 	//方程式の基底クラス
 	template <class Indices, class... Types>
-	class _Ode_tuple_base;
+	class ode_tuple_base;
 	template <imsize_t... Indices, class... Types>
-	class _Ode_tuple_base<index_tuple<Indices...>, Types...> : ode_holder<Indices, Types...>... {
+	class ode_tuple_base<index_imu_tuple<Indices...>, Types...> : ode_holder<Indices, Types...>... {
 
 		//要素取得のため
 		template <imsize_t N>
@@ -40,13 +40,13 @@ namespace iml {
 		}
 
 	public:
-		constexpr _Ode_tuple_base() : ode_holder<Indices, Types...>()... {}
+		constexpr ode_tuple_base() : ode_holder<Indices, Types...>()... {}
 		template <class... Fs>
-		constexpr explicit _Ode_tuple_base(Fs... args) : ode_holder<Indices, Types...>(args)... {}
-		_Ode_tuple_base(const _Ode_tuple_base&) = default;
-		_Ode_tuple_base(_Ode_tuple_base&&) = default;
+		constexpr explicit ode_tuple_base(Fs... args) : ode_holder<Indices, Types...>(args)... {}
+		ode_tuple_base(const ode_tuple_base&) = default;
+		ode_tuple_base(ode_tuple_base&&) = default;
 
-		using sequence_type = index_tuple<Indices...>;
+		using sequence_type = index_imu_tuple<Indices...>;
 
 		//データの取得
 		template <imsize_t N>
@@ -54,22 +54,22 @@ namespace iml {
 		template <imsize_t N>
 		auto& get() { return get_impl<N>(*this); }
 
-		_Ode_tuple_base& operator=(const _Ode_tuple_base&) = default;
-		_Ode_tuple_base& operator=(_Ode_tuple_base&& im) noexcept = default;
+		ode_tuple_base& operator=(const ode_tuple_base&) = default;
+		ode_tuple_base& operator=(ode_tuple_base&& im) noexcept = default;
 
 		//スワップ
-		void swap(_Ode_tuple_base& t) { iml::swap(*this, t); }
+		void swap(ode_tuple_base& t) { iml::swap(*this, t); }
 	};
 	//方程式クラス本体(DN:独立変数の数)
 	template <class... Types>
-	class ode_tuple : public _Ode_tuple_base<typename index_range<1, sizeof...(Types)>::type, Types...> {
+	class ode_tuple : public ode_tuple_base<typename index_imu_range<1, sizeof...(Types)>::type, Types...> {
 	public:
-		using _Ode_tuple_base<typename index_range<1, sizeof...(Types)>::type, Types...>::_Ode_tuple_base;
+		using ode_tuple_base<typename index_imu_range<1, sizeof...(Types)>::type, Types...>::ode_tuple_base;
 	};
 
 	template <class... Types1, class... Types2>
 	inline constexpr auto apply(ode_tuple<Types1...>&& f, tuple<Types2...>&& t) {
-		return _Apply2<typename ode_tuple<Types1...>::sequence_type, typename tuple<Types2...>::sequence_type>::__apply(forward<ode_tuple<Types1...>>(f), forward<tuple<Types2...>>(t));
+		return Apply2<typename ode_tuple<Types1...>::sequence_type, typename tuple<Types2...>::sequence_type>::_apply_(forward<ode_tuple<Types1...>>(f), forward<tuple<Types2...>>(t));
 	}
 
 	//常微分方程式

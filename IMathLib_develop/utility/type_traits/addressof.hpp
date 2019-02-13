@@ -25,6 +25,15 @@ namespace iml {
 	}
 	template <class T>
 	constexpr T* addressof(const T&&) = delete;
+
+
+	//多次元配列の先頭ポインタの取得
+	template <class T>
+	constexpr auto addressof_multi_array(T &val) {
+		return reinterpret_cast<typename remove_all_extents<T>::type*>(addressof(val));
+	}
+	template <class T>
+	constexpr T* addressof_multi_array(const T&&) = delete;
 }
 
 #endif
