@@ -227,7 +227,7 @@ namespace iml {
 		CharT& operator[](imsize_t index) noexcept { return _p[index]; }
 		const CharT& operator[](imsize_t index) const noexcept { return _p[index]; }
 	};
-	//二項演算子
+	//2項演算
 	template <class CharT, class Predicate, class Allocator>
 	inline string<CharT, Predicate, Allocator> operator+(const string<CharT, Predicate, Allocator>& s1, const string<CharT, Predicate, Allocator>& s2) {
 		string<CharT, Predicate, Allocator> str(s1);

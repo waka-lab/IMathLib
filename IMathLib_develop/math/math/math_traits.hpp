@@ -663,7 +663,11 @@ namespace iml {
 
 	//相対誤差評価の補助構造体
 	template <class T>
-	struct Error_evaluation;
+	struct Error_evaluation {
+		static constexpr T eps = addition<T>::identity_element();
+
+		static constexpr bool _error_evaluation_(const T& x1, const T& x2) { return x1 == x2; }
+	};
 	//浮動小数点型の評価
 	template <>
 	struct Error_evaluation<float> {
@@ -674,7 +678,7 @@ namespace iml {
 	public:
 		static constexpr float eps = limits<float>::epsilon() * 10;
 
-		static constexpr bool __error_evaluation(float x1, float x2) {
+		static constexpr bool _error_evaluation_(float x1, float x2) {
 			return (x2 == 0) ? (_abs_(x1 - x2) < eps) : (_abs_((x1 - x2) / x2) < eps);
 		}
 	};
@@ -687,7 +691,7 @@ namespace iml {
 	public:
 		static constexpr double eps = limits<double>::epsilon() * 10;
 
-		static constexpr bool __error_evaluation(double x1, double x2) {
+		static constexpr bool _error_evaluation_(double x1, double x2) {
 			return (x2 == 0) ? (_abs_(x1 - x2) < eps) : (_abs_((x1 - x2) / x2) < eps);
 		}
 	};
@@ -700,13 +704,13 @@ namespace iml {
 	public:
 		static constexpr double eps = limits<double>::epsilon() * 10;
 
-		static constexpr bool __error_evaluation(long double x1, long double x2) {
+		static constexpr bool _error_evaluation_(long double x1, long double x2) {
 			return (x2 == 0) ? (_abs_(x1 - x2) < eps) : (_abs_((x1 - x2) / x2) < eps);
 		}
 	};
 	template <class T>
 	inline constexpr bool error_evaluation(const T& x1, const T& x2) {
-		return Error_evaluation<T>::__error_evaluation(x1, x2);
+		return Error_evaluation<T>::_error_evaluation_(x1, x2);
 	}
 
 

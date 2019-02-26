@@ -27,12 +27,11 @@ namespace iml {
 			: x{ re,im1,im2,im3,im4,im5,im6,im7 } {}
 		constexpr octonion_base(const Base& re) : x{ re } {}
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		octonion_base operator-() const {
-			return octonion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]
-				, -this->x[4], -this->x[5], -this->x[6], -this->x[7]);
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		octonion<Base> operator-() const {
+			return octonion<Base>(-this->x[0], -this->x[1], -this->x[2], -this->x[3], -this->x[4], -this->x[5], -this->x[6], -this->x[7]);
 		}
-		octonion_base operator+() const { return octonion_base(*this); }
+		octonion<Base> operator+() const { return octonion<Base>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		octonion_base& operator+=(const octonion_base<T, U>& n) {
@@ -89,10 +88,8 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		octonion_base& operator/=(const octonion_base<T, U>& n) {
 			//逆元は共役を絶対値の二乗で割る
-			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3]
-				+ n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
-			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp
-				, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
+			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3] + n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
+			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		octonion_base& operator/=(const T& k) {
@@ -104,73 +101,67 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3], lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] + n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const T& n, const octonion_base& c) {
-			return octonion<Base>(n + c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		friend octonion<Base> operator+(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3], rhs[4], rhs[5], rhs[6], rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] - n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3] , lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const T& n, const octonion_base& c) {
-			return octonion<Base>(n - c[0], -c[1], -c[2], -c[3], -c[4], -c[5], -c[6], -c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		friend octonion<Base> operator-(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3], -rhs[4], -rhs[5], -rhs[6], -rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k, c[4] * k, c[5] * k, c[6] * k, c[7] * k);
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs, lhs[4] * rhs, lhs[5] * rhs, lhs[6] * rhs, lhs[7] * rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const T& k, const octonion_base& c) {
-			return octonion<Base>(k * c[0], k * c[1], k * c[2], k * c[3], k * c[4], k * c[5], k * c[6], k * c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		friend octonion<Base> operator*(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3], lhs * rhs[4], lhs * rhs[5], lhs * rhs[6], lhs * rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k, c[4] / k, c[5] / k, c[6] / k, c[7] / k);
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs, lhs[4] / rhs, lhs[5] / rhs, lhs[6] / rhs, lhs[7] / rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const T& k, const octonion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3]
-				+ c[4] * c[4] + c[5] * c[5] + c[6] * c[6] + c[7] * c[7];
-			return k * octonion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp
-				, -c[4] / temp, -c[5] / temp, -c[6] / temp, -c[7] / temp);
+		friend octonion<Base> operator/(const T& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 	};
 	//下に階層が存在しないかつBase != T
@@ -194,12 +185,11 @@ namespace iml {
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr octonion_base(const T& re) : x{ static_cast<Base>(re) } {}
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		octonion_base operator-() const {
-			return octonion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]
-				, -this->x[4], -this->x[5], -this->x[6], -this->x[7]);
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		octonion<Base> operator-() const {
+			return octonion<Base>(-this->x[0], -this->x[1], -this->x[2], -this->x[3], -this->x[4], -this->x[5], -this->x[6], -this->x[7]);
 		}
-		octonion_base operator+() const { return octonion_base(*this); }
+		octonion<Base> operator+() const { return octonion<Base>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		octonion_base& operator+=(const octonion_base<T, U>& n) {
@@ -256,10 +246,8 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		octonion_base& operator/=(const octonion_base<T, U>& n) {
 			//逆元は共役を絶対値の二乗で割る
-			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3]
-				+ n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
-			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp
-				, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
+			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3] + n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
+			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		octonion_base& operator/=(const T& k) {
@@ -271,101 +259,91 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
-		}
+		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] + n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3], lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const T& n, const octonion_base& c) {
-			return octonion<Base>(n + c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3], lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend octonion<Base> operator+(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3], rhs[4], rhs[5], rhs[6], rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] - n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3], lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const T& n, const octonion_base& c) {
-			return octonion<Base>(n - c[0], -c[1], -c[2], -c[3], -c[4], -c[5], -c[6], -c[7]);
+		friend octonion<Base> operator-(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3], lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3], -rhs[4], -rhs[5], -rhs[6], -rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k, c[4] * k, c[5] * k, c[6] * k, c[7] * k);
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const T& k, const octonion_base& c) {
-			return octonion<Base>(k * c[0], k * c[1], k * c[2], k * c[3], k * c[4], k * c[5], k * c[6], k * c[7]);
+		friend octonion<Base> operator*(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs, lhs[4] * rhs, lhs[5] * rhs, lhs[6] * rhs, lhs[7] * rhs);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			Base temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3], lhs * rhs[4], lhs * rhs[5], lhs * rhs[6], lhs * rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k, c[4] / k, c[5] / k, c[6] / k, c[7] / k);
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const T& k, const octonion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3]
-				+ c[4] * c[4] + c[5] * c[5] + c[6] * c[6] + c[7] * c[7];
-			return k * octonion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp
-				, -c[4] / temp, -c[5] / temp, -c[6] / temp, -c[7] / temp);
+		friend octonion<Base> operator/(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs, lhs[4] / rhs, lhs[5] / rhs, lhs[6] / rhs, lhs[7] / rhs);
+		}
+		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
+		friend octonion<Base> operator/(const T& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 	};
 	//下に階層が存在するかつBase == T
@@ -443,10 +421,8 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		octonion_base& operator/=(const octonion_base<T, U>& n) {
 			//逆元は共役を絶対値の二乗で割る
-			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3]
-				+ n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
-			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp
-				, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
+			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3] + n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
+			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		octonion_base& operator/=(const T& k) {
@@ -461,69 +437,65 @@ namespace iml {
 		using octonion_base<Base, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]
+				, lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] + n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const T& n, const octonion_base& c) {
-			return octonion<Base>(n + c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		friend octonion<Base> operator+(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3], rhs[4], rhs[5], rhs[6], rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] - n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]
+				, lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const T& n, const octonion_base& c) {
-			return octonion<Base>(n - c[0], -c[1], -c[2], -c[3], -c[4], -c[5], -c[6], -c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		friend octonion<Base> operator-(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3], -rhs[4], -rhs[5], -rhs[6], -rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k, c[4] * k, c[5] * k, c[6] * k, c[7] * k);
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs, lhs[4] * rhs, lhs[5] * rhs, lhs[6] * rhs, lhs[7] * rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const T& k, const octonion_base& c) {
-			return octonion<Base>(k * c[0], k * c[1], k * c[2], k * c[3], k * c[4], k * c[5], k * c[6], k * c[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		friend octonion<Base> operator*(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3], lhs * rhs[4], lhs * rhs[5], lhs * rhs[6], lhs * rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k, c[4] / k, c[5] / k, c[6] / k, c[7] / k);
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs, lhs[4] / rhs, lhs[5] / rhs, lhs[6] / rhs, lhs[7] / rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const T& k, const octonion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3]
-				+ c[4] * c[4] + c[5] * c[5] + c[6] * c[6] + c[7] * c[7];
-			return k * octonion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp
-				, -c[4] / temp, -c[5] / temp, -c[6] / temp, -c[7] / temp);
+		friend octonion<Base> operator/(const T& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 	};
 	//下に階層が存在するかつBase != T
@@ -611,10 +583,8 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		octonion_base& operator/=(const octonion_base<T, U>& n) {
 			//逆元は共役を絶対値の二乗で割る
-			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3]
-				+ n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
-			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp
-				, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
+			T temp = n.x[0] * n.x[0] + n.x[1] * n.x[1] + n.x[2] * n.x[2] + n.x[3] * n.x[3] + n.x[4] * n.x[4] + n.x[5] * n.x[5] + n.x[6] * n.x[6] + n.x[7] * n.x[7];
+			return *this *= octonion_base(n.x[0] / temp, -n.x[1] / temp, -n.x[2] / temp, -n.x[3] / temp, -n.x[4] / temp, -n.x[5] / temp, -n.x[6] / temp, -n.x[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		octonion_base& operator/=(const T& k) {
@@ -629,97 +599,87 @@ namespace iml {
 		using octonion_base<Base, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
-		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]
-				, c1[4] + c2[4], c1[5] + c2[5], c1[6] + c2[6], c1[7] + c2[7]);
-		}
+		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend octonion<Base> operator+(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] + n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3], lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend octonion<Base> operator+(const T& n, const octonion_base& c) {
-			return octonion<Base>(n + c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator+(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3], lhs[4] + rhs[4], lhs[5] + rhs[5], lhs[6] + rhs[6], lhs[7] + rhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend octonion<Base> operator+(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]
-				, c1[4] - c2[4], c1[5] - c2[5], c1[6] - c2[6], c1[7] - c2[7]);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend octonion<Base> operator+(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3], rhs[4], rhs[5], rhs[6], rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const octonion_base& c, const T& n) {
-			return octonion<Base>(c[0] - n, c[1], c[2], c[3], c[4], c[5], c[6], c[7]);
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3], lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend octonion<Base> operator-(const T& n, const octonion_base& c) {
-			return octonion<Base>(n - c[0], -c[1], -c[2], -c[3], -c[4], -c[5], -c[6], -c[7]);
+		friend octonion<Base> operator-(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3], lhs[4] - rhs[4], lhs[5] - rhs[5], lhs[6] - rhs[6], lhs[7] - rhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3], lhs[4], lhs[5], lhs[6], lhs[7]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			return octonion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3] + c1[4] * c2[4] + c1[5] * c2[5] + c1[6] * c2[6] + c1[7] * c2[7])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2] - c1[4] * c2[5] + c1[5] * c2[4] - c1[6] * c2[7] + c1[7] * c2[6])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (-c1[1] * c2[3] + c1[3] * c2[1] - c1[4] * c2[6] + c1[5] * c2[7] + c1[6] * c2[4] - c1[7] * c2[5])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1] - c1[4] * c2[7] - c1[5] * c2[6] + c1[6] * c2[5] + c1[7] * c2[4])
-				, c1[0] * c2[4] + c2[0] * c1[4] + (c1[1] * c2[5] + c1[2] * c2[6] + c1[3] * c2[7] - c1[5] * c2[1] - c1[6] * c2[2] - c1[7] * c2[3])
-				, c1[0] * c2[5] + c2[0] * c1[5] + (-c1[1] * c2[4] - c1[2] * c2[7] + c1[3] * c2[6] + c1[4] * c2[1] - c1[6] * c2[3] + c1[7] * c2[2])
-				, c1[0] * c2[6] + c2[0] * c1[6] + (c1[1] * c2[7] - c1[2] * c2[4] - c1[3] * c2[5] + c1[4] * c2[2] + c1[5] * c2[3] - c1[7] * c2[1])
-				, c1[0] * c2[7] + c2[0] * c1[7] + (-c1[1] * c2[6] + c1[2] * c2[5] - c1[3] * c2[4] + c1[4] * c2[3] - c1[5] * c2[2] + c1[6] * c2[1]));
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend octonion<Base> operator-(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3], -rhs[4], -rhs[5], -rhs[6], -rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k, c[4] * k, c[5] * k, c[6] * k, c[7] * k);
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend octonion<Base> operator*(const T& k, const octonion_base& c) {
-			return octonion<Base>(k * c[0], k * c[1], k * c[2], k * c[3], k * c[4], k * c[5], k * c[6], k * c[7]);
+		friend octonion<Base> operator*(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3] + lhs[4] * rhs[4] + lhs[5] * rhs[5] + lhs[6] * rhs[6] + lhs[7] * rhs[7])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2] - lhs[4] * rhs[5] + lhs[5] * rhs[4] - lhs[6] * rhs[7] + lhs[7] * rhs[6])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (-lhs[1] * rhs[3] + lhs[3] * rhs[1] - lhs[4] * rhs[6] + lhs[5] * rhs[7] + lhs[6] * rhs[4] - lhs[7] * rhs[5])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1] - lhs[4] * rhs[7] - lhs[5] * rhs[6] + lhs[6] * rhs[5] + lhs[7] * rhs[4])
+				, lhs[0] * rhs[4] + rhs[0] * lhs[4] + (lhs[1] * rhs[5] + lhs[2] * rhs[6] + lhs[3] * rhs[7] - lhs[5] * rhs[1] - lhs[6] * rhs[2] - lhs[7] * rhs[3])
+				, lhs[0] * rhs[5] + rhs[0] * lhs[5] + (-lhs[1] * rhs[4] - lhs[2] * rhs[7] + lhs[3] * rhs[6] + lhs[4] * rhs[1] - lhs[6] * rhs[3] + lhs[7] * rhs[2])
+				, lhs[0] * rhs[6] + rhs[0] * lhs[6] + (lhs[1] * rhs[7] - lhs[2] * rhs[4] - lhs[3] * rhs[5] + lhs[4] * rhs[2] + lhs[5] * rhs[3] - lhs[7] * rhs[1])
+				, lhs[0] * rhs[7] + rhs[0] * lhs[7] + (-lhs[1] * rhs[6] + lhs[2] * rhs[5] - lhs[3] * rhs[4] + lhs[4] * rhs[3] - lhs[5] * rhs[2] + lhs[6] * rhs[1]));
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c1, const octonion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs, lhs[4] * rhs, lhs[5] * rhs, lhs[6] * rhs, lhs[7] * rhs);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base<T, U>& c1, const octonion_base& c2) {
-			Base temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3]
-				+ c2[4] * c2[4] + c2[5] * c2[5] + c2[6] * c2[6] + c2[7] * c2[7];
-			return c1 * octonion_base(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp
-				, -c2[4] / temp, -c2[5] / temp, -c2[6] / temp, -c2[7] / temp);
+		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
+		friend octonion<Base> operator*(const T& lhs, const octonion<Base>& rhs) {
+			return octonion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3], lhs * rhs[4], lhs * rhs[5], lhs * rhs[6], lhs * rhs[7]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend octonion<Base> operator/(const octonion_base& c, const T& k) {
-			return octonion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k, c[4] / k, c[5] / k, c[6] / k, c[7] / k);
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const octonion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend octonion<Base> operator/(const T& k, const octonion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3]
-				+ c[4] * c[4] + c[5] * c[5] + c[6] * c[6] + c[7] * c[7];
-			return k * octonion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp
-				, -c[4] / temp, -c[5] / temp, -c[6] / temp, -c[7] / temp);
+		friend octonion<Base> operator/(const octonion<T>& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend octonion<Base> operator/(const octonion<Base>& lhs, const T& rhs) {
+			return octonion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs, lhs[4] / rhs, lhs[5] / rhs, lhs[6] / rhs, lhs[7] / rhs);
+		}
+		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
+		friend octonion<Base> operator/(const T& lhs, const octonion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3] + rhs[4] * rhs[4] + rhs[5] * rhs[5] + rhs[6] * rhs[6] + rhs[7] * rhs[7];
+			return lhs * octonion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp, -rhs[4] / temp, -rhs[5] / temp, -rhs[6] / temp, -rhs[7] / temp);
 		}
 	};
 
@@ -730,15 +690,15 @@ namespace iml {
 
 		//代入演算の補助
 		template <class _T>
-		static octonion* octonion_copy(octonion* const n1, const octonion<_T>& n2) {
+		static octonion* octonion_copy(octonion* const lhs, const octonion<_T>& rhs) {
 			//同じインスタンスでなければ代入
-			if (static_cast<void*>(&n1->x[0]) != static_cast<void*>(const_cast<_T*>(&n2.x[0]))) {
-				n1->x[0] = static_cast<T>(n2.x[0]); n1->x[1] = static_cast<T>(n2.x[1]);
-				n1->x[2] = static_cast<T>(n2.x[2]); n1->x[3] = static_cast<T>(n2.x[3]);
-				n1->x[4] = static_cast<T>(n2.x[4]); n1->x[5] = static_cast<T>(n2.x[5]);
-				n1->x[6] = static_cast<T>(n2.x[6]); n1->x[7] = static_cast<T>(n2.x[7]);
+			if (static_cast<void*>(&lhs->x[0]) != static_cast<void*>(const_cast<_T*>(&rhs.x[0]))) {
+				lhs->x[0] = static_cast<T>(rhs.x[0]); lhs->x[1] = static_cast<T>(rhs.x[1]);
+				lhs->x[2] = static_cast<T>(rhs.x[2]); lhs->x[3] = static_cast<T>(rhs.x[3]);
+				lhs->x[4] = static_cast<T>(rhs.x[4]); lhs->x[5] = static_cast<T>(rhs.x[5]);
+				lhs->x[6] = static_cast<T>(rhs.x[6]); lhs->x[7] = static_cast<T>(rhs.x[7]);
 			}
-			return n1;
+			return lhs;
 		}
 	public:
 		//コンストラクタの継承
@@ -863,16 +823,16 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator==(const octonion_base<T1, U1>& n1, const octonion_base<T2, U2>& n2) {
-		return (n1[0] == n2[0]) && (n1[1] == n2[1])
-			&& (n1[2] == n2[2]) && (n1[3] == n2[3])
-			&& (n1[4] == n2[4]) && (n1[5] == n2[5])
-			&& (n1[6] == n2[6]) && (n1[7] == n2[7]);
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator==(const octonion<T1>& lhs, const octonion<T2>& rhs) {
+		return (lhs[0] == rhs[0]) && (lhs[1] == rhs[1])
+			&& (lhs[2] == rhs[2]) && (lhs[3] == rhs[3])
+			&& (lhs[4] == rhs[4]) && (lhs[5] == rhs[5])
+			&& (lhs[6] == rhs[6]) && (lhs[7] == rhs[7]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator!=(const octonion_base<T1, U1>& n1, const octonion_base<T2, U2>& n2) {
-		return !(n1 == n2);
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator!=(const octonion<T1>& lhs, const octonion<T2>& rhs) {
+		return !(lhs == rhs);
 	}
 
 }
@@ -882,12 +842,12 @@ namespace iml {
 	template <class T>
 	struct addition<octonion<T>> {
 		//単位元の取得
-		static octonion<T> identity_element() {
+		static constexpr octonion<T> identity_element() {
 			return octonion<T>();
 		}
 		//逆元の取得
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		static octonion<T> inverse_element(const octonion<T>& x) {
+		static constexpr octonion<T> inverse_element(const octonion<T>& x) {
 			return -x;
 		}
 	};
@@ -895,11 +855,11 @@ namespace iml {
 	template <class T>
 	struct multiplicative<octonion<T>> {
 		//単位元の取得
-		static octonion<T> identity_element() {
+		static constexpr octonion<T> identity_element() {
 			return octonion<T>(multiplicative<T>::identity_element());
 		}
 		//逆元の取得
-		static octonion<T> inverse_element(const octonion<T>& x) {
+		static constexpr octonion<T> inverse_element(const octonion<T>& x) {
 			T temp = x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]
 				+ x[4] * x[4] + x[5] * x[5] + x[6] * x[6] + x[7] * x[7];
 			//共役を絶対値で割る
@@ -907,7 +867,7 @@ namespace iml {
 				, -x[4] / temp, -x[5] / temp, -x[6] / temp, -x[7] / temp);
 		}
 		//吸収元
-		static octonion<T> absorbing_element() {
+		static constexpr octonion<T> absorbing_element() {
 			return octonion<T>();
 		}
 	};

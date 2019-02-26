@@ -31,9 +31,9 @@ namespace iml {
 		constexpr vector_base(const vector_base<Base, N, U>& v) : x{ v.x[Indices]... } {}
 
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		vector_base operator-() const { return vector_base(-this->x[Indices]...); }
-		vector_base operator+() const { return vector_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		vector<Base, N> operator-() const { return vector<Base, N>(-this->x[Indices]...); }
+		vector<Base, N> operator+() const { return vector<Base, N>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		vector_base& operator+=(const vector_base<T, N, U>& v) {
@@ -57,30 +57,30 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] * k)...);
+		friend vector<Base, N> operator*(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
-			return vector<Base, N>((k*v[Indices])...);
+		friend vector<Base, N> operator*(const T& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs*rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] / k)...);
+		friend vector<Base, N> operator/(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在しないかつBase != T
@@ -101,9 +101,9 @@ namespace iml {
 		constexpr vector_base(const vector_base<T, N, U>& v) : x{ static_cast<Base>(v.x[Indices])... } {}
 
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		vector_base operator-() const { return vector_base(-this->x[Indices]...); }
-		vector_base operator+() const { return vector_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		vector<Base, N> operator-() const { return vector<Base, N>(-this->x[Indices]...); }
+		vector<Base, N> operator+() const { return vector<Base, N>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		vector_base& operator+=(const vector_base<T, N, U>& v) {
@@ -127,38 +127,38 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base<T, N, U>& v1, const vector_base& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<T, N>& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base<T, N, U>& v1, const vector_base& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<T, N>& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] * k)...);
+		friend vector<Base, N> operator*(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
-			return vector<Base, N>((k*v[Indices])...);
+		friend vector<Base, N> operator*(const T& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs*rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] / k)...);
+		friend vector<Base, N> operator/(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在するかつBase == T
@@ -207,26 +207,26 @@ namespace iml {
 		using vector_base<Base, N, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] * k)...);
+		friend vector<Base, N> operator*(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
-			return vector<Base, N>((k*v[Indices])...);
+		friend vector<Base, N> operator*(const T& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs*rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] / k)...);
+		friend vector<Base, N> operator/(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在するかつBase != T
@@ -279,34 +279,34 @@ namespace iml {
 		using vector_base<Base, N, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		//2項演算
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend vector<Base, N> operator+(const vector_base<T, N, U>& v1, const vector_base& v2) {
-			return vector<Base, N>((v1[Indices] + v2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend vector<Base, N> operator+(const vector<T, N>& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] + rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base& v1, const vector_base<T, N, U>& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<Base, N>& lhs, const vector<T, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend vector<Base, N> operator-(const vector_base<T, N, U>& v1, const vector_base& v2) {
-			return vector<Base, N>((v1[Indices] - v2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend vector<Base, N> operator-(const vector<T, N>& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs[Indices] - rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] * k)...);
+		friend vector<Base, N> operator*(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend vector<Base, N> operator*(const T& k, const vector_base& v) {
-			return vector<Base, N>((k*v[Indices])...);
+		friend vector<Base, N> operator*(const T& lhs, const vector<Base, N>& rhs) {
+			return vector<Base, N>((lhs*rhs[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend vector<Base, N> operator/(const vector_base& v, const T& k) {
-			return vector<Base, N>((v[Indices] / k)...);
+		friend vector<Base, N> operator/(const vector<Base, N>& lhs, const T& rhs) {
+			return vector<Base, N>((lhs[Indices] / rhs)...);
 		}
 	};
 
@@ -317,11 +317,11 @@ namespace iml {
 
 		//代入演算の補助
 		template <class _T>
-		static vector* vector_copy(vector* const v1, const vector<_T, N>& v2) {
+		static vector* vector_copy(vector* const lhs, const vector<_T, N>& rhs) {
 			//同じインスタンスでなければ代入
-			if (static_cast<void*>(&v1->x[0]) != static_cast<void*>(const_cast<_T*>(&v2.x[0])))
-				for (imsize_t i = 0; i < N; ++i) v1->x[i] = static_cast<T>(v2.x[i]);
-			return v1;
+			if (static_cast<void*>(&lhs->x[0]) != static_cast<void*>(const_cast<_T*>(&rhs.x[0])))
+				for (imsize_t i = 0; i < N; ++i) lhs->x[i] = static_cast<T>(rhs.x[i]);
+			return lhs;
 		}
 	public:
 		//コンストラクタの継承
@@ -407,30 +407,30 @@ namespace iml {
 
 	//ベクトルの拡張二項演算
 	//内積(T1×T2→Sが加法についてマグマ)
-	template <class U1, class U2, class T1, class T2, imsize_t N
+	template <class T1, class T2, imsize_t N
 		, class = typename enable_if<is_calcable<T1, T2>::mul_value && is_magma<typename calculation_result<T1, T2>::mul_type>::add_value>::type>
-	inline typename calculation_result<T1, T2>::mul_type operator*(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
+	inline typename calculation_result<T1, T2>::mul_type operator*(const vector<T1, N>& lhs, const vector<T2, N>& rhs) {
 		//加法単位元で初期化
 		typename calculation_result<T1, T2>::mul_type temp(addition<typename calculation_result<T1, T2>::mul_type>::identity_element());
-		for (imsize_t i = 0; i < N; ++i) temp += v1[i] * conj(v2[i]);
+		for (imsize_t i = 0; i < N; ++i) temp += lhs[i] * conj(rhs[i]);
 		return temp;
 	}
 	//外積(T1×T2→Sが加法についてループ)
-	template <class U1, class U2, class T1, class T2
+	template <class T1, class T2
 		, class = typename enable_if<is_calcable<T1, T2>::mul_value && is_loop<typename calculation_result<T1, T2>::mul_type>::add_value>::type>
-	inline vector<typename calculation_result<T1, T2>::mul_type, 3> operator%(const vector_base<T1, 3, U1>& v1, const vector_base<T2, 3, U2>& v2) {
-		return vector<typename calculation_result<T1, T2>::mul_type, 3>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
+	inline vector<typename calculation_result<T1, T2>::mul_type, 3> operator%(const vector<T1, 3>& lhs, const vector<T2, 3>& rhs) {
+		return vector<typename calculation_result<T1, T2>::mul_type, 3>(lhs[1] * rhs[2] - lhs[2] * rhs[1], lhs[2] * rhs[0] - lhs[0] * rhs[2], lhs[0] * rhs[1] - lhs[1] * rhs[0]);
 	}
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
-	inline bool operator==(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
-		for (imsize_t i = 0; i < N; ++i) if (v1[i] != v2[i]) return false;
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	inline bool operator==(const vector<T1, N>& lhs, const vector<T2, N>& rhs) {
+		for (imsize_t i = 0; i < N; ++i) if (lhs[i] != rhs[i]) return false;
 		return true;
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
-	inline bool operator!=(const vector_base<T1, N, U1>& v1, const vector_base<T2, N, U2>& v2) {
-		return !(v1 == v2);
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_inclusion<T1, T2>::value || is_inclusion<T2, T1>::value>::type>
+	inline bool operator!=(const vector<T1, N>& lhs, const vector<T2, N>& rhs) {
+		return !(lhs == rhs);
 	}
 
 
@@ -449,7 +449,7 @@ namespace iml {
 	template <class T, imsize_t N>
 	struct addition<vector<T, N>> {
 		//単位元の取得
-		static vector<T, N> identity_element() {
+		static constexpr vector<T, N> identity_element() {
 			return vector<T, N>();
 		}
 		//逆元の取得
@@ -463,7 +463,7 @@ namespace iml {
 	struct multiplicative<vector<T, N>> {
 		//吸収元
 		template <class = typename enable_if<is_calcable<T, T>::mul_value>::type>
-		static vector<T, N> absorbing_element() {
+		static constexpr vector<T, N> absorbing_element() {
 			return vector<T, N>();
 		}
 	};
@@ -475,7 +475,7 @@ namespace iml {
 	//誤差評価
 	template <class T, imsize_t N>
 	struct Error_evaluation<vector<T, N>> {
-		static bool __error_evaluation(const vector<T, N>& x1, const vector<T, N>& x2) {
+		static constexpr bool _error_evaluation_(const vector<T, N>& x1, const vector<T, N>& x2) {
 			for (imsize_t i = 0; i < N; ++i) if (!error_evaluation(x1[i], x2[i])) return false;
 			return true;
 		}

@@ -10,10 +10,10 @@ namespace iml {
 
 	//ベクトルに限り絶対値の定義
 	template <class T, imsize_t N>
-	struct _Abs<vector<T, N>> {
+	struct Abs<vector<T, N>> {
 		using result_type = typename math_function_type<T>::type;
 
-		static result_type __abs(const vector<T, N>& x) {
+		static result_type _abs_(const vector<T, N>& x) {
 			result_type temp = addition<T>::identity_element();
 			for (imsize_t i = 0; i < N; ++i) temp += abs(x[i])*abs(x[i]);
 			return sqrt(temp);

@@ -65,6 +65,9 @@
 #include "IMathLib/math/statistics.hpp"					//統計演算
 #include "IMathLib/math/random.hpp"						//一様乱数生成
 
+#include "IMathLib/math/automatic_differentiation.hpp"
+#include "IMathLib/math/expression_template.hpp"
+
 //3Dモデル制御
 #include "IMathLib/3d/model.hpp"
 #include "IMathLib/3d/metasequoia.hpp"

@@ -64,17 +64,17 @@ namespace iml {
 		struct Get;
 		template<>
 		struct Get<0> {
-			static constexpr first_type _get_(const pair& v) { return v.first; }
-			static first_type& _get_(pair& v) { return v.first; }
+			static const constexpr typename remove_reference<first_type>& _get_(const pair& v) { return v.first; }
+			static typename remove_reference<first_type>& _get_(pair& v) { return v.first; }
 		};
 		template<>
 		struct Get<1> {
-			static constexpr second_type _get_(const pair& v) { return v.second; }
+			static const constexpr second_type& _get_(const pair& v) { return v.second; }
 			static second_type& _get_(pair& v) { return v.second; }
 		};
 	public:
 		template <imsize_t N>
-		constexpr auto& get() const { return Get<N>::_get_(*this); }
+		const constexpr auto& get() const { return Get<N>::_get_(*this); }
 		template <imsize_t N>
 		auto& get() { return Get<N>::_get_(*this); }
 	};
@@ -86,43 +86,51 @@ namespace iml {
 
 	//変数ホルダー
 	template <class T, imsize_t N>
-	class _Value_holder {
-		template <class, class...>
-		friend class tuple_base;
-
+	struct value_holder {
 		T value;
-	public:
-		constexpr _Value_holder() : value() {}
-		constexpr _Value_holder(const T& arg) : value(static_cast<T>(arg)) {}
-		~_Value_holder() {}
+
+		constexpr value_holder() : value() {}
+		constexpr explicit value_holder(const T& arg) : value(arg) {}
+		template <class U>
+		constexpr explicit value_holder(U&& arg) : value(iml::forward<U>(arg)) {}
+		value_holder(const value_holder&) = default;
+		value_holder(value_holder&&) = default;
 	};
 	//タプルの基底
-	template <class Indices, class... Types>
+	template <class, class...>
 	class tuple_base;
 	template <imsize_t... Indices, class... Types>
-	class tuple_base<index_imu_tuple<Indices...>, Types...> : public _Value_holder<Types, Indices>... {
+	class tuple_base<index_imu_tuple<Indices...>, Types...> : public value_holder<Types, Indices>... {
 
 		//要素取得のため
 		template <imsize_t N, class T>
-		static constexpr T get_impl(const _Value_holder<T, N>& t) { return t.value; }
+		static const constexpr typename remove_reference<T>::type& get_impl(const value_holder<T, N>& t) { return t.value; }
 		template <imsize_t N, class T>
-		static T& get_impl(_Value_holder<T, N>& t) { return t.value; }
+		static constexpr typename remove_reference<T>::type& get_impl(value_holder<T, N>& t) { return t.value; }
 
 	public:
-		constexpr tuple_base() : _Value_holder<Types, Indices>()... {}
-		constexpr explicit tuple_base(const Types&... args) : _Value_holder<Types, Indices>(args)... {}
+		constexpr tuple_base() : value_holder<Types, Indices>()... {}
+		constexpr explicit tuple_base(const Types&... args) : value_holder<Types, Indices>(args)... {}
 		template <class... UTypes>
-		constexpr explicit tuple_base(UTypes&&... args) : _Value_holder<Types, Indices>(args)... {}
+		constexpr tuple_base(UTypes&&... args) : value_holder<Types, Indices>(iml::forward<UTypes>(args))... {}
 		tuple_base(const tuple_base&) = default;
 		tuple_base(tuple_base&&) = default;
+		template <class... UTypes>
+		constexpr tuple_base(const tuple_base<UTypes...>& t) : value_holder<Types, Indices>(t.get<Indices>())... {}
+		template <class... UTypes>
+		constexpr tuple_base(tuple_base<UTypes...>&& t) : value_holder<Types, Indices>(iml::forward<UTypes>(t.get<Indices>()))... {}
+
 
 		using sequence_type = index_imu_tuple<Indices...>;
+		template <imsize_t M>
+		using at_type = iml::at_type<M, Types...>;
+
 
 		//要素取得
 		template <imsize_t N>
-		constexpr auto get() const { return get_impl<N>(*this); }
+		const constexpr auto& get() const { return get_impl<N>(*this); }
 		template <imsize_t N>
-		auto& get() { return get_impl<N>(*this); }
+		constexpr auto& get() { return get_impl<N>(*this); }
 		//要素型の数
 		static constexpr imsize_t size() { return sizeof...(Types); }
 
@@ -131,10 +139,21 @@ namespace iml {
 
 		void swap(tuple_base& t) { iml::swap(*this, t); }
 	};
+	//1以上の要素をもつタプル
 	template <class... Types>
 	class tuple : public tuple_base<typename index_imu_range<0, sizeof...(Types)>::type, Types...> {
 	public:
 		using tuple_base<typename index_imu_range<0, sizeof...(Types)>::type, Types...>::tuple_base;
+	};
+	//空タプル
+	template <>
+	class tuple<> {
+	public:
+		using sequence_type = index_imu_tuple<>;
+
+
+		//要素型の数
+		static constexpr imsize_t size() { return 0; }
 	};
 
 
@@ -150,7 +169,7 @@ namespace iml {
 	template <class T, imsize_t First, imsize_t... Indices>
 	struct multi_array : multi_array_impl<T, typename reverse_index_tuple<index_imu_tuple<First, Indices...>>::type> {};
 
-	//配列の次元の取得
+	//配列の添え字リストから次元の取得
 	template <imsize_t, class>
 	struct _Dimension;
 	template <imsize_t Dim>
@@ -160,13 +179,16 @@ namespace iml {
 	};
 	template <imsize_t Dim, imsize_t First, imsize_t... Indices>
 	struct _Dimension<Dim, index_imu_tuple<First, Indices...>> : _Dimension<Dim*First, index_imu_tuple<Indices...>> {};
+	template <class>
+	struct dimension;
 	template <imsize_t First, imsize_t... Indices>
-	struct dimension : _Dimension<First, index_imu_tuple<Indices...>> {};
+	struct dimension<index_imu_tuple<First, Indices...>> : _Dimension<First, index_imu_tuple<Indices...>> {};
+
 
 	//元の型でのタプルの構築
 	template <class... Types>
 	inline constexpr tuple<typename reference_unwrapper<Types>::type...> make_tuple(Types&&... args) {
-		return tuple<typename reference_unwrapper<Types>::type...>(forward<Types>(args)...);
+		return tuple<typename reference_unwrapper<Types>::type...>(iml::forward<Types>(args)...);
 	}
 	//参照でのタプルの構築
 	template<class... Types>
@@ -176,7 +198,7 @@ namespace iml {
 	//右辺値でのタプルの構築
 	template<class... Types>
 	inline constexpr tuple<Types&&...> forward_as_tuple(Types&&... args) noexcept {
-		return tuple<Types&&...>(forward<Types>(args)...);
+		return tuple<Types&&...>(iml::forward<Types>(args)...);
 	}
 
 
@@ -187,7 +209,8 @@ namespace iml {
 	struct Apply1<index_imu_tuple<Indices...>> {
 		template <class F, class Tuple>
 		static constexpr auto _apply_(F&& f, Tuple&& t) {
-			return forward<F>(f)(forward<Tuple>(t).get<Indices>()...);
+			return invoke(forward<F>(f), forward<typename Tuple::template at_type<Indices>::type>(t.get<Indices>())...);
+			//return forward<F>(f)(forward<Tuple>(t).get<Indices>()...);
 		}
 	};
 	template <class F, class Tuple>
@@ -200,7 +223,9 @@ namespace iml {
 	struct Apply2<index_imu_tuple<Indices1...>, index_imu_tuple<Indices2...>> {
 		template <class TupleFs, class Tuple>
 		static constexpr auto _apply_(TupleFs&& f, Tuple&& t) {
-			return make_tuple(forward<TupleFs>(f).get<Indices1>()(forward<Tuple>(t).get<Indices2>()...)...);
+			return make_tuple(invoke(forward<typename TupleFs::template at_type<Indices1>::type>(f.get<Indices1>()),
+				forward<typename Tuple::template at_type<Indices2>::type>(t.get<Indices2>())...)...)
+			//return make_tuple(forward<TupleFs>(f).get<Indices1>()(forward<Tuple>(t).get<Indices2>()...)...);
 		}
 	};
 	//applyの関数がtupleで構成されているバージョン(Fsの各関数の引数の数は、Typeの数に等しくなければならない)
@@ -291,14 +316,14 @@ namespace iml {
 	struct tuple_cat_impl<ResultT, index_imu_tuple<Indices1...>, index_imu_tuple<Indices2...>> {
 		template <class Tuple>
 		static constexpr ResultT __tuple_cat(Tuple&& t) {
-			return ResultT(forward<Tuple>(t).get<Indices1>().get<Indices2>()...);
+			return ResultT(iml::forward<Tuple>(t).get<Indices1>().get<Indices2>()...);
 		}
 	};
 	template <class... Tuples>
 	inline constexpr auto tuple_cat(Tuples&&... t) {
 		using type = tuple_cat_traits<Tuples...>;
 		return tuple_cat_impl<typename type::type, typename type::index1, typename type::index2>::__tuple_cat(
-			forward_as_tuple(forward<Tuples>(t)...));
+			iml::forward_as_tuple(iml::forward<Tuples>(t)...));
 	}
 }
 

@@ -47,6 +47,8 @@ namespace iml {
 		ode_tuple_base(ode_tuple_base&&) = default;
 
 		using sequence_type = index_imu_tuple<Indices...>;
+		template <imsize_t M>
+		using at_type = iml::at_type<M, Types...>;
 
 		//データの取得
 		template <imsize_t N>

@@ -9,6 +9,7 @@ namespace iml {
 	template <class>
 	class quaternion;
 
+
 	template <class Base, class T, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
 	class quaternion_base;
 
@@ -26,9 +27,9 @@ namespace iml {
 			: x{ re,im1,im2,im3 } {}
 		constexpr quaternion_base(const Base& re) : x{ re } {}
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		quaternion_base operator-() const { return quaternion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
-		quaternion_base operator+() const { return quaternion_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		quaternion<Base> operator-() const { return quaternion<Base>(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
+		quaternion<Base> operator+() const { return quaternion<Base>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		quaternion_base& operator+=(const quaternion_base<T, U>& n) {
@@ -86,63 +87,63 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
+		//2項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] + n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n + c[0], c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] - n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n - c[0], -c[1], -c[2], -c[3]);
+		friend quaternion<Base> operator-(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k);
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const T& k, const quaternion_base& c) {
-			return quaternion<Base>(k * c[0], k * c[1], k * c[2], k * c[3]);
+		friend quaternion<Base> operator*(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const T& k, const quaternion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3];
-			return k * quaternion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp);
+		friend quaternion<Base> operator/(const T& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 	};
 	//下に階層が存在しないかつBase != T
@@ -164,9 +165,9 @@ namespace iml {
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr quaternion_base(const T& re) : x{ static_cast<Base>(re) } {}
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		quaternion_base operator-() const { return quaternion_base(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
-		quaternion_base operator+() const { return quaternion_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		quaternion<Base> operator-() const { return quaternion<Base>(-this->x[0], -this->x[1], -this->x[2], -this->x[3]); }
+		quaternion<Base> operator+() const { return quaternion<Base>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		quaternion_base& operator+=(const quaternion_base<T, U>& n) {
@@ -224,83 +225,83 @@ namespace iml {
 		}
 
 		//アクセサ
-		const Base& operator[](imsize_t index) const { return this->x[index]; }
-		Base& operator[](imsize_t index) { return this->x[index]; }
+		const constexpr Base& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr Base& operator[](imsize_t index) { return this->x[index]; }
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
-		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
-		}
+		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] + n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n + c[0], c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend quaternion<Base> operator+(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] - n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n - c[0], -c[1], -c[2], -c[3]);
+		friend quaternion<Base> operator-(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend quaternion<Base> operator-(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k);
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const T& k, const quaternion_base& c) {
-			return quaternion<Base>(k * c[0], k * c[1], k * c[2], k * c[3]);
+		friend quaternion<Base> operator*(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			Base temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
+		friend quaternion<Base> operator*(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const T& k, const quaternion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3];
-			return k * quaternion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp);
+		friend quaternion<Base> operator/(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs);
+		}
+		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
+		friend quaternion<Base> operator/(const T& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 	};
 	//下に階層が存在するかつBase == T
@@ -381,59 +382,59 @@ namespace iml {
 		using quaternion_base<Base, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
+		//2項演算
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] + n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n + c[0], c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] - n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n - c[0], -c[1], -c[2], -c[3]);
+		friend quaternion<Base> operator-(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k);
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const T& k, const quaternion_base& c) {
-			return quaternion<Base>(k * c[0], k * c[1], k * c[2], k * c[3]);
+		friend quaternion<Base> operator*(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3]);
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const T& k, const quaternion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3];
-			return k * quaternion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp);
+		friend quaternion<Base> operator/(const T& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 	};
 	//下に階層が存在するかつBase != T
@@ -522,79 +523,79 @@ namespace iml {
 		using quaternion_base<Base, typename T::algebraic_type>::operator[];
 
 
-		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
-		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] + c2[0], c1[1] + c2[1], c1[2] + c2[2], c1[3] + c2[3]);
-		}
+		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] + n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend quaternion<Base> operator+(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n + c[0], c[1], c[2], c[3]);
+		friend quaternion<Base> operator+(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] + rhs[0], lhs[1] + rhs[1], lhs[2] + rhs[2], lhs[3] + rhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend quaternion<Base> operator+(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] + rhs, lhs[1], lhs[2], lhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] - c2[0], c1[1] - c2[1], c1[2] - c2[2], c1[3] - c2[3]);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend quaternion<Base> operator+(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs + rhs[0], rhs[1], rhs[2], rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const quaternion_base& c, const T& n) {
-			return quaternion<Base>(c[0] - n, c[1], c[2], c[3]);
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend quaternion<Base> operator-(const T& n, const quaternion_base& c) {
-			return quaternion<Base>(n - c[0], -c[1], -c[2], -c[3]);
+		friend quaternion<Base> operator-(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] - rhs[0], lhs[1] - rhs[1], lhs[2] - rhs[2], lhs[3] - rhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend quaternion<Base> operator-(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] - rhs, lhs[1], lhs[2], lhs[3]);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			return quaternion<Base>(c1[0] * c2[0] - (c1[1] * c2[1] + c1[2] * c2[2] + c1[3] * c2[3])
-				, c1[0] * c2[1] + c2[0] * c1[1] + (c1[2] * c2[3] - c1[3] * c2[2])
-				, c1[0] * c2[2] + c2[0] * c1[2] + (c1[3] * c2[1] - c1[1] * c2[3])
-				, c1[0] * c2[3] + c2[0] * c1[3] + (c1[1] * c2[2] - c1[2] * c2[1]));
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend quaternion<Base> operator-(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs - rhs[0], -rhs[1], -rhs[2], -rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] * k, c[1] * k, c[2] * k, c[3] * k);
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend quaternion<Base> operator*(const T& k, const quaternion_base& c) {
-			return quaternion<Base>(k * c[0], k * c[1], k * c[2], k * c[3]);
+		friend quaternion<Base> operator*(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs[0] * rhs[0] - (lhs[1] * rhs[1] + lhs[2] * rhs[2] + lhs[3] * rhs[3])
+				, lhs[0] * rhs[1] + rhs[0] * lhs[1] + (lhs[2] * rhs[3] - lhs[3] * rhs[2])
+				, lhs[0] * rhs[2] + rhs[0] * lhs[2] + (lhs[3] * rhs[1] - lhs[1] * rhs[3])
+				, lhs[0] * rhs[3] + rhs[0] * lhs[3] + (lhs[1] * rhs[2] - lhs[2] * rhs[1]));
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c1, const quaternion_base<T, U>& c2) {
-			T temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base<T, U>(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
+		friend quaternion<Base> operator*(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] * rhs, lhs[1] * rhs, lhs[2] * rhs, lhs[3] * rhs);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base<T, U>& c1, const quaternion_base& c2) {
-			Base temp = c2[0] * c2[0] + c2[1] * c2[1] + c2[2] * c2[2] + c2[3] * c2[3];
-			return c1 * quaternion_base(c2[0] / temp, -c2[1] / temp, -c2[2] / temp, -c2[3] / temp);
+		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
+		friend quaternion<Base> operator*(const T& lhs, const quaternion<Base>& rhs) {
+			return quaternion<Base>(lhs * rhs[0], lhs * rhs[1], lhs * rhs[2], lhs * rhs[3]);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const quaternion_base& c, const T& k) {
-			return quaternion<Base>(c[0] / k, c[1] / k, c[2] / k, c[3] / k);
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const quaternion<T>& rhs) {
+			T temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<T>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
-		friend quaternion<Base> operator/(const T& k, const quaternion_base& c) {
-			Base temp = c[0] * c[0] + c[1] * c[1] + c[2] * c[2] + c[3] * c[3];
-			return k * quaternion_base(c[0] / temp, -c[1] / temp, -c[2] / temp, -c[3] / temp);
+		friend quaternion<Base> operator/(const quaternion<T>& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
+		}
+		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
+		friend quaternion<Base> operator/(const quaternion<Base>& lhs, const T& rhs) {
+			return quaternion<Base>(lhs[0] / rhs, lhs[1] / rhs, lhs[2] / rhs, lhs[3] / rhs);
+		}
+		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
+		friend quaternion<Base> operator/(const T& lhs, const quaternion<Base>& rhs) {
+			Base temp = rhs[0] * rhs[0] + rhs[1] * rhs[1] + rhs[2] * rhs[2] + rhs[3] * rhs[3];
+			return lhs * quaternion<Base>(rhs[0] / temp, -rhs[1] / temp, -rhs[2] / temp, -rhs[3] / temp);
 		}
 	};
 
@@ -605,13 +606,13 @@ namespace iml {
 
 		//代入演算の補助
 		template <class _T>
-		static quaternion* quaternion_copy(quaternion* const n1, const quaternion<_T>& n2) {
+		static quaternion* quaternion_copy(quaternion* const lhs, const quaternion<_T>& rhs) {
 			//同じインスタンスでなければ代入
-			if (static_cast<void*>(&n1->x[0]) != static_cast<void*>(const_cast<_T*>(&n2.x[0]))) {
-				n1->x[0] = static_cast<T>(n2.x[0]); n1->x[1] = static_cast<T>(n2.x[1]);
-				n1->x[2] = static_cast<T>(n2.x[2]); n1->x[3] = static_cast<T>(n2.x[3]);
+			if (static_cast<void*>(&lhs->x[0]) != static_cast<void*>(const_cast<_T*>(&rhs.x[0]))) {
+				lhs->x[0] = static_cast<T>(rhs.x[0]); lhs->x[1] = static_cast<T>(rhs.x[1]);
+				lhs->x[2] = static_cast<T>(rhs.x[2]); lhs->x[3] = static_cast<T>(rhs.x[3]);
 			}
-			return n1;
+			return lhs;
 		}
 	public:
 		//コンストラクタの継承
@@ -725,14 +726,14 @@ namespace iml {
 
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator==(const quaternion_base<T1, U1>& n1, const quaternion_base<T2, U2>& n2) {
-		return (n1[0] == n2[0]) && (n1[1] == n2[1])
-			&& (n1[2] == n2[2]) && (n1[3] == n2[3]);
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator==(const quaternion<T1>& lhs, const quaternion<T2>& rhs) {
+		return (lhs[0] == rhs[0]) && (lhs[1] == rhs[1])
+			&& (lhs[2] == rhs[2]) && (lhs[3] == rhs[3]);
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator!=(const quaternion_base<T1, U1>& n1, const quaternion_base<T2, U2>& n2) {
-		return !(n1 == n2);
+	template <class T1, class T2, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator!=(const quaternion<T1>& lhs, const quaternion<T2>& rhs) {
+		return !(lhs == rhs);
 	}
 
 }
@@ -742,12 +743,12 @@ namespace iml {
 	template <class T>
 	struct addition<quaternion<T>> {
 		//単位元の取得
-		static quaternion<T> identity_element() {
+		static constexpr quaternion<T> identity_element() {
 			return quaternion<T>();
 		}
 		//逆元の取得
 		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		static quaternion<T> inverse_element(const quaternion<T>& x) {
+		static constexpr quaternion<T> inverse_element(const quaternion<T>& x) {
 			return -x;
 		}
 	};
@@ -755,16 +756,16 @@ namespace iml {
 	template <class T>
 	struct multiplicative<quaternion<T>> {
 		//単位元の取得
-		static quaternion<T> identity_element() {
+		static constexpr quaternion<T> identity_element() {
 			return quaternion<T>(multiplicative<T>::identity_element());
 		}
 		//逆元の取得
-		static quaternion<T> inverse_element(const quaternion<T>& x) {
+		static constexpr quaternion<T> inverse_element(const quaternion<T>& x) {
 			//共役を絶対値の2乗で割る
 			return quaternion<T>(x[0], -x[1], -x[2], -x[3]) / (x[0] * x[0] + x[1] * x[1] + x[2] * x[2] + x[3] * x[3]);
 		}
 		//吸収元
-		static quaternion<T> absorbing_element() {
+		static constexpr quaternion<T> absorbing_element() {
 			return quaternion<T>();
 		}
 	};

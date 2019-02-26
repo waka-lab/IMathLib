@@ -13,7 +13,7 @@ namespace iml {
 	class matrix;
 
 
-	template <class Base, imsize_t M, imsize_t N, class T, class = typename index_imu_range<0, dimension<M, N>::value>::type, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
+	template <class Base, imsize_t M, imsize_t N, class T, class = typename index_imu_range<0, dimension<index_imu_tuple<M, N>>::value>::type, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
 	class matrix_base;
 
 
@@ -29,26 +29,26 @@ namespace iml {
 		constexpr matrix_base() : x{} {}
 		constexpr matrix_base(const typename identity_type<Base, Indices>::type&... x) : x{ x... } {}
 		template <class U>
-		constexpr matrix_base(const matrix_base<Base, M, N, U>& ma) : x{ ma.x[Indices]... } {}
+		constexpr matrix_base(const matrix_base<Base, M, N, U>& ma) : x{ ma.x[0][Indices]... } {}
 
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		matrix_base operator-() const { return matrix_base(-this->x[Indices]...); }
-		matrix_base operator+() const { return matrix_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		matrix<Base, M, N> operator-() const { return matrix<Base, M, N>(-this->x[0][Indices]...); }
+		matrix<Base, M, N> operator+() const { return matrix<Base, M, N>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		matrix_base& operator+=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] += ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] += ma.x[0][i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		matrix_base& operator-=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] -= ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] -= ma.x[0][i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		matrix_base& operator*=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] *= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] *= k;
 			return *this;
 		}
 		//行列の積
@@ -63,35 +63,35 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		matrix_base& operator/=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] /= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] /= k;
 			return *this;
 		}
 
 		//アクセサ
-		const Base* operator[](imsize_t index) const { return this->x[index]; }
-		Base* operator[](imsize_t index) { return this->x[index]; }
+		const constexpr auto& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr auto& operator[](imsize_t index) { return this->x[index]; }
 
 
 		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] * k)...);
+		friend matrix<Base, M, N> operator*(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const T& k, const matrix_base& ma) {
-			return matrix<T, M, N>((k*ma[Indices])...);
+		friend matrix<Base, M, N> operator*(const T& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs*rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend matrix<T, M, N> operator/(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] / k)...);
+		friend matrix<Base, M, N> operator/(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在しないかつBase != T
@@ -107,28 +107,28 @@ namespace iml {
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr matrix_base(const typename identity_type<T, Indices>::type&... x) : x{ static_cast<Base>(x)... } {}
 		template <class U>
-		constexpr matrix_base(const matrix_base<Base, M, N, U>& ma) : x{ ma.x[Indices]... } {}
+		constexpr matrix_base(const matrix_base<Base, M, N, U>& ma) : x{ ma.x[0][Indices]... } {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr matrix_base(const matrix_base<T, M, N, U>& ma) : x{ static_cast<Base>(ma.x[Indices])... } {}
+		constexpr matrix_base(const matrix_base<T, M, N, U>& ma) : x{ static_cast<Base>(ma.x[0][Indices])... } {}
 
 
-		template <class = typename enable_if<is_exist_add_inverse_element<T>::value>::type>
-		matrix_base operator-() const { return matrix_base(-this->x[Indices]...); }
-		matrix_base operator+() const { return matrix_base(*this); }
+		template <class = typename enable_if<is_exist_add_inverse_element<Base>::value>::type>
+		matrix<Base, M, N> operator-() const { return matrix<Base, M, N>(-this->x[0][Indices]...); }
+		matrix<Base, M, N> operator+() const { return matrix<Base, M, N>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		matrix_base& operator+=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] += ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] += ma.x[0][i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		matrix_base& operator-=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] -= ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] -= ma.x[0][i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		matrix_base& operator*=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] *= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] *= k;
 			return *this;
 		}
 		//行列の積
@@ -143,43 +143,43 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		matrix_base& operator/=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] /= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] /= k;
 			return *this;
 		}
 
 		//アクセサ
-		const Base* operator[](imsize_t index) const { return this->x[index]; }
-		Base* operator[](imsize_t index) { return this->x[index]; }
+		const constexpr auto& operator[](imsize_t index) const { return this->x[index]; }
+		constexpr auto& operator[](imsize_t index) { return this->x[index]; }
 
 
 		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base<T, M, N, U>& ma1, const matrix_base& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<T, M, N>& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base<T, M, N, U>& ma1, const matrix_base& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<T, M, N>& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] * k)...);
+		friend matrix<Base, M, N> operator*(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const T& k, const matrix_base& ma) {
-			return matrix<T, M, N>((k*ma[Indices])...);
+		friend matrix<Base, M, N> operator*(const T& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<T, M, N>((lhs*rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend matrix<T, M, N> operator/(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] / k)...);
+		friend matrix<Base, M, N> operator/(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在するかつBase == T
@@ -206,17 +206,17 @@ namespace iml {
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		matrix_base& operator+=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] += ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] += ma.x[0][i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		matrix_base& operator-=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] -= ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] -= ma.x[0][i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		matrix_base& operator*=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] *= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] *= k;
 			return *this;
 		}
 		//行列の積
@@ -231,7 +231,7 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		matrix_base& operator/=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] /= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] /= k;
 			return *this;
 		}
 
@@ -240,25 +240,25 @@ namespace iml {
 
 
 		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] * k)...);
+		friend matrix<Base, M, N> operator*(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const T& k, const matrix_base& ma) {
-			return matrix<T, M, N>((k*ma[Indices])...);
+		friend matrix<Base, M, N> operator*(const T& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs*rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend matrix<T, M, N> operator/(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] / k)...);
+		friend matrix<Base, M, N> operator/(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] / rhs)...);
 		}
 	};
 	//下に階層が存在するかつBase != T
@@ -273,7 +273,7 @@ namespace iml {
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
 		constexpr matrix_base(const typename identity_type<T, Indices>::type&... x) : matrix_base<Base, M, N, typename T::algebraic_type>(static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr matrix_base(const matrix_base<T, M, N, U>& ma) : x{ static_cast<Base>(ma.x[Indices])... } {}
+		constexpr matrix_base(const matrix_base<T, M, N, U>& ma) : x{ static_cast<Base>(ma.x[0][Indices])... } {}
 
 
 		//単項演算の継承
@@ -288,17 +288,17 @@ namespace iml {
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		matrix_base& operator+=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] += ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] += ma.x[0][i];
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		matrix_base& operator-=(const matrix_base<T, M, N, U>& ma) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] -= ma.x[0][i];
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] -= ma.x[0][i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		matrix_base& operator*=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] *= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] *= k;
 			return *this;
 		}
 		//行列の積
@@ -313,7 +313,7 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		matrix_base& operator/=(const T& k) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) this->x[0][i] /= k;
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) this->x[0][i] /= k;
 			return *this;
 		}
 
@@ -322,33 +322,33 @@ namespace iml {
 
 
 		//二項演算
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
-		friend matrix<T, M, N> operator+(const matrix_base<T, M, N, U>& ma1, const matrix_base& ma2) {
-			return matrix<T, M, N>((ma1[Indices] + ma2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
+		friend matrix<Base, M, N> operator+(const matrix<T, M, N>& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] + rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base& ma1, const matrix_base<T, M, N, U>& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<Base, M, N>& lhs, const matrix<T, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
-		template <class U, class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
-		friend matrix<T, M, N> operator-(const matrix_base<T, M, N, U>& ma1, const matrix_base& ma2) {
-			return matrix<T, M, N>((ma1[Indices] - ma2[Indices])...);
+		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
+		friend matrix<Base, M, N> operator-(const matrix<T, M, N>& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] - rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] * k)...);
+		friend matrix<Base, M, N> operator*(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
-		friend matrix<T, M, N> operator*(const T& k, const matrix_base& ma) {
-			return matrix<T, M, N>((k*ma[Indices])...);
+		friend matrix<Base, M, N> operator*(const T& lhs, const matrix<Base, M, N>& rhs) {
+			return matrix<T, M, N>((lhs*rhs[0][Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
-		friend matrix<T, M, N> operator/(const matrix_base& ma, const T& k) {
-			return matrix<T, M, N>((ma[Indices] / k)...);
+		friend matrix<Base, M, N> operator/(const matrix<Base, M, N>& lhs, const T& rhs) {
+			return matrix<Base, M, N>((lhs[0][Indices] / rhs)...);
 		}
 	};
 
@@ -362,11 +362,11 @@ namespace iml {
 
 		//代入演算の補助
 		template <class _T>
-		static matrix* matrix_copy(matrix* const ma1, const matrix<_T, M, N>& ma2) {
+		static matrix* matrix_copy(matrix* const lhs, const matrix<_T, M, N>& rhs) {
 			//同じインスタンスでなければ代入
-			if (static_cast<void*>(&ma1->x[0][0]) != static_cast<void*>(const_cast<_T*>(&ma2.x[0][0])))
-				for (imsize_t i = 0; i < dimension<M, N>::value; ++i) ma1->x[0][i] = static_cast<T>(ma2.x[0][i]);
-			return ma1;
+			if (static_cast<void*>(&lhs->x[0][0]) != static_cast<void*>(const_cast<_T*>(&rhs.x[0][0])))
+				for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) lhs->x[0][i] = static_cast<T>(rhs.x[0][i]);
+			return lhs;
 		}
 	public:
 		//コンストラクタの継承
@@ -390,8 +390,8 @@ namespace iml {
 
 		iterator begin() noexcept { return iterator(&x[0][0]); }
 		const_iterator begin() const noexcept { return const_iterator(&x[0][0]); }
-		iterator end() noexcept { return iterator(&x[0][dimension<M, N>::value - 1] + 1); }
-		const_iterator end() const noexcept { return const_iterator(&x[0][dimension<M, N>::value - 1] + 1); }
+		iterator end() noexcept { return iterator(&x[0][dimension<index_imu_tuple<M, N>>::value - 1] + 1); }
+		const_iterator end() const noexcept { return const_iterator(&x[0][dimension<index_imu_tuple<M, N>>::value - 1] + 1); }
 
 		//単項演算の継承
 		using matrix_base<T, M, N, T>::operator-;
@@ -471,26 +471,26 @@ namespace iml {
 
 
 	//行列の積(T1×T2→Sが加法についてマグマ)
-	template <class U1, class U2, class T1, class T2, imsize_t M, imsize_t N, imsize_t L
+	template <class T1, class T2, imsize_t M, imsize_t N, imsize_t L
 		, class = typename enable_if<is_calcable<T1, T2>::mul_value && is_magma<typename calculation_result<T1, T2>::mul_type>::add_value>::type>
-	inline matrix<typename calculation_result<T1, T2>::mul_type, M, L> operator*(const matrix_base<T1, M, N, U1>& ma1, const matrix_base<T2, N, L, U2>& ma2) {
+	inline matrix<typename calculation_result<T1, T2>::mul_type, M, L> operator*(const matrix<T1, M, N>& lhs, const matrix<T2, N, L>& rhs) {
 		matrix<typename calculation_result<T1, T2>::mul_type, M, L> temp;
 		for (imsize_t i = 0; i < M; ++i)
 			for (imsize_t j = 0; j < L; ++j)
 				for (imsize_t k = 0; k < N; ++k)
-					temp[i][j] += ma1[i][k] * ma2[k][j];
+					temp[i][j] += lhs[i][k] * rhs[k][j];
 		return temp;
 	}
 
 	//比較演算
-	template <class U1, class U2, class T1, class T2, imsize_t M, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator==(const matrix_base<T1, M, N, U1>& ma1, const matrix_base<T2, M, N, U2>& ma2) {
-		for (imsize_t i = 0; i < dimension<M, N>::value; ++i) if (ma1[0][i] != ma2[0][i]) return false;
+	template <class T1, class T2, imsize_t M, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator==(const matrix<T1, M, N>& lhs, const matrix<T2, M, N>& rhs) {
+		for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) if (lhs[0][i] != rhs[0][i]) return false;
 		return true;
 	}
-	template <class U1, class U2, class T1, class T2, imsize_t M, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
-	inline bool operator!=(const matrix_base<T1, M, N, U1>& ma1, const matrix_base<T2, M, N, U2>& ma2) {
-		return !(ma1 == ma2);
+	template <class T1, class T2, imsize_t M, imsize_t N, class = typename enable_if<is_calcable<T1, T2>::eq_value>::type>
+	inline bool operator!=(const matrix<T1, M, N>& lhs, const matrix<T2, M, N>& rhs) {
+		return !(lhs == rhs);
 	}
 
 
@@ -524,13 +524,13 @@ namespace iml {
 	template <class T, imsize_t N>
 	struct multiplicative<matrix<T, N, N>> {
 		//単位元(単位行列)の取得
-		static matrix<T, N, N> identity_element() {
+		static constexpr matrix<T, N, N> identity_element() {
 			matrix<T, N, N> temp;
 			for (imsize_t i = 0; i < N; ++i) temp[i][i] = multiplicative<T>::identity_element();
 			return temp;
 		}
 		//吸収元(零行列)
-		static matrix<T, N, N> absorbing_element() {
+		static constexpr matrix<T, N, N> absorbing_element() {
 			return matrix<T, N, N>();
 		}
 	};
@@ -542,8 +542,8 @@ namespace iml {
 	//誤差評価
 	template <class T, imsize_t M, imsize_t N>
 	struct Error_evaluation<matrix<T, M, N>> {
-		static bool __error_evaluation(const matrix<T, M, N>& x1, const matrix<T, M, N>& x2) {
-			for (imsize_t i = 0; i < dimension<M, N>::value; ++i) if (!error_evaluation(x1[0][i], x2[0][i])) return false;
+		static constexpr bool _error_evaluation_(const matrix<T, M, N>& x1, const matrix<T, M, N>& x2) {
+			for (imsize_t i = 0; i < dimension<index_imu_tuple<M, N>>::value; ++i) if (!error_evaluation(x1[0][i], x2[0][i])) return false;
 			return true;
 		}
 	};

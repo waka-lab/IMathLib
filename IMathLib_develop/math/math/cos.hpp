@@ -15,31 +15,23 @@ namespace iml {
 
 		//xを小さくするための補助
 		static constexpr result_type _cos_impl_(result_type x) {
-			
-			//0 < x < 0.05
-			if (20 * x >= 1) {
-				x /= 2;
-				result_type c = _cos_impl_(x);
-				return 2 * c * c - 1;
-			}
+			imsize_t n = 0;
 
-			result_type x1 = 1, x2 = 1, x3 = 2;
+			//0 < x < 0.05 となるまでの操作回数をカウント
+			while (20 * x >= 1) { x /= 4; ++n; }
+
+			result_type x1 = 1, x2 = 1, x3 = 0;
 			x *= x;
 
-			//収束条件は級数の偶数項の単調減少が崩れる
-			for (imsize_t i = 1; x1 + Error_evaluation<result_type>::eps < x3; ++i) {
-				x3 = x1;
-				x1 *= -x / (2 * i*(2 * i - 1));
-				++i;
-				x2 += x1;
-				x1 *= -x / (2 * i*(2 * i - 1));
-				x2 += x1;
-			}
-			/*for (imsize_t i = 1; !error_evaluation(x2, x3); ++i) {
+			for (imsize_t i = 1; !error_evaluation(x2, x3); ++i) {
 				x3 = x2;
 				x1 *= -x / (2 * i*(2 * i - 1));
 				x2 += x1;
-			}*/
+			}
+
+			//4倍角の式で補正する
+			while (n != 0) { x2 *= x2; x2 = 8 * x2 * x2 - 8 * x2 + 1; --n; }
+
 			return x2;
 		}
 

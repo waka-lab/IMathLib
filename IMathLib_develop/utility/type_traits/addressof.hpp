@@ -29,7 +29,7 @@ namespace iml {
 
 	//多次元配列の先頭ポインタの取得
 	template <class T>
-	constexpr auto addressof_multi_array(T &val) {
+	constexpr auto addressof_multi_array(T& val) {
 		return reinterpret_cast<typename remove_all_extents<T>::type*>(addressof(val));
 	}
 	template <class T>

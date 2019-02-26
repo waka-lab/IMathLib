@@ -159,6 +159,7 @@ namespace iml {
 		}
 	};
 
+
 	//シングルトンを実装するための基底クラス
 	template <class T>
 	class singleton {

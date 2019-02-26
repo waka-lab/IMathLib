@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_SIN_HPP
-#define _IMATH_MATH_SIN_HPP
+﻿#ifndef IMATH_MATH_MATH_SIN_HPP
+#define IMATH_MATH_MATH_SIN_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/pi.hpp"
@@ -12,15 +12,15 @@ namespace iml {
 
 	//正弦関数
 	template <class T>
-	struct _Sin {
+	struct Sin {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __sin(const T& x) {
+		static constexpr result_type _sin_(const T& x) {
 			return cos(_Pi_<result_type>::pi / 2 - x);
 		}
 	};
 	template <class T>
-	inline constexpr auto sin(const T& x) { return _Sin<T>::__sin(x); }
+	inline constexpr auto sin(const T& x) { return Sin<T>::_sin_(x); }
 
 
 	//sinc関数

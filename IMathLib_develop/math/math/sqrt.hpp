@@ -46,7 +46,7 @@ namespace iml {
 			result_type x1 = 1 / c, x2 = 0;
 			result_type h = 1 - c * x1*x1;			//0 < h < 0.75
 			//収束条件は単調増加が崩れる
-			while (x2 < x1) {
+			while (x2 + Error_evaluation<result_type>::eps < x1) {
 				x2 = x1;
 				x1 *= (1 + (64 * h + h * h*(48 + 40 * h + 35 * h*h)) / 128);
 				h = 1 - c * x1 * x1;

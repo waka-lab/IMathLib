@@ -12,10 +12,10 @@ namespace iml {
 	struct Exp {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type _ipow_(result_type x, imsize_t y) {
-			//yが2の冪であることから最適化
-			while (y > 1) { x *= x; y /= 2; }
-			return x;
+		static constexpr result_type _ipow_(result_type x) {
+			//256 = 2^8より8回計算
+			x *= x; x *= x; x *= x; x *= x; x *= x; x *= x; x *= x;
+			return x *= x;
 		}
 
 		static constexpr result_type _exp_impl_(result_type x) {
@@ -24,14 +24,14 @@ namespace iml {
 			imint_t index = static_cast<imint_t>(x);
 
 			x -= index;
-			x /= 256;			//0 < x < 1/256=0.00390625
+			x /= 256;			//0 < x < 1/256 = 1/2^8 = 0.00390625
 			//収束条件は和の単調増加が崩れる(xは十分に小さいためError_evaluation<result_type>::epsを加算するコストにあわない)
 			for (imsize_t i = 1; x3 < x2; ++i) {
 				x3 = x2;
 				x1 *= (x / i);
 				x2 += x1;
 			}
-			return _ipow_(x2, 256)*ipow(_E_<result_type>::e, index);
+			return _ipow_(x2)*ipow(_E_<result_type>::e, index);
 		}
 		static constexpr result_type _exp_(const T& x) {
 			return (x < 0) ? 1 / _exp_impl_(-x) : _exp_impl_(x);

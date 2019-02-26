@@ -42,7 +42,7 @@ namespace iml {
 				x1 *= c;
 				x2 += x1 / (2 * i - 1);
 			}
-			return (2 * x2 + index * _Loge_2_<result_type>::loge_2);
+			return 2 * x2 + index * _Loge_2_<result_type>::loge_2;
 		}
 		static constexpr result_type _log_(const T& x) {
 			if (x == 0) return limits<result_type>::positive_infinity();

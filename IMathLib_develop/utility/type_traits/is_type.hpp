@@ -342,6 +342,16 @@ namespace iml {
 	struct is_class : cat_bool<is_class_or_union<T>::value && !is_union<T>::value> {};
 
 
+	//finalクラスの判定
+	template <class T>
+	struct is_final : cat_bool<__is_final(T)> {};
+
+
+	//空クラスの判定
+	template <class T>
+	struct is_empty : cat_bool<__is_empty(T)> {};
+
+
 	//基本型の判定
 	template<class T>
 	struct is_fundamental : cat_bool<is_arithmetic<T>::value || is_void<T>::value || is_null_pointer<T>::value> {};

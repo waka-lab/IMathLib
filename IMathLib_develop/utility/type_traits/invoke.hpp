@@ -14,27 +14,27 @@ namespace iml {
 	//オブジェクトのメンバ関数へのポインタの呼び出し
 	struct invoker_pmf_object {
 		template<class Decay, class T, class... Args>
-		static auto call(Decay pmf, T&& arg, Args&&... args) { return (forward<T>(arg).*pmf)(forward<Args>(args)...); }
+		static constexpr auto call(Decay pmf, T&& arg, Args&&... args) { return (forward<T>(arg).*pmf)(forward<Args>(args)...); }
 	};
 	//スマートポインタでオブジェクトのメンバ関数へのポインタの呼び出し
 	struct invoker_pmf_pointer {
 		template<class Decay, class T, class... Args>
-		static auto call(Decay pmf, T&& arg, Args&&... args) { return ((*forward<T>(arg)).*pmf)(forward<Args>(args)...); }
+		static constexpr auto call(Decay pmf, T&& arg, Args&&... args) { return ((*forward<T>(arg)).*pmf)(forward<Args>(args)...); }
 	};
 	//オブジェクトのメンバデータへのポインタの呼び出し
 	struct invoker_pmd_object {
 		template<class Decay, class T>
-		static auto call(Decay pmd, T&& arg) { return forward<T>(arg).*pmd; }
+		static constexpr auto call(Decay pmd, T&& arg) { return forward<T>(arg).*pmd; }
 	};
 	//スマートポインタでオブジェクトのメンバデータへのポインタの呼び出し
 	struct invoker_pmd_pointer {
 		template<class Decay, class T>
-		static auto call(Decay pmd, T&& arg) { return (*forward<T>(arg)).*pmd; }
+		static constexpr auto call(Decay pmd, T&& arg) { return (*forward<T>(arg)).*pmd; }
 	};
 	//関数オブジェクトの呼び出し
 	struct invoker_functor {
 		template<class F, class... Args>
-		static auto call(F&& obj, Args&&... args) { return forward<F>(obj)(forward<Args>(args)...); }
+		static constexpr auto call(F&& obj, Args&&... args) { return forward<F>(obj)(forward<Args>(args)...); }
 	};
 
 	//オブジェクトがクラスメンバに関するものかの判別
@@ -66,7 +66,7 @@ namespace iml {
 
 	//呼び出し可能なオブジェクトを呼び出す
 	template<class F, class... Args>
-	inline auto invoke(F&& obj, Args&&... args) -> decltype(invoker<F, Args...>::call(forward<F>(obj), forward<Args>(args)...)) {
+	inline constexpr auto invoke(F&& obj, Args&&... args) -> decltype(invoker<F, Args...>::call(forward<F>(obj), forward<Args>(args)...)) {
 		return invoker<F, Args...>::call(forward<F>(obj), forward<Args>(args)...);
 	}
 

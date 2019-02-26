@@ -439,12 +439,12 @@ namespace iml {
 
 	//剰余
 	template <class T>
-	struct _Mod {
+	struct Mod {
 
-		static constexpr T __mod(const T& x, const T& y) { return x - trunc(x / y) * y; }
+		static constexpr T _mod_(const T& x, const T& y) { return x - trunc(x / y) * y; }
 	};
 	template <class T>
-	inline constexpr auto mod(const T& x, const T& y) { return _Mod<T>::__mod(x, y); }
+	inline constexpr auto mod(const T& x, const T& y) { return Mod<T>::_mod_(x, y); }
 
 }
 
