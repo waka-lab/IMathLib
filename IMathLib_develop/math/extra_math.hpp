@@ -4,7 +4,7 @@
 #include "IMathLib/math/math.hpp"
 #include "IMathLib/utility/utility.hpp"
 #include "IMathLib/utility/functional.hpp"
-#include "IMathLib/math/dual_numbers.hpp"
+#include "IMathLib/math/hypercomplex.hpp"
 
 //数学関数の拡張関数群
 

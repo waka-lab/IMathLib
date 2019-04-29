@@ -45,7 +45,7 @@ namespace iml {
 
 		static constexpr result_type b[N] = { __bernoulli_number(Indices)... };
 	};
-	template <size_t N, class T = IMATH_DEFAULT_TYPE>
+	template <size_t N, class T = IMATH_DEFAULT_FLOATING_POINT>
 	struct bernoulli_number_table : Bernoulli_number_table<N, T, typename index_range<size_t, 0, N>::type> {};
 
 	//ベルヌーイ数

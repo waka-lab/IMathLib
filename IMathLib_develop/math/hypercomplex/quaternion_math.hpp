@@ -1,8 +1,8 @@
-﻿#ifndef IMATH_MATH_QUATERNION_MATH_HPP
-#define IMATH_MATH_QUATERNION_MATH_HPP
+﻿#ifndef IMATH_MATH_HYPERCOMPLEX_QUATERNION_MATH_HPP
+#define IMATH_MATH_HYPERCOMPLEX_QUATERNION_MATH_HPP
 
 #include "IMathLib/math/math.hpp"
-#include "IMathLib/math/quaternion.hpp"
+#include "IMathLib/math/hypercomplex/quaternion.hpp"
 
 /*namespace iml {
 

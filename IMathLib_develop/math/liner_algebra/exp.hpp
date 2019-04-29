@@ -14,7 +14,7 @@ namespace iml {
 		using result_type = typename math_function_type<matrix<T, N, N>>::type;
 		using type = typename math_function_type<T>::type;
 
-		static constexpr result_type __exp(const matrix<T, N, N>& ma) {
+		static constexpr result_type _exp_(const matrix<T, N, N>& ma) {
 			result_type x1 = identity_matrix<type, N>(), x2 = identity_matrix<type, N>(), x3{};
 			for (size_t i = 1; !error_evaluation(x2, x3); ++i) {
 				x3 = x2;

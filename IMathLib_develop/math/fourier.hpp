@@ -6,7 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include "IMathLib/math/math.hpp"
-#include "IMathLib/math/complex.hpp"
+#include "IMathLib/math/hypercomplex.hpp"
 #include "IMathLib/utility/tuple.hpp"
 
 //フーリエ変換に関するヘッダ

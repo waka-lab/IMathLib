@@ -23,7 +23,7 @@ namespace iml {
 	template <>
 	struct is_void_impl<void> : true_type {};
 	template <class T>
-	struct is_void : is_void_impl<typename remove_cv<T>::type> {};
+	struct is_void : is_void_impl<remove_cv_t<T>> {};
 	template <class T>
 	constexpr bool is_void_v = is_void<T>::value;
 
@@ -60,7 +60,7 @@ namespace iml {
 	template<>
 	struct is_integral_impl<unsigned long long> : true_type {};
 	template<class T>
-	struct is_integral : is_integral_impl<typename remove_cv<T>::type> {};
+	struct is_integral : is_integral_impl<remove_cv_t<T>> {};
 	template <class T>
 	constexpr bool is_integral_v = is_integral<T>::value;
 
@@ -75,7 +75,7 @@ namespace iml {
 	template<>
 	struct is_floating_point_impl<long double> : true_type {};
 	template<class T>
-	struct is_floating_point : is_floating_point_impl<typename remove_cv<T>::type> {};
+	struct is_floating_point : is_floating_point_impl<remove_cv_t<T>> {};
 	template <class T>
 	constexpr bool is_floating_point_v = is_floating_point<T>::value;
 
@@ -273,7 +273,7 @@ namespace iml {
 		using class_type = Class;
 	};
 	template<class T>
-	struct is_member_function_pointer : is_member_function_pointer_impl<typename remove_cv<T>::type>::bool_type {};
+	struct is_member_function_pointer : is_member_function_pointer_impl<remove_cv_t<T>>::bool_type {};
 	template <class T>
 	constexpr bool is_member_function_pointer_v = is_member_function_pointer<T>::value;
 
@@ -289,7 +289,7 @@ namespace iml {
 		using class_type = T2;
 	};
 	template<class T>
-	struct is_member_object_pointer : is_member_object_pointer_impl<typename remove_cv<T>::type>::bool_type {};
+	struct is_member_object_pointer : is_member_object_pointer_impl<remove_cv_t<T>>::bool_type {};
 	template <class T>
 	constexpr bool is_member_object_pointer_v = is_member_object_pointer<T>::value;
 
@@ -332,7 +332,7 @@ namespace iml {
 
 	//nullptrの判定
 	template<class T>
-	struct is_null_pointer : cat_bool<is_same<typename remove_cv<T>::type, nullptr_t>::value> {};
+	struct is_null_pointer : cat_bool<is_same<remove_cv_t<T>, nullptr_t>::value> {};
 	template <class T>
 	constexpr bool is_null_pointer_v = is_null_pointer<T>::value;
 
@@ -343,7 +343,7 @@ namespace iml {
 	template<class T>
 	struct is_pointer_impl<T*> : cat_bool<!is_member_object_pointer<T*>::value && !is_member_function_pointer<T*>::value> {};
 	template<class T>
-	struct is_pointer : is_pointer_impl<typename remove_cv<T>::type> {};
+	struct is_pointer : is_pointer_impl<remove_cv_t<T>> {};
 	template <class T>
 	constexpr bool is_pointer_v = is_pointer<T>::value;
 

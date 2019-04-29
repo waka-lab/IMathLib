@@ -5,46 +5,58 @@
 #include "IMathLib/utility/utility.hpp"
 #include "IMathLib/math/math/numeric_traits.hpp"
 
-//デフォルトで計算される型
-#ifndef IMATH_DEFAULT_TYPE
-#define IMATH_DEFAULT_TYPE		double
-#endif // IMATH_DEFAULT_TYPE
+//デフォルトで計算される実数型
+#ifndef IMATH_DEFAULT_FLOATING_POINT
+#define IMATH_DEFAULT_FLOATING_POINT		double
+#endif // IMATH_DEFAULT_FLOATING_POINT
 
 //ベルヌーイ数の用意されるテーブル数(それを用いた関数の精度もこれに依存する)
 #ifndef IMATH_BERNOULLI_NUMBER_TABLE
 #define IMATH_BERNOULLI_NUMBER_TABLE		40
-#endif // IMATH_DEFAULT_TYPE
+#endif // IMATH_BERNOULLI_NUMBER_TABLE
 
 
 namespace iml {
 
-	//From⊂Toかの判定(From→Toできるか)
-	template <class From, class To, bool = (is_arithmetic_v<From> && is_arithmetic_v<To>)>
-	struct is_inclusion_impl : is_convertible<From, To> {};
-	//どちらかにvoidがあればfalse
-	template <class To>
-	struct is_inclusion_impl<void, To, false> : false_type {};
-	template <class From>
-	struct is_inclusion_impl<From, void, false> : false_type {};
-	//算術型の場合(表現桁数に関係なくN⊂Z⊂Rとして扱う)
+	//From⊆Toかの判定
 	template <class From, class To>
-	struct is_inclusion_impl<From, To, true> :
-		cat_bool<
-		(is_unsigned_v<From> && is_signed_v<To>) ||					//自然数型から整数型
-		(is_unsigned_v<From> && is_floating_point_v<To>) ||			//自然数型から実数型
-		(is_signed_v<From> && is_floating_point_v<To>) ||			//整数型から実数型
-		//以下同じ代数的構造での表現可能な数値による分類(Fromの方が表現可能な数値がTo以下)
-		(is_unsigned_v<From> && is_unsigned_v<To> && (numeric_traits<From>::max() <= numeric_traits<To>::max())) ||
-		(is_signed_v<From> && is_signed_v<To> && (numeric_traits<From>::max() <= numeric_traits<To>::max())) ||
-		(is_floating_point_v<From> && is_floating_point_v<To> && (numeric_traits<From>::max() <= numeric_traits<To>::max()))
-		> {};
-	template <class From, class To>
-	struct is_inclusion : is_inclusion_impl<decay_t<From>, decay_t<To>> {};
+	struct is_inclusion : false_type {};
 	template <class From, class To>
 	constexpr bool is_inclusion_v = is_inclusion<From, To>::value;
 
+	//整数同士および自然数同士の場合とN⊂Zの適用
+#define IMATH_IS_INCLUSION(N1,N2)\
+	template <> struct is_inclusion<int##N1##_t, int##N2##_t> : cat_bool<N1 <= N2> {};\
+	template <> struct is_inclusion<uint##N1##_t, uint##N2##_t> : cat_bool<N1 <= N2> {};\
+	template <> struct is_inclusion<uint##N1##_t, int##N2##_t> : true_type {};
+	IMATH_IS_INCLUSION(8, 8); IMATH_IS_INCLUSION(8, 16);
+	IMATH_IS_INCLUSION(8, 32); IMATH_IS_INCLUSION(8, 64);
+	IMATH_IS_INCLUSION(16, 8); IMATH_IS_INCLUSION(16, 16);
+	IMATH_IS_INCLUSION(16, 32); IMATH_IS_INCLUSION(16, 64);
+	IMATH_IS_INCLUSION(32, 8); IMATH_IS_INCLUSION(32, 16);
+	IMATH_IS_INCLUSION(32, 32); IMATH_IS_INCLUSION(32, 64);
+	IMATH_IS_INCLUSION(64, 8); IMATH_IS_INCLUSION(64, 16);
+	IMATH_IS_INCLUSION(64, 32); IMATH_IS_INCLUSION(64, 64);
+#undef IMATH_IS_INCLUSION
+	//浮動小数点同士の場合とN⊂RおよびZ⊂Rの適用
+#define IMATH_IS_INCLUSION_IMPL(N, TYPE)\
+	template <> struct is_inclusion<int##N##_t, TYPE> : true_type {};\
+	template <> struct is_inclusion<uint##N##_t, TYPE> : true_type {};
+#define IMATH_IS_INCLUSION(TYPE)\
+	template <> struct is_inclusion<TYPE, TYPE> : true_type {};\
+	IMATH_IS_INCLUSION_IMPL(8, TYPE); IMATH_IS_INCLUSION_IMPL(16, TYPE)\
+	IMATH_IS_INCLUSION_IMPL(32, TYPE); IMATH_IS_INCLUSION_IMPL(64, TYPE)
+	IMATH_IS_INCLUSION(float);
+	IMATH_IS_INCLUSION(double);
+	IMATH_IS_INCLUSION(long double);
+	template <> struct is_inclusion<float, double> : true_type {};
+	template <> struct is_inclusion<float, long double> : true_type {};
+	template <> struct is_inclusion<double, long double> : true_type {};
+#undef IMATH_IS_INCLUSION
+#undef IMATH_IS_INCLUSION_IMPL
 
-	//包含関係で上位のものを選択(選択できなければvoid)
+
+	//上位の数学型を選択(選択できなければvoid)
 	template <class T1, class T2>
 	struct inclusion_superior {
 		using type = conditional_t<is_inclusion_v<T1, T2>, T2
@@ -161,19 +173,19 @@ namespace iml {
 	//T1×T2→T3となるかの判定
 	template <class T1, class T2, class T3>
 	struct is_operation {
-		static constexpr bool add_value = is_inclusion_v<typename calculation_result<T1, T2>::add_type, T3>;
-		static constexpr bool sub_value = is_inclusion_v<typename calculation_result<T1, T2>::sub_type, T3>;
-		static constexpr bool mul_value = is_inclusion_v<typename calculation_result<T1, T2>::mul_type, T3>;
-		static constexpr bool div_value = is_inclusion_v<typename calculation_result<T1, T2>::div_type, T3>;
+		static constexpr bool add_value = is_inclusion_v<add_result_t<T1, T2>, T3>;
+		static constexpr bool sub_value = is_inclusion_v<sub_result_t<T1, T2>, T3>;
+		static constexpr bool mul_value = is_inclusion_v<mul_result_t<T1, T2>, T3>;
+		static constexpr bool div_value = is_inclusion_v<div_result_t<T1, T2>, T3>;
 	};
 
 
 	//加法の特性
-	template<class>
+	template <class>
 	struct addition_traits;
 	//符号無し整数
 #define IMATH_ADDITION_TRAITS(TYPE)\
-	template<>\
+	template <>\
 	struct addition_traits<TYPE> {\
 		/*単位元*/\
 		static constexpr TYPE identity_element() { return 0; }\
@@ -195,7 +207,7 @@ namespace iml {
 #undef IMATH_ADDITION_TRAITS
 	//符号あり数値
 #define IMATH_ADDITION_TRAITS(TYPE)\
-	template<>\
+	template <>\
 	struct addition_traits<TYPE> {\
 		/*単位元*/\
 		static constexpr TYPE identity_element() { return 0; }\
@@ -218,11 +230,11 @@ namespace iml {
 #undef IMATH_ADDITION_TRAITS
 
 	//乗法の特性
-	template <class T>
+	template <class>
 	struct multiplication_traits;
 	//整数
 #define IMATH_MULTIPLICATIVE_TRAITS(TYPE)\
-	template<>\
+	template <>\
 	struct multiplication_traits<TYPE> {\
 		/*単位元*/\
 		static constexpr TYPE identity_element() { return 1; }\
@@ -304,6 +316,10 @@ namespace iml {
 
 	//可逆元ならば逆元を返す(存在しない場合は例外を出す)
 	//可逆元の存在しない代数系では定義しない
+	//仮定
+	//・加法逆元では加算が可能
+	//・乗法逆元では乗算が可能で必要であれば加減算可能
+	//・代数系固有の仮定(必要かは不明)
 	template <class>
 	struct Inverse_element;
 	//符号なし整数
@@ -392,15 +408,6 @@ namespace iml {
 	inline constexpr bool is_absorbing_element(const T& x) { return x == multiplication_traits<T>::absorbing_element(); }
 
 
-	//代数的構造上の代数的構造である(algebraic_typeが内部で定義されている)ことの判定
-	template <class, class = void>
-	struct is_algebraic_structure : false_type {};
-	template <class T>
-	struct is_algebraic_structure<T, void_t<typename T::algebraic_type>> : true_type {};
-	template <class T>
-	constexpr bool is_algebraic_structure_v = is_algebraic_structure<T>::value;
-
-
 	//マグマ(亜群)の判定(閉じた演算であるかの判定)
 	template <class T>
 	struct is_magma {
@@ -475,6 +482,82 @@ namespace iml {
 	constexpr bool is_commutative_field_v = is_commutative_field<T>::value;
 
 
+	//数学型の判定(addition_traitsもしくはmultiplication_traitsがインスタンス化可能)
+	template <class T>
+	struct is_math_type_impl {
+	private:
+		template <class S> static auto tester(S*) ->decltype(S(), true_type());
+		template <class S> static false_type tester(...);
+	public:
+		static constexpr bool value = decltype(tester<addition_traits<T>>(nullptr))::value || decltype(tester<multiplication_traits<T>>(nullptr))::value;
+	};
+	template <class T>
+	struct is_math_type : bool_constant<is_math_type_impl<T>::value> {};
+	template <class T>
+	constexpr bool is_math_type_v = is_math_type<T>::value;
+
+
+	//基底をもつ数学型である(base_typeが内部で定義されている)ことの判定
+	template <class, class = void>
+	struct is_math_type_has_base : false_type {};
+	template <class T>
+	struct is_math_type_has_base<T, void_t<typename T::base_type>> : is_math_type<T> {};
+	template <class T>
+	constexpr bool is_math_type_has_base_v = is_math_type_has_base<T>::value;
+
+
+	//T1がT2の基底であることの判定
+	template <class T1, class T2, bool Result = is_same_v<T1, T2>, bool = is_math_type_has_base_v<T2>>
+	struct is_base_as_math_type_impl : true_type {};
+	template <class T1, class T2>
+	struct is_base_as_math_type_impl<T1, T2, false, false> : false_type {};
+	template <class T1, class T2>
+	struct is_base_as_math_type_impl<T1, T2, false, true>
+		: is_base_as_math_type_impl<T1, typename T2::base_type> {};
+	template <class T1, class T2>
+	struct is_base_as_math_type : bool_constant<is_base_as_math_type_impl<T1, T2>::value && !is_same_v<T1, T2>> {};
+	template <class T1, class T2>
+	constexpr bool is_base_as_math_type_v = is_base_as_math_type<T1, T2>::value;
+
+
+	//T2がT1の真に上位の数学型であることの判定(T2 = T1の場合も含む)
+	template <class T1, class T2>
+	struct is_principal_high_rank_math_type : bool_constant<is_inclusion_v<T1, T2> && !is_base_as_math_type_v<T1, T2>> {};
+	template <class T1, class T2>
+	constexpr bool is_principal_high_rank_math_type_v = is_principal_high_rank_math_type<T1, T2>::value;
+
+
+	//T2の基底の走査
+	//Result : 真に上位および下位であることもしくはT1とT2が一致することの判定
+	template <class T1, class T2, bool Result = (is_principal_high_rank_math_type_v<T1, T2> || is_principal_high_rank_math_type_v<T2, T1>), bool = is_math_type_has_base_v<T2>>
+	struct is_scalar_type_as_math_type_impl : true_type {};
+	template <class T1, class T2>
+	struct is_scalar_type_as_math_type_impl<T1, T2, false, false> : false_type {};
+	template <class T1, class T2>
+	struct is_scalar_type_as_math_type_impl<T1, T2, false, true>
+		: is_scalar_type_as_math_type_impl<T1, typename T2::base_type> {};
+	//T1が数学型における左スカラー型に成り得るかの判定
+	template <class T1, class T2, bool = is_math_type_has_base_v<T2>>
+	struct is_lscalar_operation : bool_constant<
+		//スカラー型に成り得る必要条件の記述
+		(!is_principal_high_rank_math_type_v<T1, T2> && !is_principal_high_rank_math_type_v<T2, T1>) && (is_inclusion_v<typename T2::base_type, T1> || is_scalar_type_as_math_type_impl<T1, typename T2::base_type>::value)
+	> {};
+	template <class T1, class T2>
+	struct is_lscalar_operation<T1, T2, false> : false_type {};
+	template <class T1, class T2>
+	constexpr bool is_lscalar_operation_v = is_lscalar_operation<T1, T2>::value;
+	//T2が数学型における右スカラー型に成り得るかの判定
+	template <class T1, class T2>
+	struct is_rscalar_operation : is_lscalar_operation<T2, T1> {};
+	template <class T1, class T2>
+	constexpr bool is_rscalar_operation_v = is_rscalar_operation<T1, T2>::value;
+	//T1とT2の演算がスカラー演算と成り得るかの判定
+	template <class T1, class T2>
+	struct is_scalar_operation : bool_constant<is_lscalar_operation_v<T1, T2> || is_rscalar_operation_v<T1, T2>> {};
+	template <class T1, class T2>
+	constexpr bool is_scalar_operation_v = is_scalar_operation<T1, T2>::value;
+
+
 	//相対誤差評価の補助構造体
 	//整数型の場合
 	template <class T>
@@ -514,16 +597,41 @@ namespace iml {
 
 
 	//数学関数用の型(最下層の型を(基本的に)実数体にする)
-	template <class T, class, bool = is_algebraic_structure_v<T>>
+	template <class T, class, bool = is_math_type_has_base_v<T>>
 	struct math_function_type_impl {};
 	template <class T, class... Types>
 	struct math_function_type_impl<T, type_tuple<Types...>, false>
-		: algebraic_type_rebind<conditional_t<!is_floating_point_v<T>, IMATH_DEFAULT_TYPE, T>, type_tuple<Types...>> {};
+		: algebraic_type_rebind<conditional_t<!is_floating_point_v<T>, IMATH_DEFAULT_FLOATING_POINT, T>, type_tuple<Types...>> {};
 	template <class T, class... Types>
 	struct math_function_type_impl<T, type_tuple<Types...>, true>
-		: math_function_type_impl<typename T::algebraic_type, type_tuple<T, Types...>> {};
+		: math_function_type_impl<typename T::base_type, type_tuple<T, Types...>> {};
 	template <class T>
 	struct math_function_type : math_function_type_impl<T, type_tuple<>> {};
+	template <class T>
+	using math_function_type_t = typename math_function_type<T>::type;
+
+
+	//最も低い階層の数学型の取得
+	template <class T, bool = is_math_type_has_base_v<T>>
+	struct lowest_base_of_math_type_impl {
+		using type = T;
+	};
+	template <class T>
+	struct lowest_base_of_math_type_impl<T, true> : lowest_base_of_math_type_impl<typename T::base_type> {};
+	template <class T>
+	struct lowest_base_of_math_type : lowest_base_of_math_type_impl<T> {};
+	template <class T>
+	using lowest_base_of_math_type_t = typename lowest_base_of_math_type<T>::type;
+
+
+	//数学定数のための実数型の取得
+	template <class T>
+	struct real_as_math_constant
+		: enable_if<is_principal_high_rank_math_type_v<lowest_base_of_math_type_t<T>, double>
+		|| is_principal_high_rank_math_type_v<double, lowest_base_of_math_type_t<T>>
+		, conditional_t<is_floating_point_v<lowest_base_of_math_type_t<T>>, lowest_base_of_math_type_t<T>, IMATH_DEFAULT_FLOATING_POINT>> {};
+	template <class T>
+	using real_as_math_constant_t = typename real_as_math_constant<T>::type;
 
 
 	//完全に移行完了するまで残しておく

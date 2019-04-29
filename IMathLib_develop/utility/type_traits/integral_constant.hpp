@@ -26,9 +26,20 @@ namespace iml {
 
 
 	//叙述の補助
-	template<bool Val>
+	template <bool Val>
 	struct cat_bool : bool_constant<Val> {};
-
+	template <bool Val, bool... Vals>
+	struct and_bool : bool_constant<Val && and_bool<Vals...>::value> {};
+	template <bool Val>
+	struct and_bool<Val> : bool_constant<Val> {};
+	template <bool... Vals>
+	constexpr bool and_bool_v = and_bool<Vals...>::value;
+	template <bool Val, bool... Vals>
+	struct or_bool : bool_constant<Val || and_bool<Vals...>::value> {};
+	template <bool Val>
+	struct or_bool<Val> : bool_constant<Val> {};
+	template <bool... Vals>
+	constexpr bool or_bool_v = or_bool<Vals...>::value;
 }
 
 #endif

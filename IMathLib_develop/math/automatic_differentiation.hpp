@@ -13,7 +13,7 @@ namespace iml {
 	class bottomup_ad;
 
 
-	template <class Base, class Dims, class T, class = typename index_range<size_t, 1, dimension<Dims>::value>::type, bool = is_algebraic_structure<T>::value, bool = is_same<Base, T>::value>
+	template <class Base, class Dims, class T, class = typename index_range<size_t, 1, dimension<Dims>::value>::type, bool = is_math_type_has_base<T>::value, bool = is_same<Base, T>::value>
 	class bottomup_ad_base;
 
 
@@ -472,24 +472,24 @@ namespace iml {
 	};
 	//下に階層が存在するかつBase == T
 	template <class Base, size_t... Dims, class T, size_t... Indices>
-	class bottomup_ad_base<Base, index_tuple<size_t, Dims...>, T, index_tuple<size_t, Indices...>, true, true> : public bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type> {
+	class bottomup_ad_base<Base, index_tuple<size_t, Dims...>, T, index_tuple<size_t, Indices...>, true, true> : public bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type> {
 		template <class, size_t...> friend class bottomup_ad;
 		template <class, class, class, class, bool, bool> friend class bottomup_ad_base;
 		template <class> friend struct multiplication_traits;
 		template <class> friend struct addition_traits;
 	public:
 		//コンストラクタの継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::bottomup_ad_base;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::bottomup_ad_base;
 
 		//単項演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator+;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator-;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator+;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator-;
 
 		//代入演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator+=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator-=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator*=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator/=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator+=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator-=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator*=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
@@ -539,7 +539,7 @@ namespace iml {
 		}
 
 		//添え字演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator[];
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator[];
 
 
 		//2項演算
@@ -644,32 +644,32 @@ namespace iml {
 	};
 	//下に階層が存在するかつBase != T
 	template <class Base, size_t... Dims, class T, size_t... Indices>
-	class bottomup_ad_base<Base, index_tuple<size_t, Dims...>, T, index_tuple<size_t, Indices...>, true, false> : public bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type> {
+	class bottomup_ad_base<Base, index_tuple<size_t, Dims...>, T, index_tuple<size_t, Indices...>, true, false> : public bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type> {
 		template <class, size_t...> friend class bottomup_ad;
 		template <class, class, class, class, bool, bool> friend class bottomup_ad_base;
 		template <class> friend struct multiplication_traits;
 		template <class> friend struct addition_traits;
 	public:
 		//コンストラクタの継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::bottomup_ad_base;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::bottomup_ad_base;
 
-		constexpr bottomup_ad_base() : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>() {}
+		constexpr bottomup_ad_base() : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>() {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>(static_cast<Base>(re)) {}
+		constexpr bottomup_ad_base(const T& re) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>(static_cast<Base>(re)) {}
 		template <class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const T& re, const identity_t<T, Indices>&... x) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>(static_cast<Base>(re), static_cast<Base>(x)...) {}
+		constexpr bottomup_ad_base(const T& re, const identity_t<T, Indices>&... x) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>(static_cast<Base>(re), static_cast<Base>(x)...) {}
 		template <class U, class = typename enable_if<is_inclusion<T, Base>::value>::type>
-		constexpr bottomup_ad_base(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>(static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])...) {}
+		constexpr bottomup_ad_base(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) : bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>(static_cast<Base>(n.x[0]), static_cast<Base>(n.x[Indices])...) {}
 
 		//単項演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator+;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator-;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator+;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator-;
 
 		//代入演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator+=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator-=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator*=;
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator/=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator+=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator-=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator*=;
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator/=;
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
@@ -719,7 +719,7 @@ namespace iml {
 		}
 
 		//添え字演算の継承
-		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::algebraic_type>::operator[];
+		using bottomup_ad_base<Base, index_tuple<size_t, Dims...>, typename T::base_type>::operator[];
 
 
 		//2項演算
@@ -877,7 +877,7 @@ namespace iml {
 		//コンストラクタの継承
 		using bottomup_ad_base<T, index_tuple<size_t, Dims...>, T>::bottomup_ad_base;
 
-		using algebraic_type = T;
+		using base_type = T;
 		using iterator = array_iterator<T>;
 		using const_iterator = array_iterator<const T>;
 		using dimension_type = index_tuple<size_t, Dims...>;

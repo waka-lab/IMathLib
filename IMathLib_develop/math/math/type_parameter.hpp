@@ -6,8 +6,12 @@
 
 namespace iml {
 
+	template <class>
+	struct Inverse_element;
+
+
 	//あらゆる非型テンプレートを渡すため補助テンプレート
-	template <class T, class Param>
+	template <class, class>
 	struct type_parameter;
 
 
@@ -125,6 +129,7 @@ namespace iml {
 	};
 	IMATH_TYPE_PARAMETER(float);
 	IMATH_TYPE_PARAMETER(double);
+	IMATH_TYPE_PARAMETER(long double);
 #undef IMATH_TYPE_PARAMETER
 
 
@@ -197,6 +202,42 @@ namespace iml {
 	IMATH_TYPE_PARAMETER_COMPARISON_OPERATION(&&);
 	IMATH_TYPE_PARAMETER_COMPARISON_OPERATION(||);
 #undef IMATH_TYPE_PARAMETER_COMPARISON_OPERATION
+
+
+	//type_parameterの逆元
+#define IMATH_INVERSE_ELEMENT(TYPE)\
+	template <TYPE Val> struct Inverse_element<int_parameter<TYPE, Val>> {};
+	IMATH_INVERSE_ELEMENT(bool);
+	IMATH_INVERSE_ELEMENT(unsigned char);
+	IMATH_INVERSE_ELEMENT(unsigned short);
+	IMATH_INVERSE_ELEMENT(unsigned int);
+	IMATH_INVERSE_ELEMENT(unsigned long);
+	IMATH_INVERSE_ELEMENT(char16_t);
+	IMATH_INVERSE_ELEMENT(char32_t);
+	IMATH_INVERSE_ELEMENT(unsigned long long);
+#undef IMATH_INVERSE_ELEMENT
+#define IMATH_INVERSE_ELEMENT(TYPE)\
+	template <TYPE Val>\
+	struct Inverse_element<int_parameter<TYPE, Val>> {\
+		static auto _additive_inverse_(int_parameter<TYPE, Val>) { return int_parameter<TYPE, -Val>(); }\
+	};
+	IMATH_INVERSE_ELEMENT(char);
+	IMATH_INVERSE_ELEMENT(wchar_t);
+	IMATH_INVERSE_ELEMENT(short);
+	IMATH_INVERSE_ELEMENT(int);
+	IMATH_INVERSE_ELEMENT(long);
+	IMATH_INVERSE_ELEMENT(long long);
+#undef IMATH_INVERSE_ELEMENT
+#define IMATH_INVERSE_ELEMENT(TYPE)\
+	template <typename numeric_traits<TYPE>::int_type Val>\
+	struct Inverse_element<float_parameter<TYPE, Val>> {\
+		static auto _additive_inverse_(float_parameter<TYPE, Val>) { return float_parameter<TYPE, float_to_int(-int_to_float(Val))>(); }\
+		static auto _multiplicative_inverse_(float_parameter<TYPE, Val>) { return float_parameter<TYPE, float_to_int(1 / int_to_float(Val))>(); }\
+	};
+	IMATH_INVERSE_ELEMENT(float);
+	IMATH_INVERSE_ELEMENT(double);
+	IMATH_INVERSE_ELEMENT(long double);
+#undef IMATH_INVERSE_ELEMENT
 
 
 	//配列型パラメータ

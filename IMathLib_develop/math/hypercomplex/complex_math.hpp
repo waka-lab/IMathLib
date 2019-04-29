@@ -1,7 +1,7 @@
-﻿#ifndef _MULTCOMPLEX_MATH_HPP
-#define _MULTCOMPLEX_MATH_HPP
+﻿#ifndef _MULTCOMPLEX_HYPERCOMPLEX_MATH_HPP
+#define _MULTCOMPLEX_HYPERCOMPLEX_MATH_HPP
 
-#include "IMathLib/math/complex.hpp"
+#include "IMathLib/math/hypercomplex/complex.hpp"
 #include "IMathLib/math/math.hpp"
 
 //複素数の数学関数

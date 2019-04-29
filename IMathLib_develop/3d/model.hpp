@@ -3,7 +3,7 @@
 
 #include "IMathLib/image/image.hpp"
 #include "IMathLib/math/liner_algebra.hpp"
-#include "IMathLib/math/quaternion_math.hpp"
+#include "IMathLib/math/hypercomplex.hpp"
 #include "IMathLib/container/array.hpp"
 #include "IMathLib/utility/tuple.hpp"
 

@@ -34,9 +34,9 @@ namespace iml {
 #else
 #define IMATH_INT_32BIT
 	using size_t = uint32_t;
-	inline constexpr size_t operator"" _imu(unsigned long long x) { return x; }
+	inline constexpr size_t operator"" _imu(unsigned long long x) { return size_t(x); }
 	using int_t = int32_t;
-	inline constexpr int_t operator"" _imi(unsigned long long x) { return x; }
+	inline constexpr int_t operator"" _imi(unsigned long long x) { return int_t(x); }
 #endif
 
 }

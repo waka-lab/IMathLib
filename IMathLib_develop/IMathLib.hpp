@@ -29,13 +29,6 @@
 #include "IMathLib/string/string.hpp"
 #include "IMathLib/string/static_string.hpp"
 
-//算術型ライブラリ
-//#include "IMathLib/math/complex.hpp"
-#include "IMathLib/math/split_complex.hpp"
-#include "IMathLib/math/dual_numbers.hpp"
-#include "IMathLib/math/quaternion.hpp"
-#include "IMathLib/math/octonion.hpp"
-
 //数学関数ライブラリ
 
 
@@ -53,10 +46,7 @@
 #include "IMathLib/math/extra_math.hpp"					//数学関数の拡張
 //#include "IMathLib/math/complex_math.hpp"				//複素数の数学関数
 #include "IMathLib/math/liner_algebra.hpp"				//線形代数演算
-#include "IMathLib/math/quaternion_math.hpp"			//四元数の数学関数
-#include "IMathLib/math/octonion.hpp"					//八元数
-#include "IMathLib/math/dual_numbers.hpp"				//二重数
-#include "IMathLib/math/split_complex.hpp"				//分解型複素数
+#include "IMathLib/math/hypercomplex.hpp"				//多元数
 #include "IMathLib/math/automatic_differentiation.hpp"	//自動微分
 #include "IMathLib/math/interpolation.hpp"				//補間・近似曲線
 #include "IMathLib/math/fourier.hpp"					//フーリエ変換

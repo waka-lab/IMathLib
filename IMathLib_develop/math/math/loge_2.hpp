@@ -9,7 +9,7 @@ namespace iml {
 	template <class T>
 	inline constexpr auto _Loge_2() {
 		//浮動小数点のみ
-		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_TYPE>::type;
+		using result_type = typename conditional<is_floating_point<T>::value, T, IMATH_DEFAULT_FLOATING_POINT>::type;
 
 		result_type a = result_type(1) / result_type(3)
 			, an = result_type(1) / result_type(3), b = 1;
