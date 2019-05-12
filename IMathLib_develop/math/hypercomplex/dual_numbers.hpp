@@ -166,127 +166,134 @@ namespace iml {
 
 
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_add1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator+(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator+(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<add_result_t<T1, T2>>(lhs[0] + rhs[0], lhs[1] + rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::dual_numbers_add1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	auto operator+(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
+	inline auto operator+(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
 		return dual_numbers_parameter<add_result_t<T1, T2>, decltype(Re1() + Re2()), decltype(Im1() + Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_add2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr auto operator+(const dual_numbers<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator+(const dual_numbers<T1>& lhs, const T2& rhs) {
 		return dual_numbers<add_result_t<T1, T2>>(lhs[0] + rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_add2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator+(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator+(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return dual_numbers_parameter<add_result_t<T1, T2>, decltype(Re() + rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_add3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator+(const T1& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator+(const T1& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<add_result_t<T1, T2>>(lhs + rhs[0], rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::dual_numbers_add3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	auto operator+(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
+	inline auto operator+(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
 		return dual_numbers_parameter<add_result_t<T1, T2>, decltype(lhs + Re()), Im>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_sub1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator-(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator-(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<sub_result_t<T1, T2>>(lhs[0] - rhs[0], lhs[1] - rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::dual_numbers_sub1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	auto operator-(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
+	inline auto operator-(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
 		return dual_numbers_parameter<sub_result_t<T1, T2>, decltype(Re1() - Re2()), decltype(Im1() - Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_sub2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr auto operator-(const dual_numbers<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator-(const dual_numbers<T1>& lhs, const T2& rhs) {
 		return dual_numbers<sub_result_t<T1, T2>>(lhs[0] - rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_sub2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator-(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator-(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return dual_numbers_parameter<sub_result_t<T1, T2>, decltype(Re() - rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_sub3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator-(const T1& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator-(const T1& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<sub_result_t<T1, T2>>(lhs - rhs[0], -rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::dual_numbers_sub3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	auto operator-(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
+	inline auto operator-(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
 		return dual_numbers_parameter<sub_result_t<T1, T2>, decltype(lhs - Re()), decltype(-Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_mul1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator*(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator*(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<mul_result_t<T1, T2>>(lhs[0] * rhs[0], lhs[0] * rhs[1] + lhs[1] * rhs[0]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::dual_numbers_mul1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	auto operator*(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
+	inline auto operator*(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
 		return dual_numbers_parameter<mul_result_t<T1, T2>, decltype(Re1() * Re2()), decltype(Re1() * Im2() + Im1() * Re2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_mul2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr auto operator*(const dual_numbers<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator*(const dual_numbers<T1>& lhs, const T2& rhs) {
 		return dual_numbers<mul_result_t<T1, T2>>(lhs[0] * rhs, lhs[1] * rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_mul2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator*(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator*(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return dual_numbers_parameter<mul_result_t<T1, T2>, decltype(Re() * rhs), decltype(Im() * rhs)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_mul3_v<is_rscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	constexpr auto operator*(const T1& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr auto operator*(const T1& lhs, const dual_numbers<T2>& rhs) {
 		return dual_numbers<mul_result_t<T1, T2>>(lhs * rhs[0], lhs * rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::dual_numbers_mul3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	auto operator*(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
+	inline auto operator*(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
 		return dual_numbers_parameter<mul_result_t<T1, T2>, decltype(lhs * Re()), decltype(lhs * Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_div2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr auto operator/(const dual_numbers<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator/(const dual_numbers<T1>& lhs, const T2& rhs) {
 		return dual_numbers<div_result_t<T1, T2>>(lhs[0] / rhs, lhs[1] / rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_div2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator/(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator/(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return dual_numbers_parameter<div_result_t<T1, T2>, decltype(Re() / rhs), decltype(Im() / rhs)>();
 	}
 
 
 	//比較演算
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	constexpr bool operator==(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr bool operator==(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) {
 		return (lhs[0] == rhs[0]) && (lhs[1] == rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::dual_numbers_eq1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	auto operator==(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
+	inline auto operator==(dual_numbers_parameter<T1, Re1, Im1>, dual_numbers_parameter<T2, Re2, Im2>) {
 		return (Re1() == Re2()) && (Im1() == Im2());
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr bool operator==(const dual_numbers<T1>& lhs, T2& rhs) {
+	inline constexpr bool operator==(const dual_numbers<T1>& lhs, T2& rhs) {
 		return (lhs[0] == rhs) && is_absorbing_element(lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_eq2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator==(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator==(dual_numbers_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return (Re() == rhs) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq3_v<is_rscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	constexpr bool operator==(const T1& lhs, const dual_numbers<T2>& rhs) {
+	inline constexpr bool operator==(const T1& lhs, const dual_numbers<T2>& rhs) {
 		return (lhs == rhs[0]) && is_absorbing_element(rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::dual_numbers_eq3_v<is_lscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	auto operator==(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
+	inline auto operator==(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im>) {
 		return (lhs == Re()) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	constexpr bool operator!=(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const dual_numbers<T1>& lhs, const dual_numbers<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::dual_numbers_eq1_v<!is_scalar_operation_v<dual_numbers<T1>, dual_numbers<T2>>, T1, T2>>>
-	auto operator!=(dual_numbers_parameter<T1, Re1, Im1> lhs, dual_numbers_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(dual_numbers_parameter<T1, Re1, Im1> lhs, dual_numbers_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	constexpr bool operator!=(const dual_numbers<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const dual_numbers<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::dual_numbers_eq2_v<is_rscalar_operation_v<dual_numbers<T1>, T2>, T1, T2>>>
-	auto operator!=(dual_numbers_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(dual_numbers_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::dual_numbers_eq3_v<is_rscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	constexpr bool operator!=(const T1& lhs, const dual_numbers<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const T1& lhs, const dual_numbers<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::dual_numbers_eq3_v<is_rscalar_operation_v<T1, dual_numbers<T2>>, T1, T2>>>
-	auto operator!=(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(type_parameter<T1, Param> lhs, dual_numbers_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
+
+
+	//二重数型の生成
+	template <class T1, class T2>
+	inline constexpr dual_numbers<reference_unwrapper_t<T1>> make_dual_numbers(T1&& re, T2&& im) {
+		return dual_numbers<reference_unwrapper_t<T1>>(forward<T1>(re), forward<T2>(im));
+	}
 
 
 	//二重数の判定

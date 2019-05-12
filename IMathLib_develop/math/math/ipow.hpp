@@ -8,7 +8,7 @@ namespace iml {
 
 	//自然数冪(積に関してマグマであることを要求)
 	template <class T>
-	inline constexpr T _Ipow(T x, size_t y) {
+	inline constexpr T ipow_impl(T x, size_t y) {
 
 		/*switch (y) {
 		case 0: return 1;
@@ -30,7 +30,7 @@ namespace iml {
 	inline constexpr T ipow(const T& x, size_t y) {
 		if (y == 0) return 1;
 		if (x == 0) return 0;
-		return _Ipow(x, y);
+		return ipow_impl(x, y);
 	}
 	//整数冪
 	template <class T>

@@ -169,128 +169,134 @@ namespace iml {
 
 
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_add1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator+(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator+(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
 		return split_complex<add_result_t<T1, T2>>(lhs[0] + rhs[0], lhs[1] + rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::split_complex_add1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	auto operator+(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
+	inline auto operator+(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
 		return split_complex_parameter<add_result_t<T1, T2>, decltype(Re1() + Re2()), decltype(Im1() + Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_add2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator+(const split_complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator+(const split_complex<T1>& lhs, const T2& rhs) {
 		return split_complex<add_result_t<T1, T2>>(lhs[0] + rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_add2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator+(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator+(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return split_complex_parameter<add_result_t<T1, T2>, decltype(Re() + rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_add3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator+(const T1& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator+(const T1& lhs, const split_complex<T2>& rhs) {
 		return split_complex<add_result_t<T1, T2>>(lhs + rhs[0], rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::split_complex_add3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	auto operator+(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
+	inline auto operator+(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
 		return split_complex_parameter<add_result_t<T1, T2>, decltype(lhs + Re()), Im>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_sub1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator-(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator-(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
 		return split_complex<sub_result_t<T1, T2>>(lhs[0] - rhs[0], lhs[1] - rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::split_complex_sub1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	auto operator-(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
+	inline auto operator-(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
 		return split_complex_parameter<sub_result_t<T1, T2>, decltype(Re1() - Re2()), decltype(Im1() - Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_sub2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator-(const split_complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator-(const split_complex<T1>& lhs, const T2& rhs) {
 		return split_complex<sub_result_t<T1, T2>>(lhs[0] - rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_sub2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator-(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator-(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return split_complex_parameter<sub_result_t<T1, T2>, decltype(Re() - rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_sub3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator-(const T1& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator-(const T1& lhs, const split_complex<T2>& rhs) {
 		return split_complex<sub_result_t<T1, T2>>(lhs - rhs[0], -rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::split_complex_sub3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	auto operator-(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
+	inline auto operator-(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
 		return split_complex_parameter<sub_result_t<T1, T2>, decltype(lhs - Re()), decltype(-Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_mul1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator*(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator*(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
 		return split_complex<mul_result_t<T1, T2>>(lhs[0] * rhs[0] + lhs[1] * rhs[1], lhs[0] * rhs[1] + lhs[1] * rhs[0]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::split_complex_mul1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	auto operator*(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
+	inline auto operator*(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
 		return split_complex_parameter<mul_result_t<T1, T2>, decltype(Re1() * Re2() + Im1() * Im2()), decltype(Re1() * Im2() + Im1() * Re2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_mul2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator*(const split_complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator*(const split_complex<T1>& lhs, const T2& rhs) {
 		return split_complex<mul_result_t<T1, T2>>(lhs[0] * rhs, lhs[1] * rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_mul2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator*(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator*(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return split_complex_parameter<mul_result_t<T1, T2>, decltype(Re() * rhs), decltype(Im() * rhs)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_mul3_v<is_rscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	constexpr auto operator*(const T1& lhs, const split_complex<T2>& rhs) {
+	inline constexpr auto operator*(const T1& lhs, const split_complex<T2>& rhs) {
 		return split_complex<mul_result_t<T1, T2>>(lhs * rhs[0], lhs * rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::split_complex_mul3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	auto operator*(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
+	inline auto operator*(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
 		return split_complex_parameter<mul_result_t<T1, T2>, decltype(lhs * Re()), decltype(lhs * Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_div2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator/(const split_complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator/(const split_complex<T1>& lhs, const T2& rhs) {
 		return split_complex<div_result_t<T1, T2>>(lhs[0] / rhs, lhs[1] / rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_div2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator/(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator/(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return split_complex_parameter<div_result_t<T1, T2>, decltype(Re() / rhs), decltype(Im() / rhs)>();
 	}
 
 
 	//比較演算
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	constexpr bool operator==(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
+	inline constexpr bool operator==(const split_complex<T1>& lhs, const split_complex<T2>& rhs) {
 		return (lhs[0] == rhs[0]) && (lhs[1] == rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::split_complex_eq1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	auto operator==(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
+	inline auto operator==(split_complex_parameter<T1, Re1, Im1>, split_complex_parameter<T2, Re2, Im2>) {
 		return (Re1() == Re2()) && (Im1() == Im2());
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr bool operator==(const split_complex<T1>& lhs, T2& rhs) {
+	inline constexpr bool operator==(const split_complex<T1>& lhs, T2& rhs) {
 		return (lhs[0] == rhs) && is_absorbing_element(lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_eq2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator==(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator==(split_complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return (Re() == rhs) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq3_v<is_rscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	constexpr bool operator==(const T1& lhs, const split_complex<T2>& rhs) {
+	inline constexpr bool operator==(const T1& lhs, const split_complex<T2>& rhs) {
 		return (lhs == rhs[0]) && is_absorbing_element(rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::split_complex_eq3_v<is_lscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	auto operator==(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
+	inline auto operator==(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im>) {
 		return (lhs == Re()) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	constexpr bool operator!=(const split_complex<T1>& lhs, const split_complex<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const split_complex<T1>& lhs, const split_complex<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::split_complex_eq1_v<!is_scalar_operation_v<split_complex<T1>, split_complex<T2>>, T1, T2>>>
-	auto operator!=(split_complex_parameter<T1, Re1, Im1> lhs, split_complex_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(split_complex_parameter<T1, Re1, Im1> lhs, split_complex_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	constexpr bool operator!=(const split_complex<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const split_complex<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::split_complex_eq2_v<is_rscalar_operation_v<split_complex<T1>, T2>, T1, T2>>>
-	auto operator!=(split_complex_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(split_complex_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::split_complex_eq3_v<is_rscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	constexpr bool operator!=(const T1& lhs, const split_complex<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const T1& lhs, const split_complex<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::split_complex_eq3_v<is_rscalar_operation_v<T1, split_complex<T2>>, T1, T2>>>
-	auto operator!=(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(type_parameter<T1, Param> lhs, split_complex_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
 
+
+	//分解型複素数型の生成
+	template <class T1, class T2>
+	inline constexpr split_complex<reference_unwrapper_t<T1>> make_split_complex(T1&& re, T2&& im) {
+		return split_complex<reference_unwrapper_t<T1>>(forward<T1>(re), forward<T2>(im));
+	}
 
 
 	//分解型複素数の判定

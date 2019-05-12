@@ -8,148 +8,129 @@
 
 namespace iml {
 
-	//ベクトルに限り絶対値の定義
 	template <class T, size_t N>
 	struct Abs<vector<T, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type _abs_(const vector<T, N>& x) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < N; ++i) temp += abs(x[i])*abs(x[i]);
+		static constexpr auto _abs_(const vector<T, N>& x) {
+			auto temp = abs2(x[0]);
+			for (size_t i = 1; i < N; ++i) temp += abs2(x[i]);
 			return sqrt(temp);
+		}
+	};
+	template <class T, size_t N>
+	struct Abs2<vector<T, N>> {
+		static constexpr auto _abs_(const vector<T, N>& x) {
+			auto temp = abs2(x[0]);
+			for (size_t i = 1; i < N; ++i) temp += abs2(x[i]);
+			return temp;
 		}
 	};
 
 	//マンハッタンノルム
 	template <class T>
-	struct _Manhattan_norm {
-		using result_type = typename math_function_type<T>::type;
-
-		static constexpr result_type __manhattan_norm(const T& x) {
+	struct Manhattan_norm {
+		static constexpr auto _manhattan_norm_(const T& x) {
 			return abs(x);
 		}
 	};
 	template <class T, size_t N>
-	struct _Manhattan_norm<vector<T, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __manhattan_norm(const vector<T, N>& x) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < N; ++i) temp += abs(x[i]);
+	struct Manhattan_norm<vector<T, N>> {
+		static auto _manhattan_norm_(const vector<T, N>& x) {
+			auto temp = abs(x[0]);
+			for (size_t i = 1; i < N; ++i) temp += abs(x[i]);
 			return temp;
 		}
 	};
 	template <class T, size_t M, size_t N>
-	struct _Manhattan_norm<matrix<T, M, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __manhattan_norm(const matrix<T, M, N>& x, size_t n) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < dimension<M, N>::value; ++i) temp += abs(x[0][i]);
+	struct Manhattan_norm<matrix<T, M, N>> {
+		static auto _manhattan_norm_(const matrix<T, M, N>& x, size_t n) {
+			auto temp = abs(x[0][0]);
+			for (size_t i = 1; i < M * N; ++i) temp += abs(x[0][i]);
 			return temp;
 		}
 	};
 	template <class T>
-	inline constexpr auto manhattan_norm(const T& x) { return _Manhattan_norm<T>::__manhattan_norm(x); }
+	inline constexpr auto manhattan_norm(const T& x) { return Manhattan_norm<T>::_manhattan_norm_(x); }
 
 
 	//ユークリッドノルム
 	template <class T>
-	struct _Euclid_norm {
-		using result_type = typename math_function_type<T>::type;
-
-		static constexpr result_type __euclid_norm(const T& x) {
+	struct Euclid_norm {
+		static constexpr auto _euclid_norm_(const T& x) {
 			return abs(x);
 		}
 	};
 	template <class T, size_t N>
-	struct _Euclid_norm<vector<T, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __euclid_norm(const vector<T, N>& x) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < N; ++i) temp += abs(x[i])*abs(x[i]);
+	struct Euclid_norm<vector<T, N>> {
+		static constexpr auto _euclid_norm_(const vector<T, N>& x) {
+			auto temp = abs2(x[0]);
+			for (size_t i = 1; i < N; ++i) temp += abs2(x[i]);
 			return sqrt(temp);
 		}
 	};
 	template <class T, size_t M, size_t N>
-	struct _Euclid_norm<matrix<T, M, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __euclid_norm(const matrix<T, M, N>& x, size_t n) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < dimension<M, N>::value; ++i) temp += abs(x[0][i])*abs(x[0][i]);
+	struct Euclid_norm<matrix<T, M, N>> {
+		static constexpr auto _euclid_norm_(const matrix<T, M, N>& x, size_t n) {
+			auto temp = abs2(x[0][0]);
+			for (size_t i = 1; i < M * N; ++i) temp += abs2(x[0][i]);
 			return sqrt(temp);
 		}
 	};
 	template <class T>
-	inline constexpr auto euclid_norm(const T& x) { return _Euclid_norm<T>::__euclid_norm(x); }
+	inline constexpr auto euclid_norm(const T& x) { return Euclid_norm<T>::_euclid_norm_(x); }
 
 
 	//チェビシェフノルム
 	template <class T>
-	struct _Chebyshev_norm {
-		using result_type = typename math_function_type<T>::type;
-
-		static constexpr result_type __chebyshev_norm(const T& x) {
+	struct Chebyshev_norm {
+		static constexpr auto _hebyshev_norm_(const T& x) {
 			return abs(x);
 		}
 	};
 	template <class T, size_t N>
-	struct _Chebyshev_norm<vector<T, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __chebyshev_norm(const vector<T, N>& x) {
-			result_type temp = addition_traits<T>::identity_element();
+	struct Chebyshev_norm<vector<T, N>> {
+		static constexpr auto _hebyshev_norm_(const vector<T, N>& x) {
+			auto temp = abs(x[0]);
 			for (size_t i = 0; i < N; ++i)  if (abs(x[i]) > temp) tenp = abs(x[i]);
 			return temp;
 		}
 	};
 	template <class T, size_t M, size_t N>
-	struct _Chebyshev_norm<matrix<T, M, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __chebyshev_norm(const matrix<T, M, N>& x, size_t n) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < dimension<M, N>::value; ++i) if (abs(x[0][i]) > temp) tenp = abs(x[0][i]);
+	struct Chebyshev_norm<matrix<T, M, N>> {
+		static constexpr auto _hebyshev_norm_(const matrix<T, M, N>& x) {
+			auto temp = abs(x[0]);
+			for (size_t i = 1; i < M * N; ++i) if (abs(x[0][i]) > temp) tenp = abs(x[0][i]);
 			return temp;
 		}
 	};
 	template <class T>
-	inline constexpr auto chebyshev_norm(const T& x) { return _Chebyshev_norm<T>::__chebyshev_norm(x); }
+	inline constexpr auto chebyshev_norm(const T& x) { return Chebyshev_norm<T>::_hebyshev_norm_(x); }
 
 
 	//Lpノルム
 	template <class T>
-	struct _Lp_norm {
-		using result_type = typename math_function_type<T>::type;
-
-		static constexpr result_type __lp_norm(const T& x, size_t n) {
+	struct Lp_norm {
+		static constexpr auto _lp_norm_(const T& x, size_t n) {
 			return abs(x);
 		}
 	};
 	template <class T, size_t N>
-	struct _Lp_norm<vector<T, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __lp_norm(const vector<T, N>& x, size_t n) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < N; ++i) temp += pow(abs(x[i]), n);
-			return pow(temp, result_type(1) / n);
+	struct Lp_norm<vector<T, N>> {
+		static constexpr auto _lp_norm_(const vector<T, N>& x, size_t n) {
+			auto temp = pow(abs(x[0]), n);
+			for (size_t i = 1; i < N; ++i) temp += pow(abs(x[i]), n);
+			return nth_root(temp,  n);
 		}
 	};
 	template <class T, size_t M, size_t N>
-	struct _Lp_norm<matrix<T, M, N>> {
-		using result_type = typename math_function_type<T>::type;
-
-		static result_type __lp_norm(const matrix<T, M, N>& x, size_t n) {
-			result_type temp = addition_traits<T>::identity_element();
-			for (size_t i = 0; i < dimension<M, N>::value; ++i) temp += pow(abs(x[0][i]), n);
-			return pow(temp, result_type(1) / n);
+	struct Lp_norm<matrix<T, M, N>> {
+		static constexpr auto _lp_norm_(const matrix<T, M, N>& x, size_t n) {
+			auto temp = pow(abs(x[0][0]), n);
+			for (size_t i = 1; i < M * N; ++i) temp += pow(abs(x[0][i]), n);
+			return nth_root(temp, n);
 		}
 	};
 	template <class T>
-	inline constexpr auto lp_norm(const T& x, size_t n) { return _Lp_norm<T>::__lp_norm(x, n); }
+	inline constexpr auto lp_norm(const T& x, size_t n) { return Lp_norm<T>::_lp_norm_(x, n); }
 
 }
 

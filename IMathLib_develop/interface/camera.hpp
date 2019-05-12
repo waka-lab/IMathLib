@@ -223,7 +223,7 @@ namespace iml {
 			friend vector3<S> screen_to_world(const camera<S>& c, const vector3<S>& pos);
 		};
 		template <class T>
-		const T camera<T>::_pi = iml::math_constant<T>::pi;
+		const T camera<T>::_pi = iml::pi<T>;
 
 		//ビュー行列の更新
 		template <class T>

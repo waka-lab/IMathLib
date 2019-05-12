@@ -4,7 +4,7 @@
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/abs.hpp"
 #include "IMathLib/math/math/log.hpp"
-#include "IMathLib/math/math/euler_constant.hpp"
+#include "IMathLib/math/math/gamma.hpp"
 
 namespace iml {
 

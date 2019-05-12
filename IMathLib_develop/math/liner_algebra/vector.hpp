@@ -232,6 +232,14 @@ namespace iml {
 	auto operator!=(vector_parameter<T1, N, Types1...> rhs, vector_parameter<T2, N, Types2...> lhs) { return !(lhs == rhs); }
 
 
+	//ベクトル型の生成
+	template <class First, class... Types>
+	inline constexpr vector<reference_unwrapper_t<First>, sizeof...(Types) + 1> make_vector(First&& first, Types&&... args) {
+		return vector<reference_unwrapper_t<First>, sizeof...(Types) + 1>(forward<First>(first), forward<Types>(args)...);
+	}
+
+
+
 	//ベクトルの判定
 	template <class T>
 	struct is_vector_impl : false_type {};

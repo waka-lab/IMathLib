@@ -3,7 +3,7 @@
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/exp_int.hpp"
-#include "IMathLib/math/math/loge_2.hpp"
+#include "IMathLib/math/math/ln2.hpp"
 #include "IMathLib/math/math/log.hpp"
 
 namespace iml {

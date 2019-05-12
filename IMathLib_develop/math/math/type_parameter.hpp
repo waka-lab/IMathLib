@@ -15,6 +15,17 @@ namespace iml {
 	struct type_parameter;
 
 
+	//type_parameterの判定
+	template <class>
+	struct is_type_parameter_impl : false_type {};
+	template <class T, class Param>
+	struct is_type_parameter_impl<type_parameter<T, Param>> : true_type {};
+	template <class T>
+	struct is_type_parameter : is_type_parameter_impl<remove_cv_t<T>> {};
+	template <class T>
+	constexpr bool is_type_parameter_v = is_type_parameter<T>::value;
+
+
 	//整数パラメータの場合
 	template <class T, T Val>
 	using int_parameter = type_parameter<T, index_tuple<T, Val>>;

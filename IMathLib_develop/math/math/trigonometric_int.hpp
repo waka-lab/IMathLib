@@ -1,9 +1,9 @@
-﻿#ifndef IMATH_MATH_MATH_TRIANGLE_INT_HPP
-#define IMATH_MATH_MATH_TRIANGLE_INT_HPP
+﻿#ifndef IMATH_MATH_MATH_TRIGONOMETRIC_INT_HPP
+#define IMATH_MATH_MATH_TRIGONOMETRIC_INT_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/exp_int.hpp"
-#include "IMathLib/math/math/loge_2.hpp"
+#include "IMathLib/math/math/ln2.hpp"
 #include "IMathLib/math/math/log.hpp"
 
 namespace iml {

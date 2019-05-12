@@ -12,22 +12,21 @@
 namespace iml {
 
 	//イテレータの種類に応じたソートアルゴリズム
-	template <class RandomAccessIterator, class Predicate, class IteratorTag>
-	struct _Sort {
-		//ランダムアクセスイテレータでなければならない
-		static_assert(is_same<IteratorTag, random_access_iterator_tag>::value
-			, "The type of iterator is different.");
+	template <class, class, class>
+	struct Sort;
+	template <class RandomAccessIterator, class Predicate>
+	struct Sort<RandomAccessIterator, Predicate, random_access_iterator_tag>{
 
 		using value_type = typename iterator_traits<RandomAccessIterator>::value_type;
 		using iterator = RandomAccessIterator;
 
 		static constexpr bool pred_swap(iterator a, iterator b) {
 			//イテレータ位置はa < bとなっている
-			return Predicate::lt(*b, *a) ? iml::swap(*a, *b), true : false;
+			return Predicate::lt(*b, *a) ? (iml::swap(*a, *b), true) : false;
 		}
 
 		//整数の自然対数の整数近似
-		static constexpr size_t __log_int(size_t x) {
+		static constexpr size_t _log_int_(size_t x) {
 			size_t index = 0;			//冪指数
 			double c = x;
 			if (x <= 1) return 0;			//1未満ならば負数となる
@@ -59,14 +58,14 @@ namespace iml {
 		}
 
 		//挿入ソート
-		static constexpr void __insert_sort(iterator first, iterator last) {
+		static constexpr void _insert_sort_(iterator first, iterator last) {
 			pred_swap(first, first + 1);
 			for (iterator i = first + 1; i != last; ++i)
 				for (iterator j = i; j != first; --j)
 					if (!pred_swap(j - 1, j)) break;
 		}
 		//イントロソート用のクイックソート
-		static constexpr void __quick_sort(iterator first, iterator last, size_t size) {
+		static constexpr void _quick_sort_(iterator first, iterator last, size_t size) {
 			if (distance(first, last) <= size) return;
 			iterator i = first, j = last - 1;
 			value_type pivot = __median3(*i, *(i + (j - i) / 2), *j);
@@ -77,20 +76,20 @@ namespace iml {
 				iml::swap(*i, *j);
 				++i; --j;
 			}
-			__quick_sort(first, i, size);
-			__quick_sort(++j, last, size);
+			_quick_sort_(first, i, size);
+			_quick_sort_(++j, last, size);
 		}
 
 		//イントロソート
-		static constexpr void __sort(iterator first, iterator last) {
+		static constexpr void _sort_(iterator first, iterator last) {
 			size_t dis = last - first;
 			if (dis <= 1) return;
-			__quick_sort(first, last, __log_int(dis));
-			__insert_sort(first, last);
+			_quick_sort_(first, last, _log_int_(dis));
+			_insert_sort_(first, last);
 		}
 	};
 	template <class BidirectionalIterator, class Predicate>
-	struct _Sort<BidirectionalIterator, Predicate, bidirectional_iterator_tag> {
+	struct Sort<BidirectionalIterator, Predicate, bidirectional_iterator_tag> {
 
 		using value_type = typename iterator_traits<BidirectionalIterator>::value_type;
 		using iterator = BidirectionalIterator;
@@ -101,7 +100,7 @@ namespace iml {
 		}
 
 		//整数の自然対数の整数近似
-		static constexpr size_t __log_int(size_t x) {
+		static constexpr size_t _log_int_(size_t x) {
 			size_t index = 0;			//冪指数
 			double c = x;
 			if (x <= 1) return 0;			//1未満ならば負数となる
@@ -133,14 +132,14 @@ namespace iml {
 		}
 
 		//挿入ソート
-		static constexpr void __insert_sort(iterator first, iterator last) {
+		static constexpr void _insert_sort_(iterator first, iterator last) {
 			pred_swap(first, next(first));
 			for (iterator i = next(first); i != last; ++i)
 				for (iterator j = i; j != first; --j)
 					if (!pred_swap(prev(j), j)) break;
 		}
 		//イントロソート用のクイックソート(予め距離を計算しておいて高速化をする)
-		static constexpr void __quick_sort(iterator first, iterator last, size_t size, size_t dis) {
+		static constexpr void _quick_sort_(iterator first, iterator last, size_t size, size_t dis) {
 			if (dis <= size) return;
 			iterator i = first, j = prev(last);
 			--dis;
@@ -155,20 +154,20 @@ namespace iml {
 			}
 			//次のデータの長さを算出
 			dis = distance(first, i);
-			__quick_sort(first, i, size, dis);
-			__quick_sort(++j, last, size, cnt - dis);
+			_quick_sort_(first, i, size, dis);
+			_quick_sort_(++j, last, size, cnt - dis);
 		}
 
 		//イントロソート
-		static constexpr void __sort(iterator first, iterator last) {
+		static constexpr void _sort_(iterator first, iterator last) {
 			size_t dis = distance(first, last);
 			if (dis <= 1) return;
-			__quick_sort(first, last, __log_int(dis), dis);
-			__insert_sort(first, last);
+			_quick_sort_(first, last, _log_int_(dis), dis);
+			_insert_sort_(first, last);
 		}
 	};
 	template <class ForwardIterator, class Predicate>
-	struct _Sort<ForwardIterator, Predicate, forward_iterator_tag> {
+	struct Sort<ForwardIterator, Predicate, forward_iterator_tag> {
 
 		using value_type = typename iterator_traits<ForwardIterator>::value_type;
 		using iterator = ForwardIterator;
@@ -178,7 +177,7 @@ namespace iml {
 		}
 
 		//コームソート
-		static constexpr void __sort(iterator first, iterator last) {
+		static constexpr void _sort_(iterator first, iterator last) {
 			size_t dis = distance(first, last);
 			if (dis <= 1) return;
 			for (size_t interval = dis * 10 / 13;; interval = interval * 10 / 13) {
@@ -192,7 +191,7 @@ namespace iml {
 	//ソート
 	template <class Iterator, class Predicate = type_comparison<typename iterator_traits<Iterator>::value_type>>
 	inline constexpr void sort(Iterator first, Iterator last) {
-		_Sort<Iterator, Predicate, typename iterator_traits<Iterator>::iterator_category>::__sort(first, last);
+		Sort<Iterator, Predicate, typename iterator_traits<Iterator>::iterator_category>::_sort_(first, last);
 	}
 
 }
@@ -324,6 +323,37 @@ namespace iml {
 		for (BidirectionalIterator itr = prev(last); first != itr; --itr)
 			if (pred(*itr)) return itr;
 		return (pred(*first)) ? first : last;
+	}
+
+	//イテレータから最大要素のイテレータを返す
+	template <class ForwardIterator>
+	inline constexpr ForwardIterator max_element(ForwardIterator first, ForwardIterator last) {
+		//前方向イテレータでなければならない
+		static_assert(is_base_of_v<forward_iterator_tag, typename iterator_traits<ForwardIterator>::iterator_category>
+			, "The type of iterator is different.");
+
+		ForwardIterator p = first++;
+		if (first == last) return first;
+		while (first != last) {
+			if (*p < *first) p = first;
+			++first;
+		}
+		return p;
+	}
+	//イテレータから最小要素のイテレータを返す
+	template <class ForwardIterator>
+	inline constexpr ForwardIterator min_element(ForwardIterator first, ForwardIterator last) {
+		//前方向イテレータでなければならない
+		static_assert(is_base_of_v<forward_iterator_tag, typename iterator_traits<ForwardIterator>::iterator_category>
+			, "The type of iterator is different.");
+
+		ForwardIterator p = first++;
+		if (first == last) return first;
+		while (first != last) {
+			if (*p > *first) p = first;
+			++first;
+		}
+		return p;
 	}
 }
 

@@ -1,5 +1,5 @@
-﻿#ifndef _IMATH_MATH_DIRICHELT_ETA_HPP
-#define _IMATH_MATH_DIRICHELT_ETA_HPP
+﻿#ifndef IMATH_MATH_MATH_DIRICHELT_ETA_HPP
+#define IMATH_MATH_MATH_DIRICHELT_ETA_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/pow.hpp"
@@ -8,10 +8,10 @@ namespace iml {
 
 	//ディリクレのイータ関数
 	template <class T>
-	struct _Dirichlet_eta {
+	struct Dirichlet_eta {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __dirichlet_eta(const T& x) {
+		static constexpr result_type _dirichlet_eta_(const T& x) {
 			result_type x2 = 0.5, x1 = 0.5, x3 = 1, x4 = 1, x5 = 0;
 
 			for (size_t i = 1; !error_evaluation(x2, x5); ++i) {
@@ -30,7 +30,7 @@ namespace iml {
 		}
 	};
 	template <class T>
-	inline constexpr auto dirichlet_eta(const T& x) { return _Dirichlet_eta<T>::__dirichlet_eta(x); }
+	inline constexpr auto dirichlet_eta(const T& x) { return Dirichlet_eta<T>::_dirichlet_eta_(x); }
 
 }
 

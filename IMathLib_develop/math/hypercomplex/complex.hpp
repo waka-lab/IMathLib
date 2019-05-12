@@ -143,8 +143,8 @@ namespace iml {
 		//Uは体でTは環を仮定しているため，乗算がT×U→Tで十分
 		template <class U, class = enable_if_t<dec::complex_div1_v<is_operation<T, U, T>::mul_value && !is_rscalar_operation_v<complex, complex<U>>, T, U>>>
 		complex& operator/=(const complex<U>& c) {
-			T temp[] = { this->x_m[0] * c.x_m[0] + this->x_m[1] * c.x_m[1], this->x_m[1] * c.x_m[0] - this->x_m[0] * c.x_m[1] };
-			U temp2 = c.x_m[0] * c.x_m[0] + c.x_m[1] * c.x_m[1];
+			T temp[] = { this->x_m[0] * conj(c.x_m[0]) + this->x_m[1] * conj(c.x_m[1]), this->x_m[1] * conj(c.x_m[0]) - this->x_m[0] * conj(c.x_m[1]) };
+			U temp2 = abs2(c.x_m[0]) + abs2(c.x_m[1]);
 			this->x_m[0] = temp[0] / temp2; this->x_m[1] = temp[1] / temp2;
 			return *this;
 		}
@@ -174,107 +174,107 @@ namespace iml {
 
 	//複素数の2項演算
 	template <class T1, class T2, class = enable_if_t<dec::complex_add1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr auto operator+(const complex<T1>& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator+(const complex<T1>& lhs, const complex<T2>& rhs) {
 		return complex<add_result_t<T1, T2>>(lhs[0] + rhs[0], lhs[1] + rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_add1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator+(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
+	inline auto operator+(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
 		return complex_parameter<add_result_t<T1, T2>, decltype(Re1() + Re2()), decltype(Im1() + Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_add2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator+(const complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator+(const complex<T1>& lhs, const T2& rhs) {
 		return complex<add_result_t<T1, T2>>(lhs[0] + rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_add2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator+(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator+(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return complex_parameter<add_result_t<T1, T2>, decltype(Re() + rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_add3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr auto operator+(const T1& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator+(const T1& lhs, const complex<T2>& rhs) {
 		return complex<add_result_t<T1, T2>>(lhs + rhs[0], rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_add3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator+(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
+	inline auto operator+(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
 		return complex_parameter<add_result_t<T1, T2>, decltype(lhs + Re()), Im>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::complex_sub1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr auto operator-(const complex<T1>& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator-(const complex<T1>& lhs, const complex<T2>& rhs) {
 		return complex<sub_result_t<T1, T2>>(lhs[0] - rhs[0], lhs[1] - rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_sub1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator-(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
+	inline auto operator-(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
 		return complex_parameter<sub_result_t<T1, T2>, decltype(Re1() - Re2()), decltype(Im1() - Im2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_sub2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator-(const complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator-(const complex<T1>& lhs, const T2& rhs) {
 		return complex<sub_result_t<T1, T2>>(lhs[0] - rhs, lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_sub2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator-(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator-(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return complex_parameter<sub_result_t<T1, T2>, decltype(Re() - rhs), Im>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_sub3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr auto operator-(const T1& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator-(const T1& lhs, const complex<T2>& rhs) {
 		return complex<sub_result_t<T1, T2>>(lhs - rhs[0], -rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_sub3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator-(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
+	inline auto operator-(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
 		return complex_parameter<sub_result_t<T1, T2>, decltype(lhs - Re()), decltype(-Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::complex_mul1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr auto operator*(const complex<T1>& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator*(const complex<T1>& lhs, const complex<T2>& rhs) {
 		return complex<mul_result_t<T1, T2>>(lhs[0] * rhs[0] - lhs[1] * rhs[1], lhs[0] * rhs[1] + lhs[1] * rhs[0]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_mul1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator*(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
+	inline auto operator*(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
 		return complex_parameter<mul_result_t<T1, T2>, decltype(Re1() * Re2() - Im1() * Im2()), decltype(Re1() * Im2() + Im1() * Re2())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_mul2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator*(const complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator*(const complex<T1>& lhs, const T2& rhs) {
 		return complex<mul_result_t<T1, T2>>(lhs[0] * rhs, lhs[1] * rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_mul2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator*(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator*(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return complex_parameter<mul_result_t<T1, T2>, decltype(Re() * rhs), decltype(Im() * rhs)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_mul3_v<is_rscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr auto operator*(const T1& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator*(const T1& lhs, const complex<T2>& rhs) {
 		return complex<mul_result_t<T1, T2>>(lhs * rhs[0], lhs * rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_mul3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator*(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
+	inline auto operator*(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
 		return complex_parameter<mul_result_t<T1, T2>, decltype(lhs * Re()), decltype(lhs * Im())>();
 	}
 
 	template <class T1, class T2, class = enable_if_t<dec::complex_div1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr auto operator/(const complex<T1>& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator/(const complex<T1>& lhs, const complex<T2>& rhs) {
 		auto temp = rhs[0] * rhs[0] + rhs[1] * rhs[1];
 		return complex<mul_result_t<T1, T2>>((lhs[0] * rhs[0] + lhs[1] * rhs[1]) / temp
 			, (lhs[1] * rhs[0] - lhs[0] * rhs[1]) / temp);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_div1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator/(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
+	inline auto operator/(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
 		using type = decltype(Re2() * Re2() + Im2() * Im2());
 		return complex_parameter<mul_result_t<T1, T2>, decltype((Re1() * Re2() + Im1() * Im2()) / type())
 			, decltype((Im1() * Re2() - Re1() * Im2()) / type())>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_div2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr auto operator/(const complex<T1>& lhs, const T2& rhs) {
+	inline constexpr auto operator/(const complex<T1>& lhs, const T2& rhs) {
 		return complex<div_result_t<T1, T2>>(lhs[0] / rhs, lhs[1] / rhs);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_div2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator/(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator/(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return complex_parameter<div_result_t<T1, T2>, decltype(Re() / rhs), decltype(Im() / rhs)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_div3_v<is_rscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr auto operator/(const T1& lhs, const complex<T2>& rhs) {
+	inline constexpr auto operator/(const T1& lhs, const complex<T2>& rhs) {
 		auto temp = rhs[0] * rhs[0] + rhs[1] * rhs[1];
 		return complex<mul_result_t<T1, T2>>(lhs * rhs[0] / temp, -lhs * rhs[1] / temp);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_div3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator/(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
+	inline auto operator/(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
 		using type = decltype(Re() * Re() + Im() * Im());
 		return complex<mul_result_t<T1, T2>, decltype(lhs * Re() / type()), decltype(-lhs * Im() / type())>();
 	}
@@ -282,41 +282,48 @@ namespace iml {
 
 	//比較演算
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr bool operator==(const complex<T1>& lhs, const complex<T2>& rhs) {
+	inline constexpr bool operator==(const complex<T1>& lhs, const complex<T2>& rhs) {
 		return (lhs[0] == rhs[0]) && (lhs[1] == rhs[1]);
 	}
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_eq1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator==(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
+	inline auto operator==(complex_parameter<T1, Re1, Im1>, complex_parameter<T2, Re2, Im2>) {
 		return (Re1() == Re2()) && (Im1() == Im2());
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr bool operator==(const complex<T1>& lhs, T2& rhs) {
+	inline constexpr bool operator==(const complex<T1>& lhs, T2& rhs) {
 		return (lhs[0] == rhs) && is_absorbing_element(lhs[1]);
 	}
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_eq2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator==(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
+	inline auto operator==(complex_parameter<T1, Re, Im>, type_parameter<T2, Param> rhs) {
 		return (Re() == rhs) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq3_v<is_rscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr bool operator==(const T1& lhs, const complex<T2>& rhs) {
+	inline constexpr bool operator==(const T1& lhs, const complex<T2>& rhs) {
 		return (lhs == rhs[0]) && is_absorbing_element(rhs[1]);
 	}
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_eq3_v<is_lscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator==(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
+	inline auto operator==(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im>) {
 		return (lhs == Re()) && int_parameter<bool, is_absorbing_element(Im::value)>();
 	}
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	constexpr bool operator!=(const complex<T1>& lhs, const complex<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const complex<T1>& lhs, const complex<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re1, class Im1, class Re2, class Im2, class = enable_if_t<dec::complex_eq1_v<!is_scalar_operation_v<complex<T1>, complex<T2>>, T1, T2>>>
-	auto operator!=(complex_parameter<T1, Re1, Im1> lhs, complex_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(complex_parameter<T1, Re1, Im1> lhs, complex_parameter<T2, Re2, Im2> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	constexpr bool operator!=(const complex<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const complex<T1>& lhs, T2& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Re, class Im, class Param, class = enable_if_t<dec::complex_eq2_v<is_rscalar_operation_v<complex<T1>, T2>, T1, T2>>>
-	auto operator!=(complex_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(complex_parameter<T1, Re, Im> lhs, type_parameter<T2, Param> rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class = enable_if_t<dec::complex_eq3_v<is_rscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	constexpr bool operator!=(const T1& lhs, const complex<T2>& rhs) { return !(lhs == rhs); }
+	inline constexpr bool operator!=(const T1& lhs, const complex<T2>& rhs) { return !(lhs == rhs); }
 	template <class T1, class T2, class Param, class Re, class Im, class = enable_if_t<dec::complex_eq3_v<is_rscalar_operation_v<T1, complex<T2>>, T1, T2>>>
-	auto operator!=(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
+	inline auto operator!=(type_parameter<T1, Param> lhs, complex_parameter<T2, Re, Im> rhs) { return !(lhs == rhs); }
+
+
+	//複素数型の生成
+	template <class T1, class T2>
+	inline constexpr complex<reference_unwrapper_t<T1>> make_complex(T1&& re, T2&& im) {
+		return complex<reference_unwrapper_t<T1>>(forward<T1>(re), forward<T2>(im));
+	}
 
 
 	//複素数の判定

@@ -2,7 +2,7 @@
 #define IMATH_MATH_MATH_LOG_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
-#include "IMathLib/math/math/loge_2.hpp"
+#include "IMathLib/math/math/ln2.hpp"
 
 namespace iml {
 
@@ -13,7 +13,7 @@ namespace iml {
 
 		static constexpr result_type _log_impl_(const T& x) {
 
-			if (x == 2) return _Loge_2_<result_type>::loge_2;
+			if (x == 2) return ln2<result_type>;
 			else if (x == 0) return numeric_traits<result_type>::negative_infinity();
 			else if (x < 0) return numeric_traits<result_type>::nan();
 			
@@ -42,7 +42,7 @@ namespace iml {
 				x1 *= c;
 				x2 += x1 / (2 * i - 1);
 			}
-			return 2 * x2 + index * _Loge_2_<result_type>::loge_2;
+			return 2 * x2 + index * ln2<result_type>;
 		}
 		static constexpr result_type _log_(const T& x) {
 			if (x == 0) return numeric_traits<result_type>::positive_infinity();

@@ -41,6 +41,15 @@ namespace iml {
 
 	template <class T>
 	inline constexpr auto abs(const T& x) { return Abs<T>::_abs_(x); }
+
+
+	//絶対値の2乗
+	template <class T>
+	struct Abs2 {
+		static constexpr T _abs2_(T x) { return x * x; }
+	};
+	template <class T>
+	inline constexpr auto abs2(const T& x) { return Abs2<T>::_abs2_(x); }
 }
 
 

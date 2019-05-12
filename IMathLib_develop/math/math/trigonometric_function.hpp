@@ -1,9 +1,10 @@
-﻿#ifndef IMATH_MATH_MATH_COS_HPP
-#define IMATH_MATH_MATH_COS_HPP
+﻿#ifndef IMATH_MATH_MATH_TRIGONOMETRIC_FUNCTION_HPP
+#define IMATH_MATH_MATH_TRIGONOMETRIC_FUNCTION_HPP
 
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/pi.hpp"
 #include "IMathLib/math/math/numerical_correction.hpp"
+#include "IMathLib/math/math/abs.hpp"
 
 
 namespace iml {
@@ -44,6 +45,39 @@ namespace iml {
 	};
 	template <class T>
 	inline constexpr auto cos(const T& x) { return Cos<T>::_cos_(x); }
+
+
+	//正弦関数
+	template <class T>
+	struct Sin {
+		using result_type = typename math_function_type<T>::type;
+
+		static constexpr result_type _sin_(const T& x) {
+			return cos(pi<result_type> / 2 - x);
+		}
+	};
+	template <class T>
+	inline constexpr auto sin(const T& x) { return Sin<T>::_sin_(x); }
+
+
+	//sinc関数
+	template <class T>
+	inline constexpr auto sinc(const T& x) {
+		return (x == 0) ? 1 : sin(x) / x;
+	}
+
+
+	//正接関数
+	template <class T>
+	struct Tan {
+		using result_type = typename math_function_type<T>::type;
+
+		static constexpr result_type _tan_(const T& x) {
+			return sin(x) / cos(x);
+		}
+	};
+	template <class T>
+	inline constexpr auto tan(const T& x) { return Tan<T>::_tan_(x); }
 }
 
 

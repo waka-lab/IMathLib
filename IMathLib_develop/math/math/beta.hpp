@@ -10,15 +10,15 @@ namespace iml {
 
 	//ベータ関数
 	template <class T>
-	struct _Beta {
+	struct Beta {
 		using result_type = typename math_function_type<T>::type;
 
 		//ベータ関数
-		static constexpr result_type __beta(const T& a, const T& b) {
+		static constexpr result_type _beta_(const T& a, const T& b) {
 			return exp(lgamma(a) + lgamma(b) - lgamma(a + b));
 		}
 		//不完全ベータ関数
-		static constexpr result_type __beta_impl(const T& a, const T& b, const T& x) {
+		static constexpr result_type _beta_impl_(const T& a, const T& b, const T& x) {
 			result_type x1 = 1, x2 = result_type(1) / a, x3 = 0;
 
 			for (size_t i = 1; !error_evaluation(x2, x3); ++i) {
@@ -28,25 +28,25 @@ namespace iml {
 			}
 			return pow(x, a)*x2;
 		}
-		static constexpr result_type __beta(const T& a, const T& b, const T& x) {
+		static constexpr result_type _beta_(const T& a, const T& b, const T& x) {
 			if (x == 0) return 0;
-			if (x == 1) return __beta(a, b);
+			if (x == 1) return _beta_(a, b);
 			//xが0.5より大きいときで場合分け
-			return ((2 * x > 1) ? __beta(a, b) - __beta_impl(b, a, 1 - x) : __beta_impl(a, b, x));
+			return ((2 * x > 1) ? _beta_(a, b) - _beta_impl_(b, a, 1 - x) : _beta_impl_(a, b, x));
 		}
 	};
 	template <class T>
-	inline constexpr auto beta(const T& a, const T& b) { return _Beta<T>::__beta(a, b); }
+	inline constexpr auto beta(const T& a, const T& b) { return Beta<T>::_beta_(a, b); }
 	template <class T>
-	inline constexpr auto beta(const T& a, const T& b, const T& x) { return _Beta<T>::__beta(a, b, x); }
+	inline constexpr auto beta(const T& a, const T& b, const T& x) { return Beta<T>::_beta_(a, b, x); }
 
 
 	//正規化ベータ関数
 	template <class T>
-	struct _Beta_i {
+	struct Beta_i {
 		using result_type = typename math_function_type<T>::type;
 
-		static constexpr result_type __beta_i_impl(const T& a, const T& b, const T& x) {
+		static constexpr result_type _beta_i_impl_(const T& a, const T& b, const T& x) {
 			result_type x1 = 1, x2 = result_type(1) / a, x3 = 0;
 
 			for (size_t i = 1; !error_evaluation(x2, x3); ++i) {
@@ -56,15 +56,15 @@ namespace iml {
 			}
 			return pow(x, a)*x2;
 		}
-		static constexpr result_type __beta_i(const T& a, const T& b, const T& x) {
+		static constexpr result_type _beta_i_(const T& a, const T& b, const T& x) {
 			if (x == 0) return 0;
 			if (x == 1) return 1;
 			//xが0.5より大きいときで場合分け
-			return ((2 * x > 1) ? 1 - __beta_i_impl(b, a, 1 - x) : __beta_i_impl(a, b, x));
+			return ((2 * x > 1) ? 1 - _beta_i_impl_(b, a, 1 - x) : _beta_i_impl_(a, b, x));
 		}
 	};
 	template <class T>
-	inline constexpr auto beta_i(const T& a, const T& b, const T& x) { return _Beta_i<T>::__beta_i(a, b, x); }
+	inline constexpr auto beta_i(const T& a, const T& b, const T& x) { return Beta_i<T>::_beta_i_(a, b, x); }
 
 }
 

@@ -10,21 +10,21 @@ namespace iml {
 	namespace rnd {
 
 		//乱数の基底クラス(テンプレート引数は符号無し整数型)
-		template <class UIntT, class = typename enable_if<!is_unsigned<UIntT>::value>::type>
+		template <class UInt, class = typename enable_if<!is_unsigned<UInt>::value>::type>
 		class random_base {
 			//整数型でなければならない
-			static_assert(is_integral<UIntT>::value, "Template must be integer type.");
+			static_assert(is_integral<UInt>::value, "Template must be integer type.");
 		protected:
 			size_t	cnt = 0;			//カウンタ
 		public:
 			constexpr random_base() {}
 			virtual ~random_base() = 0 {}
 
-			virtual constexpr UIntT(min)() const = 0;
-			virtual constexpr UIntT(max)() const = 0;
+			virtual constexpr UInt min() const = 0;
+			virtual constexpr UInt max() const = 0;
 
 			//シード値のセット
-			virtual void seed(UIntT s) = 0;
+			virtual void seed(UInt s) = 0;
 
 			//疑似乱数の取得
 			virtual UIntT get() = 0;
@@ -32,7 +32,7 @@ namespace iml {
 			//乱数を進める
 			void discard(size_t k) { for (size_t i = 0; i < k; ++i) this->get(); }
 
-			//計算回数
+			//計算回数の取得
 			size_t times() { return cnt; }
 
 			//正規化した疑似乱数の取得

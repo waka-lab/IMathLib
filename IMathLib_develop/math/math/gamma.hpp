@@ -7,8 +7,7 @@
 #include "IMathLib/math/math/log.hpp"
 #include "IMathLib/math/math/exp.hpp"
 #include "IMathLib/math/math/pow.hpp"
-#include "IMathLib/math/math/sin.hpp"
-#include "IMathLib/math/math/tan.hpp"
+#include "IMathLib/math/math/trigonometric_function.hpp"
 
 namespace iml {
 
@@ -195,6 +194,11 @@ namespace iml {
 	};
 	template <class T>
 	inline constexpr auto digamma(const T& x) { return Digamma<T>::_digamma_(x); }
+
+
+	//オイラーの定数
+	template <class T>
+	constexpr auto euler_constant = -digamma<T>(1);
 }
 
 

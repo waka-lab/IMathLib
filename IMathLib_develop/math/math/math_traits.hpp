@@ -131,7 +131,7 @@ namespace iml {
 		static constexpr bool geq_value = decltype(geq_tester<T1, T2>(nullptr, nullptr))::value;
 	};
 	template <class T1, class T2>
-	struct is_calcable : is_calcable_impl<decay_t<T1>, decay_t<T2>> {};
+	struct is_calcable : is_calcable_impl<remove_cv_t<T1>, remove_cv_t<T2>> {};
 
 
 	//任意の2つの型の演算テスト(演算不可の場合はvoid型)
@@ -159,7 +159,7 @@ namespace iml {
 		using div_type = decltype(tester<is_calcable<T1, T2>::div_value>::div_tester<T1, T2>());
 	};
 	template <class T1, class T2>
-	struct calculation_result : calculation_result_impl<T1, T2> {};
+	struct calculation_result : calculation_result_impl<remove_cv_t<T1>, remove_cv_t<T2>> {};
 	template <class T1, class T2>
 	using add_result_t = typename calculation_result<T1, T2>::add_type;
 	template <class T1, class T2>

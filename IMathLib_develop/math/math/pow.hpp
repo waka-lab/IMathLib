@@ -16,7 +16,7 @@ namespace iml {
 	struct Pow {
 		using result_type = typename math_function_type<T>::type;
 
-		template <class S, class = typename enable_if<!is_integral<S>::value>::type>
+		template <class S, class = enable_if_t<!is_integral_v<S>>>
 		static constexpr result_type _pow_(const T& x, const S& y) {
 
 			if (x == 0 && y == 0) return result_type(1);
@@ -33,6 +33,11 @@ namespace iml {
 	};
 	template <class T1, class T2>
 	inline constexpr auto pow(const T1& x, const T2& y) { return Pow<T1>::_pow_(x, y); }
+
+
+	//n乗根
+	template <class T>
+	inline constexpr auto nth_root(const T& x, size_t n) { return exp(log(x) / n); }
 
 }
 

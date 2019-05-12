@@ -11,20 +11,23 @@ namespace iml {
 
 	template <class T>
 	struct Exp<complex<T>> {
-		using result_type = typename math_function_type<complex<T>>::type;
-		static constexpr result_type _exp_(const complex<T>& c) { return result_type(cos(c[0]), sin(c[1])); }
+		static constexpr auto _exp_(const complex<T>& c) {
+			auto temp = exp(c[0]);
+			return make_complex(temp * cos(c[1]), temp * sin(c[1]));
+		}
 	};
 	template <class T>
 	struct Exp<split_complex<T>> {
-		using result_type = typename math_function_type<split_complex<T>>::type;
-		static constexpr result_type _exp_(const split_complex<T>& c) { return result_type(cosh(c[0]), sinh(c[1])); }
+		static constexpr auto _exp_(const split_complex<T>& c) {
+			auto temp = exp(c[0]);
+			return make_split_complex(temp * cosh(c[1]), temp * sinh(c[1]));
+		}
 	};
 	template <class T>
 	struct Exp<dual_numbers<T>> {
-		using result_type = typename math_function_type<dual_numbers<T>>::type;
-		static constexpr result_type _exp_(const dual_numbers<T>& c) {
+		static constexpr auto _exp_(const dual_numbers<T>& c) {
 			auto temp = exp(c[0]);
-			return result_type(temp, c[1] * temp);
+			return make_dual_numbers(temp, c[1] * temp);
 		}
 	};
 }

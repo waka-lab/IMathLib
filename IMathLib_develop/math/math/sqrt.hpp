@@ -44,7 +44,8 @@ namespace iml {
 			//1 < x < 2^2 = 4
 			while (c > 4) { c /= 4; temp *= 2; }
 			result_type x1 = 1 / c, x2 = 0;
-			result_type h = 1 - c * x1*x1;			//0 < h < 0.75
+			//result_type h = 1 - c * x1*x1;			//0 < h < 0.75
+			result_type h = 1 - x1;						//0 < h < 0.75
 			//収束条件は単調増加が崩れる
 			while (x2 + Error_evaluation<result_type>::epsilon() < x1) {
 				x2 = x1;

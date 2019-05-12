@@ -4,8 +4,7 @@
 #include "IMathLib/math/math/math_traits.hpp"
 #include "IMathLib/math/math/pow.hpp"
 #include "IMathLib/math/math/factorial.hpp"
-#include "IMathLib/math/math/cos.hpp"
-#include "IMathLib/math/math/sin.hpp"
+#include "IMathLib/math/math/trigonometric_function.hpp"
 #include "IMathLib/math/math/pi.hpp"
 #include "IMathLib/utility/tuple.hpp"
 

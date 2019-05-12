@@ -12,14 +12,17 @@ namespace iml {
 	//リーマンのゼータ関数
 	template <class T>
 	struct Riemann_zeta {
-		using result_type = typename math_function_type<T>::type;
-
-		static constexpr result_type _riemann_zeta_(const T& x) {
+		static constexpr auto _riemann_zeta_(const T& x) {
 			return dirichlet_eta(x) / (1 - pow<size_t, T>(2, 1 - x));
 		}
 	};
 	template <class T>
 	inline constexpr auto riemann_zeta(const T& x) { return Riemann_zeta<T>::_riemann_zeta_(x); }
+
+
+	//アペリーの定数(リーマンのゼータ関数の特殊値ζ(3)による導出)
+	template <class T>
+	constexpr auto apery_constant = riemann_zeta<T>(3);
 
 
 	//リーマンのクシー関数

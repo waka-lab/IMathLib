@@ -989,10 +989,6 @@ namespace iml {
 	struct Floor<bottomup_ad<T, Dims...>> {
 		static constexpr bottomup_ad<T, Dims...> _floor_(const bottomup_ad<T, Dims...>& x) { return bottomup_ad<T, Dims...>(floor(x[0])); }
 	};
-	template <class T, size_t... Dims>
-	struct Pi<bottomup_ad<T, Dims...>> {
-		static constexpr auto _pi_(size_t n = 2) { return Pi<T>::_pi_(n); }
-	};
 }
 
 namespace iml {
