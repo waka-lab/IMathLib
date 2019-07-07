@@ -3,11 +3,11 @@
 
 #include "IMathLib/container/list.hpp"
 
-//スタック
+// スタック
 
 namespace iml {
 
-	//スタック
+	// スタック
 	template <class T, class Container = list<T>>
 	class stack {
 	protected:

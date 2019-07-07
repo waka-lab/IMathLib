@@ -163,6 +163,8 @@ namespace iml {
 	struct tuple_size<tuple<Types...>> {
 		static constexpr size_t value = sizeof...(Types);
 	};
+	template <class T>
+	constexpr size_t tuple_size_v = tuple_size<T>::value;
 
 
 
@@ -173,6 +175,8 @@ namespace iml {
 	struct is_tuple_impl<tuple<Types...>> : true_type {};
 	template <class T>
 	struct is_tuple : is_tuple_impl<remove_cv_t<T>> {};
+	template <class T>
+	constexpr bool is_tuple_v = is_tuple<T>::value;
 
 
 	//多次元配列の構築

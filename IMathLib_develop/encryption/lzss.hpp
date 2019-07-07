@@ -18,8 +18,8 @@ namespace iml {
 
 	private:
 		LZSS_ENCODE_INFO			_encode_info;	//エンコード情報
-		std::vector<unsigned char>	_original;		//オリジナルデータ
-		std::vector<unsigned char>	_press;			//圧縮データ
+		dynamic_array<unsigned char>	_original;		//オリジナルデータ
+		dynamic_array<unsigned char>	_press;			//圧縮データ
 
 		size_t						_p_original;	//オリジナルデータの位置(データ取り出し時に使用)
 		size_t						_p_press;		//圧縮データの位置(データ取り出し時に使用)
@@ -100,12 +100,12 @@ namespace iml {
 
 
 		//エンコード
-		static shared_array<unsigned char> encode(const unsigned char* binary, size_t byte) {
+		static dynamic_array<unsigned char> encode(const unsigned char* binary, size_t byte) {
 			__int32 encode_code;
 		}
 
 		//デコード
-		static shared_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
+		static dynamic_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
 			
 		}
 	};
@@ -259,7 +259,7 @@ namespace iml {
 						// 指定のバイト数分だけ前のアドレスから、指定の
 						// バイト数分だけコピー
 						{
-							std::vector<unsigned char> buf;
+							dynamic_array<unsigned char> buf;
 							for (size_t i = 0; i < EqualNum; ++i)
 								buf.push_back(_original[_original.size() - 1 + 1 - Index + i]);
 							for (size_t i = 0; i < EqualNum; ++i)

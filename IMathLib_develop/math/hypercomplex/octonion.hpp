@@ -93,10 +93,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = octonion<Other>;
 
-		constexpr iterator begin() noexcept { return iterator(&x[0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x[0]); }
-		constexpr iterator end() noexcept { return iterator(&x[7] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x[7] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m); }
+		constexpr iterator end() noexcept { return iterator(x_m + 8); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m + 8); }
 
 		//単項演算の継承
 		template <class = enable_if_t<is_exist_additive_inverse_v<T>>>
@@ -287,13 +287,13 @@ namespace iml {
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const octonion& n) {
-			os << '(' << n.x[0] << ',' << n.x[1] << ',' << n.x[2] << ',' << n.x[3]
-				<< ',' << n.x[4] << ',' << n.x[5] << ',' << n.x[6] << ',' << n.x[7] << ')';
+			os << '(' << n.x_m[0] << ',' << n.x_m[1] << ',' << n.x_m[2] << ',' << n.x_m[3]
+				<< ',' << n.x_m[4] << ',' << n.x_m[5] << ',' << n.x_m[6] << ',' << n.x_m[7] << ')';
 			return os;
 		}
 		friend std::wostream& operator<<(std::wostream& os, const octonion& n) {
-			os << L'(' << n.x[0] << L',' << n.x[1] << L',' << n.x[2] << L',' << n.x[3]
-				<< L',' << n.x[4] << L',' << n.x[5] << L',' << n.x[6] << L',' << n.x[7] << L')';
+			os << '(' << n.x_m[0] << ',' << n.x_m[1] << ',' << n.x_m[2] << ',' << n.x_m[3]
+				<< ',' << n.x_m[4] << ',' << n.x_m[5] << ',' << n.x_m[6] << ',' << n.x_m[7] << ')';
 			return os;
 		}
 	};

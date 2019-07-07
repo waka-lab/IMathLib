@@ -125,7 +125,8 @@ namespace iml {
 
 			//現在指しているノードを返す
 			const typename _Basic_prefix_tree<T>::Node& Get() const {
-				return m_tree.m_nodeList.at(m_current);
+				//return m_tree.m_nodeList.at(m_current);
+				return m_tree.m_nodeList[m_current];
 			}
 
 			//現在指しているノードへアクセス
@@ -189,7 +190,7 @@ namespace iml {
 		}
 
 	private:
-		std::vector<Node>		m_nodeList;
+		dynamic_array<Node>		m_nodeList;
 		size_t				m_nodeTop = invalid_index;
 
 		//指定された接頭符号に対応するノードを返す
@@ -205,20 +206,23 @@ namespace iml {
 				if (walker.HasChild(bits[i]) == false) break;
 				walker.Next(bits[i]);
 			}
-			if (i < 0) return std::pair<Node&, bool>(m_nodeList.at(walker.m_current), false);
+			//if (i < 0) return std::pair<Node&, bool>(m_nodeList.at(walker.m_current), false);
+			if (i < 0) return std::pair<Node&, bool>(m_nodeList[walker.m_current], false);
 
 			// (ノードが作られていなかった続きから) 新しくノードを作成
 			for (; i >= 0; --i) {
 				size_t newIndex = static_cast<size_t>(m_nodeList.size());
 				m_nodeList.push_back(Node{});
 
-				auto& node = m_nodeList.at(walker.m_current);
+				//auto& node = m_nodeList.at(walker.m_current);
+				auto& node = m_nodeList[walker.m_current];
 				node.m_childIndex[(bits[i])] = newIndex;
 
 				walker.Next(bits[i]);
 			}
 
-			return std::pair<Node&, bool>(m_nodeList.at(walker.m_current), true);
+			//return std::pair<Node&, bool>(m_nodeList.at(walker.m_current), true);
+			return std::pair<Node&, bool>(m_nodeList[walker.m_current], true);
 		}
 	};
 
@@ -253,8 +257,8 @@ namespace iml {
 
 	public:
 		//エンコード
-		static shared_array<unsigned char> encode(const unsigned char* binary, size_t byte) {
-			shared_array<unsigned char> result;
+		static dynamic_array<unsigned char> encode(const unsigned char* binary, size_t byte) {
+			dynamic_array<unsigned char> result;
 			size_t sum_table[256] = {};				//ASCIIコードの和テーブル
 
 			//和のテーブルの作成
@@ -263,8 +267,8 @@ namespace iml {
 		}
 
 		//デコード
-		static shared_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
-			shared_array<unsigned char> result;
+		static dynamic_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
+			dynamic_array<unsigned char> result;
 			//unsigned char huffman_table[256];
 			//最初の4バイトはサイズ情報
 			result.resize(*reinterpret_cast<const unsigned __int32*>(binary));

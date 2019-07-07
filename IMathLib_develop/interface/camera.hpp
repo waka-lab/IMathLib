@@ -236,7 +236,7 @@ namespace iml {
 			c->set_projection_matrix();
 		}
 		//スクリーンモード開始
-		inline void screen_start(const rect<int_t>& screen = interface_control::inst()->get_client_area()) {
+		inline void screen_start(const rect<int_t>& screen = interface::inst()->get_client_area()) {
 			//射影行列の設定
 			glMatrixMode(GL_PROJECTION);
 			glPushMatrix();
@@ -262,7 +262,7 @@ namespace iml {
 		template <class T>
 		inline vector3<T> world_to_screen(const camera<T>& c, const vector3<T>& pos) {
 			vector4<T> temp(pos[0], pos[1], pos[2], 1);
-			temp = interface_control::inst()->get_viewport_matrix<T>()
+			temp = interface::inst()->get_viewport_matrix<T>()
 				*c.get_projection_matrix()
 				*c.get_view_matrix()
 				*temp;
@@ -272,7 +272,7 @@ namespace iml {
 		template <class T>
 		inline vector3<T> screen_to_world(const camera<T>& c, const vector3<T>& pos) {
 			vector4<T> temp(pos[0], pos[1], pos[2], 1);
-			temp = inverse_matrix(interface_control::inst()->get_viewport_matrix<T>()
+			temp = inverse_matrix(interface::inst()->get_viewport_matrix<T>()
 				*c.get_projection_matrix()
 				*c.get_view_matrix())
 				*temp;

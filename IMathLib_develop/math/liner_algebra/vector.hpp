@@ -137,10 +137,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = vector<Other, N>;
 
-		constexpr iterator begin() noexcept { return iterator(&x_m[0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x_m[0]); }
-		constexpr iterator end() noexcept { return iterator(&x_m[N - 1] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x_m[N - 1] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m); }
+		constexpr iterator end() noexcept { return iterator(x_m + N); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m + N); }
 
 		//単項演算
 		using vector_base<T, N>::operator-;

@@ -42,7 +42,7 @@ namespace iml {
 				//ファイル読み込み
 				std::fstream ifs(text_file, std::ios::in);
 				if (ifs.fail()) {
-					interface_control::inst()->log_wrrite(log_output::error, "", log_output::file_read_error, text_file);
+					log_output::inst()->wrrite(log_output::error, "", log_output::file_read_error, text_file);
 					str = nullptr;
 					return;
 				}
@@ -69,14 +69,17 @@ namespace iml {
 			//std::string		str;
 			FILE			*fp;
 			char			str[256];
-			string<char>	dir;
+			std::string		dir;
 		public:
-			text_line_load(const CharT* text_file) :dir(text_file, (iml::max)(string_rfind(text_file, "\\", 1), string_rfind(text_file, "/", 1))) {
+			text_line_load(const CharT* text_file)
+				// 今は無視
+				:dir(text_file, ((iml::max)(string_rfind(text_file, "\\", 1), string_rfind(text_file, "/", 1)) == nullptr)
+					? text_file : (iml::max)(string_rfind(text_file, "\\", 1), string_rfind(text_file, "/", 1))) {
 				errno_t error;
 				if ((error = fopen_s(&fp, text_file, "rt")) != 0) {
 					fp = nullptr;
 					strerror_s(str, 256, error);
-					interface_control::inst()->log_wrrite(log_output::error, str, log_output::function_error, "fopen_s");
+					log_output::inst()->wrrite(log_output::error, str, log_output::function_error, "fopen_s");
 				}
 				dir.push_back('/');
 			}
@@ -91,7 +94,7 @@ namespace iml {
 				return str;
 			}
 			//ディレクトリパスの取得
-			const string<char>& dir_path() const {
+			const std::string& dir_path() const {
 				return dir;
 			}
 		};

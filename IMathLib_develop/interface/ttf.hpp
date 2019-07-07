@@ -1,7 +1,6 @@
-﻿#ifndef _TTF_HPP
-#define _TTF_HPP
-
-#ifdef _IMATH_INTERFACE_FONT_
+﻿#ifndef IMATHLIB_INTERFACE_TTF_HPP
+#define IMATHLIB_INTERFACE_TTF_HPP
+#ifdef IMATHLIB_INTERFACE_TTF
 
 
 #include "IMathLib/image/color.hpp"
@@ -22,7 +21,7 @@ namespace iml {
 			ttf(const char* str, size_t size) :font_ptr(TTF_OpenFont(str, size)), point_size(size) {
 				//インスタンスの存在確認をしてフォントハンドルが存在するかを確認する
 				if (!font_ptr) {
-					interface_control::inst()->log_wrrite(log_output::error, TTF_GetError(), log_output::file_read_error, str);
+					log_output::inst()->wrrite(log_output::error, TTF_GetError(), log_output::file_read_error, str);
 					return;
 				}
 				this->line_width = 0;
@@ -54,7 +53,7 @@ namespace iml {
 				SDL_Surface	*img;
 				img = TTF_RenderUNICODE_Blended(font(), reinterpret_cast<Uint16*>(str), color_trans(color));
 				if (!img) {
-					interface_control::inst()->log_wrrite(log_output::error, TTF_GetError(), log_output::function_error, str);
+					log_output::inst()->wrrite(log_output::error, TTF_GetError(), log_output::function_error, str);
 					return nullptr;
 				}
 				return img;
@@ -64,7 +63,7 @@ namespace iml {
 				SDL_Surface	*img;
 				img = TTF_RenderUTF8_Blended(font(), str, color_trans(color));
 				if (!img) {
-					interface_control::inst()->log_wrrite(log_output::error, TTF_GetError(), log_output::function_error, str);
+					log_output::inst()->wrrite(log_output::error, TTF_GetError(), log_output::function_error, str);
 					return nullptr;
 				}
 				return img;
@@ -74,7 +73,7 @@ namespace iml {
 			unit_string_texture(const SDL_Surface *img, bool i) :indention(i), texture(img) {}
 			template <class CharT>
 			unit_string_texture(const ttf& font, const CharT* str, const color_32bit &color, bool i): indention(i)
-				, texture(unique_ptr<SDL_Surface, deallocator<SDL_Surface>::function>(create_string_texture(font, const_cast<CharT*>(str), color), SDL_FreeSurface).get()) {}
+				, texture(unique_ptr<SDL_Surface>(create_string_texture(font, const_cast<CharT*>(str), color), dealloc_ident<dealloc::function>(), SDL_FreeSurface).get()) {}
 
 			const bool flag() const { return indention; }
 			void set_flag(bool i) { indention = i; }

@@ -1,37 +1,30 @@
-﻿#ifndef _LIST_HPP
-#define _LIST_HPP
+﻿#ifndef IMATHLIB_CONTAINER_LIST_HPP
+#define IMATHLIB_CONTAINER_LIST_HPP
 
 #include "IMathLib/container/array.hpp"
 
-//連結リスト
 
-//双方向連結リスト
+//  双方向連結リスト
 namespace iml {
 
-	//双方向連結リストのイテレータ
+	//  連結リストのノード
 	template <class T>
-	class list_iterator
-		: public iterator_base<bidirectional_iterator_tag, T> {
-		template <class _T>
-		friend class list_iterator;
+	struct list_node {
+		list_node*	next_m;			//  次のノード
+		list_node*	prev_m;			//  前のノード
+		T			value_m;
 
-		using this_type = list_iterator<T>;
+		constexpr list_node(const T& v) : value_m(v), next_m(nullptr), prev_m(nullptr) {}
+		constexpr list_node(const T& v, list_node* prev, list_node* next) : prev_m(prev), next_m(next), value_m(v) {}
+		list_node(list_node&& node) : next_m(node.next_m), prev_m(node.prev_m), value_m(node.value_m) { node.next_m = node.prev_m = node.next_m = nullptr; }
+	};
 
-	public:
-		//双方向連結リストのセル
-		struct cell {
-			cell*	front;			//前のセル
-			cell*	back;			//次のセル
-			T		value;
-			cell() :value{}, front(nullptr), back(nullptr) {}
-			cell(const T& v) :value(v), front(nullptr), back(nullptr) {}
-		};
-	private:
-		cell*	current;
-	public:
-		//直接データの取得
-		cell* _Ptr() { return current; }
-		cell* _Ptr() const { return current; }
+
+	//  双方向連結リストのイテレータ
+	template <class T>
+	struct list_iterator {
+		list_node<T>*	current_m;
+		list_node<T>*	prev_m;
 
 		using iterator_category = bidirectional_iterator_tag;
 		using value_type = T;
@@ -43,241 +36,295 @@ namespace iml {
 		struct rebind {
 			using other = list_iterator<Other>;
 		};
+		template <class Other>
+		using rebind_t = list_iterator<Other>;
 
-		constexpr list_iterator() :current(nullptr) {}
-		constexpr list_iterator(cell* itr) : current(itr) {}
-		template <class S>
-		constexpr list_iterator(const list_iterator<S>& itr)
-			: current(reinterpret_cast<cell*>(itr.current)) {}
+		constexpr list_iterator() : current_m(nullptr) {}
+		template <class U>
+		list_iterator(list_node<U>* prev, list_node<U>* current) : prev_m(prev), current_m(current) {}
+		template <class U>
+		list_iterator(nullptr_t, list_node<U>* current) : prev_m(nullptr), current_m(current) {}
+		template <class U>
+		list_iterator(list_node<U>* prev, nullptr_t) : prev_m(prev), current_m(nullptr) {}
+		list_iterator(nullptr_t, nullptr_t) : prev_m(nullptr), current_m(nullptr) {}
+		template <class U>
+		constexpr list_iterator(const list_iterator<U>& itr) : prev_m(reinterpret_cast<list_node<T>*>(itr.prev_m)), current_m(reinterpret_cast<list_node<T>*>(itr.current_m)) {}
 		
-		reference operator*() const { return current->value; }
-		pointer operator->() const { return &current->value; }
-		this_type& operator++() { current = current->back; return *this; }
-		this_type operator++(int) { this_type temp = *this; ++*this; return temp; }
-		this_type& operator--() { current = current->front; return *this; }
-		this_type operator--(int) { this_type temp = *this; --*this; return temp; }
+		reference operator*() const { return current_m->value_m; }
+		pointer operator->() const { return &current_m->value_m; }
+		list_iterator& operator++() { prev_m = current_m; current_m = current_m->next_m; return *this; }
+		list_iterator operator++(int) { list_iterator temp = *this; ++*this; return temp; }
+		list_iterator& operator--() { current_m = prev_m; prev_m = current_m->prev_m; return *this; }
+		list_iterator operator--(int) { list_iterator temp = *this; --*this; return temp; }
 
 		reference operator[](difference_type n) const { return *next(*this, n); }
 		
-		bool operator==(const this_type& itr) const { return current == itr.current; }
-		bool operator!=(const this_type& itr) const { return !(*this == itr); }
-
+		bool operator==(const list_iterator& itr) const { return current_m == itr.current_m; }
+		bool operator!=(const list_iterator& itr) const { return !(*this == itr); }
 	};
 
-	//双線形連結リストのコンテナ
-	template <class T, class Allocator>
-	class list_container :public container_base<T, list_iterator<T>, Allocator> {
+
+	//  双方向連結リスト
+	template <class T, class Allocator = allocator<list_node<T>>>
+	class list {
 	public:
-		using typename container_base<T, list_iterator<T>, Allocator>::value_type;
-		using typename container_base<T, list_iterator<T>, Allocator>::iterator;
-		using typename container_base<T, list_iterator<T>, Allocator>::const_iterator;
-		using typename container_base<T, list_iterator<T>, Allocator>::allocator_type;
+		using value_type = T;
+		using reference = T & ;
+		using const_reference = const T &;
+		using iterator = list_iterator<T>;
+		using const_iterator = list_iterator<const T>;
+		using allocator_type = Allocator;
+		using size_type = typename allocator_traits<Allocator>::size_type;
 	private:
-		using this_type = list_container;
-	protected:
-		Allocator	_allo;				//アロケータ
-		iterator	_header;			//一番最初の位置-1かつ一番最後の位置+1(基点となる位置)
-		size_t	_size = 0;			//要素数
-
+		Allocator		alloc_m;			//  アロケータ
+		list_node<T>*	first_m;			//  一番最初の要素
+		list_node<T>*	last_m;				//  一番最後の要素
+		size_type		size_m;				//  要素数
 	public:
-		list_container() :_header(_allo.create(1)) {
-			_header._Ptr()->back = _header._Ptr()->front = _header._Ptr();
-		}
-		virtual ~list_container() = 0 {}
-
-		virtual iterator begin() noexcept = 0;
-		virtual const_iterator begin() const noexcept = 0;
-		virtual iterator end() noexcept = 0;
-		virtual const_iterator end() const noexcept = 0;
-
-		//サイズの取得
-		size_t size() const { return _size; }
-		//コンテナの入れ替え
-		void swap(const this_type& c) {
-			iml::swap(this->_allo, c._allo);
-			iml::swap(this->_size, c._size);
-		}
-		//前方探索
-		size_t find(const T& key, size_t pos = 0) {
-			if (_size <= pos) return npos;
-			iterator temp = next(_header, pos + 1);
-			for (size_t i = pos; i < _size; ++i, ++temp)
-				if (*temp == key) return i;
-			return npos;
-		}
-		//後方探索
-		size_t rfind(const T& key, size_t pos = npos) {
-			iterator temp = next(_header, (iml::min)(pos, this->_size) + 1);
-			for (size_t i = (iml::min)(pos, this->_size); i != 0; --i, --temp)
-				if (*temp == key) return i;
-			return npos;
-		}
-
-		//空かの判定
-		virtual bool empty() const noexcept = 0;
-
-		//メモリの解放
-		void clear() {
-			for (iterator itr = begin(); itr != end();) _allo.destroy(itr++, 1);
-			_size = 0;
-		}
-
-		//要素の削除
-		void erase(const_iterator p) {
-			to_iterator(p)._Ptr()->front->back = to_iterator(p)._Ptr()->back;
-			to_iterator(p)._Ptr()->back->front = to_iterator(p)._Ptr()->front;
-			--_size;
-			_allo.destroy(to_iterator(p), 1);
-		}
-		void erase(const_iterator first, const_iterator last) {
-			for (const_iterator itr = first; itr != last; ++itr)
-				erase(itr);
-		}
-
-		//要素の挿入
-		void insert(const_iterator p, const T& c) {
-			iterator temp = _allo.create(1);
-			temp._Ptr()->front = to_iterator(p)._Ptr()->front;
-			temp._Ptr()->back = to_iterator(p)._Ptr();
-			temp._Ptr()->value = c;
-			to_iterator(p)._Ptr()->front->back = temp._Ptr();
-			to_iterator(p)._Ptr()->front = temp._Ptr();
-			++_size;
-		}
+		constexpr list() : first_m(nullptr), last_m(nullptr), size_m(0), alloc_m() {}
+		explicit list(const Allocator& alloc) : first_m(nullptr), last_m(nullptr), size_m(0)
+			, alloc_m(allocator_traits<Allocator>::select_on_container_copy_construction(alloc)) {}
 		template <class InputIterator>
-		void insert(const_iterator p, InputIterator first, InputIterator last) {
-			//入力イテレータでなければならない
-			static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value
-				, "The type of iterator is different.");
+		list(InputIterator first, InputIterator last) {
+			static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-			for (InputIterator itr = first; itr != last; ++itr, ++p)
-				insert(p, static_cast<T>(*itr));
+			
 		}
+		list(const list& l) : first_m(nullptr), last_m(nullptr), size_m(0), alloc_m() { *this = l; }
+		list(list&& l) : first_m(l.first_m), last(l.last_m), size_m(l.size_m), alloc_m(l.alloc_m) { first_m = last_m = nullptr; }
+		~list() { clear(); }
 
-		//前後への挿入
-		void push_front(const T& v) { insert(begin(), v); }
-		void push_back(const T& v) { insert(end(), v); }
-		void pop_front() { erase(begin()); }
-		void pop_back() { erase(--end()); }
+		iterator begin() noexcept { return iterator(nullptr, first_m); }
+		const_iterator begin() const noexcept { return const_iterator(nullptr, first_m); }
+		iterator end() noexcept { return iterator(last_m, nullptr); }
+		const_iterator end() const noexcept { return const_iterator(last_m, nullptr); }
 
-		//前後へのアクセス
-		T& front() { return *begin(); }
-		const T& front() const { return *begin(); }
-		T& back() { return *--end(); }
-		const T& back() const { return *--end(); }
-
-		//内部イテレータ
+		void clear() {
+			for (list_node<T>* ptr = first_m; ptr != nullptr;) {
+				list_node<T>* temp = ptr; ptr = ptr->next_m;
+				allocator_traits<Allocator>::destroy(alloc_m, temp);
+				alloc_m.deallocate(temp, 1);
+			}
+			size_m = 0;
+			first_m = last_m = nullptr;
+		}
+		bool empty() const noexcept { return size_m == 0; }
+		size_type size() const { return size_m; }
+		void swap(list& l) {
+			iml::swap(alloc_m, l.alloc_m);
+			iml::swap(first_m, l.first_m);
+			iml::swap(last_m, l.last_m);
+			iml::swap(size_m, l.size_m);
+		}
+		// 内部イテレータ
 		template <class F>
 		F for_each(F f) const { return iml::for_each(begin(), end(), f); }
-	};
 
-	//双方向連結リスト
-	template <class T, class Allocator = allocator<typename list_iterator<T>::cell, list_iterator<T>>>
-	class list : public list_container<T, Allocator> {
-	public:
-		using typename list_container<T, Allocator>::value_type;
-		using typename list_container<T, Allocator>::iterator;
-		using typename list_container<T, Allocator>::const_iterator;
-		using typename list_container<T, Allocator>::allocator_type;
-	private:
 
-	public:
-		constexpr list() {}
+		//  要素の挿入(emptyなときはiteratorが無効であるため挿入不可)
+		void insert(const_iterator p, const T& v) {
+			list_node<T>* temp = alloc_m.allocate(1);
+			//  pの位置にtempを挿入するためにpの前とpで前後を結合する
+			allocator_traits<Allocator>::construct(alloc_m, temp, v, to_iterator(p).current_m->prev_m, to_iterator(p).current_m);
+			//  tempの前後の情報をtempで書き換える
+			temp->prev_m->next_m = temp;
+			temp->next_m->prev_m = temp;
+			++size_m;
+		}
+		//  [first, last)
 		template <class InputIterator>
-		list(InputIterator first, InputIterator last) { insert(begin(), first, last); }
-		list(const list& list) { insert(begin(), list.begin(), list.end()); }
-		~list() { clear(); _allo.destroy(_header, 1); }
+		void insert(const_iterator p, InputIterator first, InputIterator last) {
+			static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		//イテレータの取得
-		iterator begin() noexcept { return next(_header, 1); }
-		const_iterator begin() const noexcept { return to_const_iterator(next(_header, 1)); }
-		iterator end() noexcept { return _header; }
-		const_iterator end() const noexcept { return to_const_iterator(_header); }
+			list_node<T>* temp = to_iterator(p).current_m->prev_m;
+			for (InputIterator itr = first; itr != last; ++itr, temp = temp->next_m, ++size_m) {
+				temp->next_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, temp->next_m, *itr, temp, nullptr);
+			}
+			temp->next_m = to_iterator(p).current_m;
+			temp->prev_m->next_m = temp;
+			temp->next_m->prev_m = temp;
+		}
+		//  要素の削除(emptyなときはiteratorが無効であるため削除不可)
+		void erase(const_iterator p) {
+			//  pを除去するためにpの前後を結合する
+			//  pが最初の要素のとき
+			if (p.current_m->prev_m == nullptr) {
+				first_m = to_iterator(p).current_m->next_m;
+				if (first_m != nullptr) first_m->prev_m = nullptr;
+			}
+			else to_iterator(p).current_m->prev_m->next_m = to_iterator(p).current_m->next_m;
+			//  pが最後の要素のとき
+			if (p.current_m->next_m == nullptr) {
+				last_m = to_iterator(p).current_m->prev_m;
+				if (last_m != nullptr) last_m->next_m = nullptr;
+			}
+			else to_iterator(p).current_m->next_m->prev_m = to_iterator(p).current_m->prev_m;
+			
+			allocator_traits<Allocator>::destroy(alloc_m, to_iterator(p).current_m);
+			alloc_m.deallocate(to_iterator(p).current_m, 1);
+			--size_m;
+		}
+		//  [first, last)
+		void erase(const_iterator first, const_iterator last) {
+			//  firstが最初の要素のとき
+			if (first.current_m->prev_m == nullptr) {
+				first_m = to_iterator(last).current_m;
+				if (first_m != nullptr) first_m->prev_m = nullptr;
+			}
+			else to_iterator(first).current_m->prev_m->next_m = to_iterator(last).current_m;
+			//  lastが終端を示す要素のとき
+			if (last.current_m == nullptr) {
+				last_m = to_iterator(first).current_m->prev_m;
+				if (last_m != nullptr) last_m->next_m = nullptr;
+			}
+			else to_iterator(last).current_m->prev_m = to_iterator(first).current_m->prev_m;
+			
+			//  cleanのコピペ
+			for (list_node<T>* ptr = to_iterator(first).current_m, last_ptr = to_iterator(last).current_m; ptr != last_ptr; --size_m) {
+				list_node<T>* temp = ptr; ptr = ptr->next_m;
+				allocator_traits<Allocator>::destroy(alloc_m, temp);
+				alloc_m.deallocate(temp, 1);
+			}
+		}
 
-		bool empty() const noexcept { return _size == 0; }
 
-		//代入
-		list& operator=(const list& b) {
-			if (this->_size > b._size) {
-				//多い分を削除
-				this->erase(next(this->begin(), this->_size - b._size), this->end());
-				copy_order(this->begin(), b.begin(), b.end());
+		// 前後への挿入
+		list& push_front(const T& v) {
+			if (size_m == 0) {
+				first_m = last_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, first_m, v, nullptr, nullptr);
 			}
 			else {
-				copy_order(this->begin(), b.begin(), b._size - this->_size);
-				//新たにメモリを確保して追加
-				this->insert(--this->end(), next(b.begin(), this->_size), b.end());
+				first_m->prev_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, first_m->prev_m, v, nullptr, first_m);
+				first_m = first_m->prev_m;
 			}
+			++size_m;
 			return *this;
 		}
-		list& operator=(list&& b) {
-			if (this->_header == b._header) return *this;
-			this->_header = b._header; b._header == nullptr;
+		list& push_back(const T& v) {
+			if (size_m == 0) {
+				first_m = last_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, first_m, v, nullptr, nullptr);
+			}
+			else {
+				last_m->next_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, last_m->next_m, v, last_m, nullptr);
+				last_m = last_m->next_m;
+			}
+			++size_m;
 			return *this;
 		}
+		list& pop_front() {
+			if (size_m == 0) return *this;
 
-		//コンテナの中身の入れ替え
-		void swap(list& c) {
-			iml::swap(*this, c);
-		}
-
-		T& operator[](size_t index) noexcept { return (index < _size / 2) ? _header[index + 1] : *prev(_header, _size - index); }
-		const T& operator[](size_t index) const noexcept { return (index < _size / 2) ? _header[index + 1] : *prev(_header, _size - index); }
-	};
-
-	//シェア双方向連結リスト
-	template <class T, class Allocator = allocator<typename list_iterator<T>::cell, list_iterator<T>>>
-	class shared_list : public list_container<T, Allocator> {
-		shared_count<T, deallocator<T>::function>	sc;			//シェアカウンタ(clearで解放のためハンドルを渡す必要はない)
-	public:
-		constexpr shared_list() :sc(nullptr, [&](T*) {clear(); _allo.destroy(_header, 1);  }) {}
-		template <class InputIterator>
-		shared_list(InputIterator first, InputIterator last) : sc(nullptr, [&](T*) {clear(); _allo.destroy(_header, 1);  }) {
-			insert(begin(), first, last);
-		}
-		shared_list(const shared_list& list) :sc(nullptr, [&](T*) {clear(); _allo.destroy(_header, 1);  }) {
-			insert(begin(), list.begin(), list.end());
-		}
-		~shared_list() {}
-
-		//イテレータの取得
-		iterator begin() noexcept { return next(_header, 1); }
-		const_iterator begin() const noexcept { return to_const_iterator(next(_header, 1)); }
-		iterator end() noexcept { return _header; }
-		const_iterator end() const noexcept { return to_const_iterator(_header); }
-
-		bool empty() const noexcept { return _size == 0; }
-
-		//代入
-		shared_list& operator=(const shared_list& b) {
-			if (this->_header == b._header) return *this;
-			this->sc = b.sc;
-			this->_size = b._size;
-			this->_allo = b._allo;
-			this->_header = b._header;
+			list_node<T>* temp = first_m->next_m;
+			allocator_traits<Allocator>::destroy(alloc_m, first_m);
+			alloc_m.deallocate(first_m, 1);
+			first_m = temp;
+			//  要素数が1でなかったときは終端設定をする必要がある
+			if (first_m != nullptr) first_m->prev_m = nullptr;
+			--size_m;
 			return *this;
 		}
-		shared_list& operator=(shared_list&& b) {
-			if (this->_header == b._header) return *this;
-			this->sc = b.sc;
-			this->_size = b._size;
-			this->_allo = b._allo;
-			this->_header = b._header;
+		list& pop_back() {
+			if (size_m == 0) return *this;
+
+			list_node<T>* temp = last_m->prev_m;
+			allocator_traits<Allocator>::destroy(alloc_m, last_m);
+			alloc_m.deallocate(last_m, 1);
+			last_m = temp;
+			if (last_m != nullptr) last_m->next_m = nullptr;
+			--size_m;
 			return *this;
 		}
 
-		//コンテナの中身の入れ替え
-		void swap(shared_list& c) {
-			iml::swap(*this, c);
+		//  代入
+		list& operator=(const list& l) {
+			if (first_m == l.first_m) return *this;
+			if (size_m > l.size_m) {
+				if (l.size_m == 0) clear();
+				else {
+					//  [l.first_m, l.last_m]を代入
+					list_node<T>* temp = first_m;
+					for (list_node<T>* ptr = l.first_m; ptr != nullptr; temp = temp->next_m, ptr = ptr->next_m) temp->value_m = ptr->value_m;
+					//  一番最後の位置の決定(仮定からtemp->prev_mは存在する)
+					last_m = temp->prev_m;
+					last_m->next_m = nullptr;
+					//  [temp, last_m]を削除
+					while (temp != nullptr) {
+						list_node<T>* temp2 = temp; temp = temp->next_m;
+						allocator_traits<Allocator>::destroy(alloc_m, temp2);
+						alloc_m.deallocate(temp2, 1);
+					}
+				}
+			}
+			else if (size_m == l.size_m) {
+				for (list_node<T>* ptr1 = first_m, *ptr2 = l.first_m; ptr2 != nullptr; ptr1 = ptr1->next_m, ptr2 = ptr2->next_m)
+					ptr1->value_m = ptr2->value_m;
+			}
+			else if (size_m == 0) {
+				//  size_m < l.size_mかつsize_m == 0となる特殊な場合
+				first_m = last_m = alloc_m.allocate(1);
+				allocator_traits<Allocator>::construct(alloc_m, first_m, l.first_m->value_m, nullptr, nullptr);
+				for (list_node<T>* ptr = l.first_m->next_m; ptr != nullptr; ptr = ptr->next_m, last_m = last_m->next_m) {
+					last_m->next_m = alloc_m.allocate(1);
+					allocator_traits<Allocator>::construct(alloc_m, last_m->next_m, ptr->value_m, last_m, nullptr);
+				}
+			}
+			else if (size_m < l.size_m) {
+				list_node<T>* temp = l.first_m;
+				//  [first_m,last_m]に対して代入
+				for (list_node<T>* ptr = first_m; ptr != nullptr; ptr = ptr->next_m, temp = temp->next_m) ptr->value_m = temp->value_m;
+				//  一番最後の位置に対してメモリ確保しながら代入
+				for (; temp != nullptr; last_m = last_m->next_m, temp = temp->next_m) {
+					last_m->next_m = alloc_m.allocate(1);
+					allocator_traits<Allocator>::construct(alloc_m, last_m->next_m, temp->value_m, last_m, nullptr);
+				}
+			}
+			size_m = l.size_m;
+			return *this;
+		}
+		list& operator=(list&& l) {
+			if (first_m == l.first_m) return *this;
+			first_m = l.first_m; last_m = l.last_m;
+			alloc_m = l.alloc_m;
+			size_m = l.size_m;
+			l.first_m = l.last_m = nullptr;
+			return *this;
 		}
 
-		//インスタンスが唯一かの判定
-		bool unique() const { return sc.unique(); }
-		//カウントの取得
-		size_t use_count() const { return sc.use_count(); }
+		T& operator[](size_type index) noexcept {
+			if (index < size_m / 2) {
+				list_node<T>* ptr = first_m;
+				for (size_type i = 0; i < index; ++i, ptr = ptr->next_m);
+				return ptr->value_m;
+			}
+			else {
+				list_node<T>* ptr = last_m;
+				for (size_type i = 0, n = size_m - index - 1; i < n; ++i, ptr = ptr->prev_m);
+				return ptr->value_m;
+			}
+		}
+		const T& operator[](size_type index) const noexcept {
+			if (index < size_m / 2) {
+				list_node<T>* ptr = first_m;
+				for (size_type i = 0; i < index; ++i, ptr = ptr->next_m);
+				return ptr->value_m;
+			}
+			else {
+				list_node<T>* ptr = last_m;
+				for (size_type i = 0, n = size_m - index - 1; i < n; ++i, ptr = ptr->prev_m);
+				return ptr->value_m;
+			}
+		}
 
-		T& operator[](size_t index) noexcept { return (index < _size / 2) ? _header[index + 1] : *prev(_header, _size - index); }
-		const T& operator[](size_t index) const noexcept { return (index < _size / 2) ? _header[index + 1] : *prev(_header, _size - index); }
+		// 前後へのアクセス
+		T& front() { return first_m->value_m; }
+		const T& front() const { return first_m->value_m; }
+		T& back() { return last_m->value_m; }
+		const T& back() const { return last_m->value_m; }
 	};
 
 }

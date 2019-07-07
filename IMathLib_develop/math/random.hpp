@@ -27,7 +27,7 @@ namespace iml {
 			virtual void seed(UInt s) = 0;
 
 			//疑似乱数の取得
-			virtual UIntT get() = 0;
+			virtual UInt get() = 0;
 
 			//乱数を進める
 			void discard(size_t k) { for (size_t i = 0; i < k; ++i) this->get(); }

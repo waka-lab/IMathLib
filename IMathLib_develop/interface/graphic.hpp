@@ -1,7 +1,6 @@
-﻿#ifndef _GRAPHIC_HPP
-#define _GRAPHIC_HPP
-
-#ifdef _IMATH_INTERFACE_IMAGE_
+﻿#ifndef IMATHLIB_INTERFACE_GRAPHIC_HPP
+#define IMATHLIB_INTERFACE_GRAPHIC_HPP
+#ifdef IMATHLIB_INTERFACE_IMAGE
 
 
 #include "IMathLib/interface/interface.hpp"
@@ -46,7 +45,7 @@ namespace iml {
 				}
 				else {
 					//ビットレートが24か32でない
-					interface_control::inst()->log_wrrite(log_output::error, "The bit rate is not 24 or 32.", log_output::data_error, "bit rate error.");
+					log_output::inst()->wrrite(log_output::error, "The bit rate is not 24 or 32.", log_output::data_error, "bit rate error.");
 					tex_id = 0;
 					return;
 				}
@@ -84,7 +83,7 @@ namespace iml {
 					break;
 				default:
 					//ビットレートが24か32でない
-					interface_control::inst()->log_wrrite(log_output::error, "The bit rate is not 24 or 32.", log_output::data_error, "bit rate error.");
+					log_output::inst()->wrrite(log_output::error, "The bit rate is not 24 or 32.", log_output::data_error, "bit rate error.");
 					tex_id = 0;
 					return;
 				}
@@ -135,7 +134,7 @@ namespace iml {
 					glGetShaderiv(shader_id, GL_INFO_LOG_LENGTH, &log_length);
 					error_mes = new char[log_length + 1];
 					glGetShaderInfoLog(shader_id, log_length, NULL, error_mes);
-					interface_control::inst()->log_wrrite(log_output::error, error_mes, log_output::data_error, str);
+					log_output::inst()->wrrite(log_output::error, error_mes, log_output::data_error, str);
 					delete[] error_mes;
 				}
 			}
@@ -189,7 +188,7 @@ namespace iml {
 					glGetProgramiv(po_id, GL_INFO_LOG_LENGTH, &log_length);
 					error_mes = new char[log_length + 1];
 					glGetProgramInfoLog(po_id, log_length, nullptr, error_mes);
-					interface_control::inst()->log_wrrite(log_output::error, error_mes, log_output::data_error, "glLinkProgram");
+					log_output::inst()->wrrite(log_output::error, error_mes, log_output::data_error, "glLinkProgram");
 					delete[] error_mes;
 				}
 			}

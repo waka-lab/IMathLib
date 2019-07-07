@@ -18,7 +18,7 @@ namespace iml {
 		}
 
 		//Adler-32のチェックサムを返す(65521は2^{16}未満の最大素数)
-		static unsigned int adler_32(const shared_array<unsigned char>& data){
+		static unsigned int adler_32(const dynamic_array<unsigned char>& data){
 			unsigned int a = 1, b = 0;
 
 			for (auto itr = data.begin(); itr != data.end(); ++itr) {
@@ -31,7 +31,7 @@ namespace iml {
 		//エンコード
 
 		//デコード
-		static shared_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
+		static dynamic_array<unsigned char> decode(const unsigned char* binary, size_t byte) {
 
 			//圧縮方式がdeflateであることのチェック
 			if ((binary[0] & 0x0F) != 0x08) throw std::runtime_error("deflate圧縮以外のタイプが指定されました。非対応につきDecodeできません。");
@@ -49,8 +49,9 @@ namespace iml {
 			auto result = deflate::decode(&binary[2], byte - 6, slide_window);
 
 			//フッターでのAdler-32のチェックサム
-			if (unsigned_int_cast(&binary[byte - 4]) != adler_32(result)) throw std::runtime_error("圧縮データが壊れています。decodeに失敗しました。");
-			
+			if (unsigned_int_cast(&binary[byte - 4]) != adler_32(result)) {
+				throw std::runtime_error("圧縮データが壊れています。decodeに失敗しました。");
+			}
 			return result;
 		}
 	};

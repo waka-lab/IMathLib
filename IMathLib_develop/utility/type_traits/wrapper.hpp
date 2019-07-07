@@ -21,8 +21,8 @@ namespace iml {
 	constexpr size_t identity_v = identity<T, N>::value;
 
 
-	//int型引数が_Wrap_intより優先されるようにラップ
-	struct _Wrap_int { _Wrap_int(int) {} };
+	//int型引数がint_wrapperより優先されるようにラップ(型推論に利用)
+	struct int_wrapper { int_wrapper(int) {} };
 
 
 	//参照変数ののためのラッパー

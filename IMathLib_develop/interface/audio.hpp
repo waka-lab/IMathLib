@@ -1,7 +1,6 @@
-﻿#ifndef _AUDIO_HPP
-#define _AUDIO_HPP
-
-#ifdef _IMATH_INTERFACE_AUDIO_
+﻿#ifndef IMATHLIB_INTERFACE_AUDIO_HPP
+#define IMATHLIB_INTERFACE_AUDIO_HPP
+#ifdef IMATHLIB_INTERFACE_AUDIO
 
 #include "IMathLib/interface/interface.hpp"
 #include "IMathLib/utility/utility.hpp"
@@ -30,7 +29,7 @@ namespace iml {
 			struct holder_bgm :holder_base {
 				holder_bgm(const char* str) {
 					if (!(handle = Mix_LoadMUS(str)))
-						interface_control::inst()->log_wrrite(log_output::error, Mix_GetError(), log_output::file_read_error, str);
+						interface::inst()->log_wrrite(log_output::error, Mix_GetError(), log_output::file_read_error, str);
 				}
 				virtual ~holder_bgm() { free(); }
 
@@ -54,10 +53,10 @@ namespace iml {
 			//SE
 			template <size_t N>
 			struct holder_se :holder_base {
-				static_assert(!(N < _IMATH_INTERFACE_SE_NAM_), "The size of N is too large.");
+				static_assert(!(N < IMATHLIB_INTERFACESE_NAM_), "The size of N is too large.");
 				holder_se(const char* str) :channel(-1) {
 					if (!(handle = Mix_LoadWAV(str)))
-						interface_control::inst()->log_wrrite(log_output::error, Mix_GetError(), log_output::file_read_error, str);
+						interface::inst()->log_wrrite(log_output::error, Mix_GetError(), log_output::file_read_error, str);
 				}
 				virtual ~holder_se() { free(); }
 

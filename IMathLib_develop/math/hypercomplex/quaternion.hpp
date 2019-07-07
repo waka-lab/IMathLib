@@ -95,10 +95,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = quaternion<Other>;
 
-		constexpr iterator begin() noexcept { return iterator(&x[0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x[0]); }
-		constexpr iterator end() noexcept { return iterator(&x[3] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x[3] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m); }
+		constexpr iterator end() noexcept { return iterator(x_m + 4); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m + 4); }
 
 		//単項演算
 		template <class = enable_if_t<is_exist_additive_inverse_v<T>>>
@@ -219,11 +219,11 @@ namespace iml {
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const quaternion& n) {
-			os << '(' << n.x[0] << ',' << n.x[1] << ',' << n.x[2] << ',' << n.x[3] << ')';
+			os << '(' << n.x_m[0] << ',' << n.x_m[1] << ',' << n.x_m[2] << ',' << n.x_m[3] << ')';
 			return os;
 		}
 		friend std::wostream& operator<<(std::wostream& os, const quaternion& n) {
-			os << L'(' << n.x[0] << L',' << n.x[1] << L',' << n.x[2] << L',' << n.x[3] << L')';
+			os << '(' << n.x_m[0] << ',' << n.x_m[1] << ',' << n.x_m[2] << ',' << n.x_m[3] << ')';
 			return os;
 		}
 	};

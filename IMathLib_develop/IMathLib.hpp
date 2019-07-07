@@ -5,6 +5,7 @@
 
 #define IMATHLIB_VERSION
 
+#define _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
 
 #include <iostream>
 #include <fstream>
@@ -62,7 +63,7 @@
 #include "IMathLib/3d/metasequoia.hpp"
 
 //OpenGLとSDL2が有効であるとき利用可能なインターフェース
-#ifdef _IMATH_OPENGL_AND_SDL2_
+#ifdef IMATHLIB_OPENGL_AND_SDL2
 #include "IMathLib/interface/IMathLib_interface.hpp"
 #endif
 

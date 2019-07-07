@@ -89,10 +89,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = split_complex<Other>;
 
-		constexpr iterator begin() noexcept { return iterator(&x[0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x[0]); }
-		constexpr iterator end() noexcept { return iterator(&x[1] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x[1] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m); }
+		constexpr iterator end() noexcept { return iterator(x_m + 2); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m + 2); }
 
 		//単項演算
 		template <class = enable_if_t<is_exist_additive_inverse_v<T>>>
@@ -158,11 +158,11 @@ namespace iml {
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const split_complex& n) {
-			os << '(' << n.x[0] << ',' << n.x[1] << ')';
+			os << '(' << n.x_m[0] << ',' << n.x_m[1] << ')';
 			return os;
 		}
 		friend std::wostream& operator<<(std::wostream& os, const split_complex& n) {
-			os << L'(' << n.x[0] << L',' << n.x[1] << L')';
+			os << L'(' << n.x_m[0] << L',' << n.x_m[1] << L')';
 			return os;
 		}
 	};

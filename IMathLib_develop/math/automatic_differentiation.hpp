@@ -66,32 +66,32 @@ namespace iml {
 		constexpr bottomup_ad_base(const Base& re) : x{ re } {}
 		constexpr bottomup_ad_base(const Base& re, const identity_t<Base, Indices>&... x) : x{ re,x... } {}
 		template <class U>
-		constexpr bottomup_ad_base(const bottomup_ad_base<Base, index_tuple<size_t, Dims...>, U>& n) : x{ addressof_multi_array(n.x)[0], addressof_multi_array(n.x)[Indices]... } {}
+		constexpr bottomup_ad_base(const bottomup_ad_base<Base, index_tuple<size_t, Dims...>, U>& n) : x{ pointer_cast(n.x)[0], pointer_cast(n.x)[Indices]... } {}
 
 		template <class = typename enable_if<is_exist_additive_inverse_v<Base>>::type>
-		bottomup_ad<Base, Dims...> operator-() const { return bottomup_ad<Base, Dims...>(-addressof_multi_array(this->x)[0], (-addressof_multi_array(this->x)[Indices])...); }
+		bottomup_ad<Base, Dims...> operator-() const { return bottomup_ad<Base, Dims...>(-pointer_cast(this->x)[0], (-pointer_cast(this->x)[Indices])...); }
 		bottomup_ad<Base, Dims...> operator+() const { return bottomup_ad<Base, Dims...>(*this); }
 
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] += addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] += pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const T& n) {
-			addressof_multi_array(this->x)[0] += n;
+			pointer_cast(this->x)[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] -= addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] -= pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const T& n) {
-			addressof_multi_array(this->x)[0] -= n;
+			pointer_cast(this->x)[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
@@ -99,13 +99,13 @@ namespace iml {
 			typename multi_array<Base, Dims...>::type result = {};
 			multi_loop_multiplication<typename multi_array<Base, Dims...>::type>::loop(result, this->x, n.x, 1);
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] = addressof_multi_array(result)[i];
+				pointer_cast(this->x)[i] = pointer_cast(result)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		bottomup_ad_base& operator*=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] *= k;
+				pointer_cast(this->x)[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
@@ -115,7 +115,7 @@ namespace iml {
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		bottomup_ad_base& operator/=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] /= k;
+				pointer_cast(this->x)[i] /= k;
 			return *this;
 		}
 
@@ -127,33 +127,33 @@ namespace iml {
 		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs + addressof_multi_array(rhs[0])[0]
-				, addressof_multi_array(rhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(lhs + pointer_cast(rhs[0])[0]
+				, pointer_cast(rhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs - addressof_multi_array(rhs[0])[0]
-				, (-addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs - pointer_cast(rhs[0])[0]
+				, (-pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -163,13 +163,13 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] * rhs
-				, (addressof_multi_array(lhs[0])[Indices] * rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] * rhs
+				, (pointer_cast(lhs[0])[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs * addressof_multi_array(rhs[0])[0]
-				, (lhs * addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs * pointer_cast(rhs[0])[0]
+				, (lhs * pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -177,8 +177,8 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] / rhs
-				, (addressof_multi_array(lhs[0])[Indices] / rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] / rhs
+				, (pointer_cast(lhs[0])[Indices] / rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
@@ -188,41 +188,41 @@ namespace iml {
 
 		//比較演算
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] == rhs; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] == rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] != rhs; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] != rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] < rhs; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] < rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] <= rhs; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] <= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] > rhs; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] > rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] >= rhs; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] >= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= pointer_cast(rhs[0])[0]; }
 	};
 	//下に階層が存在しないかつBase != T
 	template <class Base, size_t... Dims, class T, size_t... Indices>
@@ -289,23 +289,23 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] += addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] += pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const T& n) {
-			addressof_multi_array(this->x)[0] += n;
+			pointer_cast(this->x)[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] -= addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] -= pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const T& n) {
-			addressof_multi_array(this->x)[0] -= n;
+			pointer_cast(this->x)[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
@@ -313,13 +313,13 @@ namespace iml {
 			typename multi_array<Base, Dims...>::type result = {};
 			multi_loop_multiplication<typename multi_array<Base, Dims...>::type>::loop(result, this->x, n.x, 1);
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] = addressof_multi_array(result)[i];
+				pointer_cast(this->x)[i] = pointer_cast(result)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		bottomup_ad_base& operator*=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] *= k;
+				pointer_cast(this->x)[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
@@ -329,7 +329,7 @@ namespace iml {
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		bottomup_ad_base& operator/=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] /= k;
+				pointer_cast(this->x)[i] /= k;
 			return *this;
 		}
 
@@ -341,43 +341,43 @@ namespace iml {
 		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs + addressof_multi_array(rhs[0])[0]
-				, addressof_multi_array(rhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(lhs + pointer_cast(rhs[0])[0]
+				, pointer_cast(rhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs - addressof_multi_array(rhs[0])[0]
-				, (-addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs - pointer_cast(rhs[0])[0]
+				, (-pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -393,13 +393,13 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] * rhs
-				, (addressof_multi_array(lhs[0])[Indices] * rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] * rhs
+				, (pointer_cast(lhs[0])[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs * addressof_multi_array(rhs[0])[0]
-				, (lhs * addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs * pointer_cast(rhs[0])[0]
+				, (lhs * pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -411,8 +411,8 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] / rhs
-				, (addressof_multi_array(lhs[0])[Indices] / rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] / rhs
+				, (pointer_cast(lhs[0])[Indices] / rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
@@ -422,53 +422,53 @@ namespace iml {
 
 		//比較演算
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] == rhs; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] == rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] != rhs; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] != rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] < rhs; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] < rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] <= rhs; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] <= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] > rhs; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] > rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] >= rhs; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] >= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= pointer_cast(rhs[0])[0]; }
 	};
 	//下に階層が存在するかつBase == T
 	template <class Base, size_t... Dims, class T, size_t... Indices>
@@ -494,23 +494,23 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] += addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] += pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const T& n) {
-			addressof_multi_array(this->x)[0] += n;
+			pointer_cast(this->x)[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] -= addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] -= pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const T& n) {
-			addressof_multi_array(this->x)[0] -= n;
+			pointer_cast(this->x)[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
@@ -518,13 +518,13 @@ namespace iml {
 			typename multi_array<Base, Dims...>::type result = {};
 			multi_loop_multiplication<typename multi_array<Base, Dims...>::type>::loop(result, this->x, n.x, 1);
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] = addressof_multi_array(result)[i];
+				pointer_cast(this->x)[i] = pointer_cast(result)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		bottomup_ad_base& operator*=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] *= k;
+				pointer_cast(this->x)[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
@@ -534,7 +534,7 @@ namespace iml {
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		bottomup_ad_base& operator/=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] /= k;
+				pointer_cast(this->x)[i] /= k;
 			return *this;
 		}
 
@@ -545,33 +545,33 @@ namespace iml {
 		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs + addressof_multi_array(rhs[0])[0]
-				, addressof_multi_array(rhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(lhs + pointer_cast(rhs[0])[0]
+				, pointer_cast(rhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs - addressof_multi_array(rhs[0])[0]
-				, (-addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs - pointer_cast(rhs[0])[0]
+				, (-pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -581,13 +581,13 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] * rhs
-				, (addressof_multi_array(lhs[0])[Indices] * rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] * rhs
+				, (pointer_cast(lhs[0])[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs * addressof_multi_array(rhs[0])[0]
-				, (lhs * addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs * pointer_cast(rhs[0])[0]
+				, (lhs * pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -595,8 +595,8 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] / rhs
-				, (addressof_multi_array(lhs[0])[Indices] / rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] / rhs
+				, (pointer_cast(lhs[0])[Indices] / rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
@@ -606,41 +606,41 @@ namespace iml {
 
 		//比較演算
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] == rhs; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] == rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] != rhs; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] != rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] < rhs; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] < rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] <= rhs; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] <= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] > rhs; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] > rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] >= rhs; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] >= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= pointer_cast(rhs[0])[0]; }
 	};
 	//下に階層が存在するかつBase != T
 	template <class Base, size_t... Dims, class T, size_t... Indices>
@@ -674,23 +674,23 @@ namespace iml {
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] += addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] += pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		bottomup_ad_base& operator+=(const T& n) {
-			addressof_multi_array(this->x)[0] += n;
+			pointer_cast(this->x)[0] += n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const bottomup_ad_base<T, index_tuple<size_t, Dims...>, U>& n) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] -= addressof_multi_array(n.x)[i];
+				pointer_cast(this->x)[i] -= pointer_cast(n.x)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		bottomup_ad_base& operator-=(const T& n) {
-			addressof_multi_array(this->x)[0] -= n;
+			pointer_cast(this->x)[0] -= n;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
@@ -698,13 +698,13 @@ namespace iml {
 			typename multi_array<Base, Dims...>::type result = {};
 			multi_loop_multiplication<typename multi_array<Base, Dims...>::type>::loop(result, this->x, n.x, 1);
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] = addressof_multi_array(result)[i];
+				pointer_cast(this->x)[i] = pointer_cast(result)[i];
 			return *this;
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		bottomup_ad_base& operator*=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] *= k;
+				pointer_cast(this->x)[i] *= k;
 			return *this;
 		}
 		template <class U, class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
@@ -714,7 +714,7 @@ namespace iml {
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		bottomup_ad_base& operator/=(const T& k) {
 			for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i)
-				addressof_multi_array(this->x)[i] /= k;
+				pointer_cast(this->x)[i] /= k;
 			return *this;
 		}
 
@@ -725,43 +725,43 @@ namespace iml {
 		//2項演算
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] + addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] + pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] + rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] + rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::add_value>::type>
 		friend bottomup_ad<Base, Dims...> operator+(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs + addressof_multi_array(rhs[0])[0]
-				, addressof_multi_array(rhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(lhs + pointer_cast(rhs[0])[0]
+				, pointer_cast(rhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - addressof_multi_array(rhs[0])[0]
-				, (addressof_multi_array(lhs[0])[Indices] - addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - pointer_cast(rhs[0])[0]
+				, (pointer_cast(lhs[0])[Indices] - pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] - rhs
-				, addressof_multi_array(lhs[0])[Indices]...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] - rhs
+				, pointer_cast(lhs[0])[Indices]...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::sub_value>::type>
 		friend bottomup_ad<Base, Dims...> operator-(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs - addressof_multi_array(rhs[0])[0]
-				, (-addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs - pointer_cast(rhs[0])[0]
+				, (-pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -777,13 +777,13 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] * rhs
-				, (addressof_multi_array(lhs[0])[Indices] * rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] * rhs
+				, (pointer_cast(lhs[0])[Indices] * rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::mul_value>::type>
 		friend bottomup_ad<Base, Dims...> operator*(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
-			return bottomup_ad<Base, Dims...>(lhs * addressof_multi_array(rhs[0])[0]
-				, (lhs * addressof_multi_array(rhs[0])[Indices])...);
+			return bottomup_ad<Base, Dims...>(lhs * pointer_cast(rhs[0])[0]
+				, (lhs * pointer_cast(rhs[0])[Indices])...);
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
@@ -795,8 +795,8 @@ namespace iml {
 		}
 		template <class = typename enable_if<is_operation<Base, T, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) {
-			return bottomup_ad<Base, Dims...>(addressof_multi_array(lhs[0])[0] / rhs
-				, (addressof_multi_array(lhs[0])[Indices] / rhs)...);
+			return bottomup_ad<Base, Dims...>(pointer_cast(lhs[0])[0] / rhs
+				, (pointer_cast(lhs[0])[Indices] / rhs)...);
 		}
 		template <class = typename enable_if<is_operation<T, Base, Base>::div_value>::type>
 		friend bottomup_ad<Base, Dims...> operator/(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) {
@@ -806,53 +806,53 @@ namespace iml {
 
 		//比較演算
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] == rhs; }
+		friend bool operator==(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] == rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == addressof_multi_array(rhs[0])[0]; }
+		friend bool operator==(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs == pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::eq_value>::type>
-		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] != rhs; }
+		friend bool operator!=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] != rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::eq_value>::type>
-		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != addressof_multi_array(rhs[0])[0]; }
+		friend bool operator!=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs != pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::lt_value>::type>
-		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] < rhs; }
+		friend bool operator<(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] < rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::lt_value>::type>
-		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs < pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::leq_value>::type>
-		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] <= rhs; }
+		friend bool operator<=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] <= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::leq_value>::type>
-		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator<=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs <= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::gt_value>::type>
-		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] > rhs; }
+		friend bool operator>(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] > rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::gt_value>::type>
-		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs > pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return addressof_multi_array(lhs[0])[0] >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<Base, Dims...>& rhs) { return pointer_cast(lhs[0])[0] >= pointer_cast(rhs[0])[0]; }
 		template <class = typename enable_if<is_calcable<Base, T>::geq_value>::type>
-		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return addressof_multi_array(lhs[0])[0] >= rhs; }
+		friend bool operator>=(const bottomup_ad<Base, Dims...>& lhs, const T& rhs) { return pointer_cast(lhs[0])[0] >= rhs; }
 		template <class = typename enable_if<is_calcable<T, Base>::geq_value>::type>
-		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= addressof_multi_array(rhs[0])[0]; }
+		friend bool operator>=(const T& lhs, const bottomup_ad<Base, Dims...>& rhs) { return lhs >= pointer_cast(rhs[0])[0]; }
 	};
 
 	//ボトムアップ型自動微分
@@ -870,7 +870,7 @@ namespace iml {
 		static bottomup_ad* bottomup_ad_copy(bottomup_ad* const lhs, const bottomup_ad<_T, Dims...>& rhs) {
 			//同じインスタンスでなければ代入
 			//if (static_cast<void*>(addressof(lhs->x)) != static_cast<void*>(const_cast<_T*>(addressof(rhs[0]))))
-				for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) addressof_multi_array(lhs->x)[i] = static_cast<T>(addressof_multi_array(rhs.x)[i]);
+				for (size_t i = 0; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) pointer_cast(lhs->x)[i] = static_cast<T>(pointer_cast(rhs.x)[i]);
 			return lhs;
 		}
 	public:
@@ -887,10 +887,10 @@ namespace iml {
 			using other = bottomup_ad<Other, Dims...>;
 		};
 
-		iterator begin() noexcept { return iterator(addressof_multi_array(this->x)); }
-		const_iterator begin() const noexcept { return const_iterator(addressof_multi_array(this->x)); }
-		iterator end() noexcept { return iterator(addressof(addressof_multi_array(this->x)[dimension<index_tuple<size_t, Dims...>>::value - 1]) + 1); }
-		const_iterator end() const noexcept { return const_iterator(addressof(addressof_multi_array(this->x)[dimension<index_tuple<size_t, Dims...>>::value - 1]) + 1); }
+		iterator begin() noexcept { return iterator(pointer_cast(this->x)); }
+		const_iterator begin() const noexcept { return const_iterator(pointer_cast(this->x)); }
+		iterator end() noexcept { return iterator(addressof(pointer_cast(this->x)[dimension<index_tuple<size_t, Dims...>>::value - 1]) + 1); }
+		const_iterator end() const noexcept { return const_iterator(addressof(pointer_cast(this->x)[dimension<index_tuple<size_t, Dims...>>::value - 1]) + 1); }
 
 		//単項演算の継承
 		using bottomup_ad_base<T, index_tuple<size_t, Dims...>, T>::operator-;
@@ -918,13 +918,13 @@ namespace iml {
 
 		//ストリーム出力
 		friend std::ostream& operator<<(std::ostream& os, const bottomup_ad& n) {
-			os << addressof_multi_array(n.x)[0];
-			for (size_t i = 1; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) os << ',' << addressof_multi_array(n.x)[i];
+			os << pointer_cast(n.x)[0];
+			for (size_t i = 1; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) os << ',' << pointer_cast(n.x)[i];
 			return os;
 		}
 		friend std::wostream& operator<<(std::wostream& os, const bottomup_ad& n) {
-			os << addressof_multi_array(n.x)[0];
-			for (size_t i = 1; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) os << L',' << addressof_multi_array(n.x)[i];
+			os << pointer_cast(n.x)[0];
+			for (size_t i = 1; i < dimension<index_tuple<size_t, Dims...>>::value; ++i) os << L',' << pointer_cast(n.x)[i];
 			return os;
 		}
 	};
@@ -976,7 +976,7 @@ namespace iml {
 	template <class AD, size_t N, class T>
 	AD ad_variable(const T& x) {
 		AD result(x);
-		addressof_multi_array(result[0])[ad_variable_suffix<N, typename AD::dimension_type>::value] = 1;
+		pointer_cast(result[0])[ad_variable_suffix<N, typename AD::dimension_type>::value] = 1;
 		return result;
 	}
 
@@ -1028,7 +1028,7 @@ namespace iml {
 			//result:結果, x:元データ, table:xの冪乗テーブル, p:xの逆数の冪
 			template <size_t M>
 			static void loop(S(&result)[N], const S(&x)[N], const bottomup_ad<T, Dims...>(&table)[M], size_t p) {
-				T temp1 = 1 / pow(addressof_multi_array(x)[0], p);
+				T temp1 = 1 / pow(pointer_cast(x)[0], p);
 				for (size_t i = 1; i < N; ++i) {
 					T temp2 = p * binom(p + i, i);
 					for (size_t j = 1; j <= i; ++j) {
@@ -1056,12 +1056,12 @@ namespace iml {
 			template <size_t M>
 			static void loop(S(&result)[N], const S(&x)[N], const bottomup_ad<T, Dims...>(&table)[M], size_t p) {
 				//p*f^(-p)部の構築
-				T temp1 = p / pow(addressof_multi_array(x)[0], p);
+				T temp1 = p / pow(pointer_cast(x)[0], p);
 
 				for (size_t i = 1; i < N; ++i) {
 					T temp2 = temp1 * binom(p + i, i);
 					for (size_t j = 1; j <= i; ++j) {
-						temp2 *= (i + 1 - j) / (-addressof_multi_array(x)[0] * j);
+						temp2 *= (i + 1 - j) / (-pointer_cast(x)[0] * j);
 						loop_impl(i, result, table[j].x, temp2 / (p + j));
 					}
 				}
@@ -1074,7 +1074,7 @@ namespace iml {
 		}
 		//逆元の取得
 		static constexpr bottomup_ad<T, Dims...> inverse_element(const bottomup_ad<T, Dims...>& x) {
-			bottomup_ad<T, Dims...> result(multiplicative_inverse(addressof_multi_array(x.x)[0]));
+			bottomup_ad<T, Dims...> result(multiplicative_inverse(pointer_cast(x.x)[0]));
 			bottomup_ad<T, Dims...> table[template_max<index_tuple<size_t, Dims...>>::value] = { identity_element() };		//xの冪乗のテーブル(1,x,x^2,...)
 			//xの冪乗のテーブルの構築
 			for (size_t i = 1; i < template_max<index_tuple<size_t, Dims...>>::value; ++i) table[i] = table[i - 1] * x;
@@ -1098,7 +1098,7 @@ namespace iml {
 		static constexpr T epsilon() { return Error_evaluation<T>::epsilon(); }
 
 		static bool _error_evaluation_(const bottomup_ad<T, Dims...>& lhs, const bottomup_ad<T, Dims...>& rhs) {
-			return error_evaluation(addressof_multi_array(lhs[0])[0], addressof_multi_array(rhs[0])[0]);
+			return error_evaluation(pointer_cast(lhs[0])[0], pointer_cast(rhs[0])[0]);
 		}
 	};
 }

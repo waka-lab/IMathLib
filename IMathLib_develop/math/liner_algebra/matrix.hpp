@@ -136,10 +136,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = matrix<Other, M, N>;
 
-		constexpr iterator begin() noexcept { return iterator(&x_m[0][0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x_m[0][0]); }
-		constexpr iterator end() noexcept { return iterator(&x_m[0][M * N - 1] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x_m[0][M * N - 1] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m[0]); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m[0]); }
+		constexpr iterator end() noexcept { return iterator(x_m[0] + M * N); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m[0] + M * N); }
 
 		//単項演算
 		using matrix_base<T, M, N>::operator-;
@@ -308,7 +308,7 @@ namespace iml {
 	template <class T>
 	struct is_matrix : is_matrix_impl<remove_cv_t<T>> {};
 	template <class T>
-	using is_matrix_t = typename is_matrix<T>::type;
+	constexpr bool is_matrix_v = is_matrix<T>::value;
 
 
 	//行列の除去

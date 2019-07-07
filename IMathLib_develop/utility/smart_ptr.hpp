@@ -1,383 +1,396 @@
-﻿#ifndef IMATH_UTILITY_SMART_PTR_HPP
-#define IMATH_UTILITY_SMART_PTR_HPP
+﻿#ifndef IMATHLIB_UTILITY_SMART_PTR_HPP
+#define IMATHLIB_UTILITY_SMART_PTR_HPP
 
-#include "IMathLib/container/container.hpp"
+#include "IMathLib/container/allocator.hpp"
 
-//スマートポインタの実装
 
+// インスタンスの所有権が唯一なスマートポインタ
 namespace iml {
 
-	//スマートポインタの基底クラス
 	template <class T>
-	class smart_base {
-	protected:
-		T*	p;
+	class unique_ptr {
+		template <class>
+		friend class shared_ptr;
+		template <class>
+		friend class unique_ptr;
+
+		T*					p_m;			// 保持しているインスタンス
+		deallocator_base*	dealloc_m;		// ディアロケータ
 	public:
-		using element_type = typename remove_extent<T>::type;
+		constexpr unique_ptr() noexcept : p_m(nullptr), dealloc_m(nullptr) {}
+		unique_ptr(unique_ptr&& u) noexcept : p_m(u.p_m), dealloc_m(u.dealloc_m) { u.p_m = nullptr; u.dealloc_m = nullptr; }
+		template <class U>
+		unique_ptr(unique_ptr<U>&& u) noexcept : p_m(static_cast<T*>(u.p_m)), dealloc_m(u.dealloc_m) { u.p_m = nullptr; u.dealloc_m = nullptr; }
+		template <class U>
+		explicit unique_ptr(U* p) : p_m(static_cast<T*>(p)), dealloc_m(deallocator<T, dealloc::variable>::get(p)) {}
+		template <class U, size_t N, class... Types>
+		explicit unique_ptr(U* p, dealloc_ident<N> id, Types&&... args) : p_m(static_cast<T*>(p)), dealloc_m(deallocator<T, N>::get(p, forward<Types>(args)...)) {}
+		~unique_ptr() { dealloc_m->destroy(); }
 
-		constexpr smart_base() :p(nullptr) {}
-		constexpr smart_base(T* p) :p(p) {}
-		template <class S>
-		constexpr smart_base(S* p) : p(static_cast<T*>(p)) {}
-		virtual ~smart_base() = 0 {};
+		void swap(unique_ptr& x) noexcept {
+			iml::swap(p_m, x.p_m); iml::swap(dealloc_m, x.dealloc_m);
+		}
+		// インスタンスの所有権を破棄(解放はしない)
+		T* release() noexcept {
+			T* temp = p_m;
+			if (!dealloc_m) {
+				dealloc_m->release();
+				dealloc_m = nullptr;
+			}
+			p_m = nullptr;
+			return temp;
+		}
+		// インスタンスの破棄
+		void reset() { unique_ptr().swap(*this); }
+		// インスタンスを破棄して再設定
+		template <class U>
+		void reset(U* p) { unique_ptr(p).swap(*this); }
+		template <class U, size_t N, class... Types>
+		void reset(U* p, dealloc_ident<N> id = dealloc_ident<N>(), Types&&... args) {
+			unique_ptr(p, id, forward<Types>(args)...).swap(*this);
+		}
 
-		//各種参照
+		unique_ptr& operator=(const unique_ptr&) = delete;
+		unique_ptr& operator=(unique_ptr&& u) noexcept {
+			if (this != &u) {
+				p_m = u.p; u.p_m = nullptr;
+				dealloc_m = u.dealloc_m; u.dealloc_m = nullptr;
+			}
+			return *this;
+		}
+
+
+		// 各種参照
+		T* get() const { return p_m; }
 		T& operator*() const { return *get(); }
 		T* operator->() const { return get(); }
-		T* get() const { return p; }
 
-		//リソースの破棄(デストラクタで自動解放等される)
-		virtual void reset() = 0;
+		// リソースを所持しているかの判定
+		operator bool() const { return !!p_m; }
+		bool operator!() const { return !p_m; }
 
-		//リソースを所持しているかの判定
-		operator bool() const { return !!p; }
-		bool operator!() const { return !p; }
-
-		const T& operator[](size_t index) const { return p[index]; }
-		T& operator[](size_t index) { return p[index]; }
+		const T& operator[](size_t index) const { return p_m[index]; }
+		T& operator[](size_t index) { return p_m[index]; }
 	};
-
-	//比較演算
-	template <class T>
-	inline bool operator==(const smart_base<T>& lhs, const smart_base<T>& rhs) {
-		return lhs.get() == rhs.get();
-	}
-	template<class T>
-	inline bool operator!=(const smart_base<T>& lhs, const smart_base<T>& rhs) {
-		return lhs.get() != rhs.get();
-	}
 }
 
-//シェアスマートポインタ
+
+
+// シェアポインタ
 namespace iml {
 
-	//参照カウンタ
-	template <class T, size_t N>
+	// 参照カウンタ
+	struct shared_count_impl {
+		size_t					shared_cnt_m;		// シェアカウンタ
+		size_t					weak_cnt_m;			// ウィークカウンタ
+		deallocator_base*		dealloc_m;			// リソースを参照してその破棄の中継をする
+
+		// p:保持しているリソースへのポインタ
+		// N:deallocatorの種類を示す定数
+		template <class T, size_t N, class... Types>
+		explicit shared_count_impl(T* p, dealloc_ident<N>, Types&&... args) : shared_cnt_m(1), weak_cnt_m(0), dealloc_m(deallocator<T, N>::get(p, forward<Types>(args)...)) {}
+		template <class T>
+		explicit shared_count_impl(T* p, deallocator_base* dealloc) : shared_cnt_m(1), weak_cnt_m(0), dealloc_m(dealloc) {}
+		shared_count_impl(const shared_count_impl& c)  noexcept : shared_cnt_m(c.shared_cnt_m), weak_cnt_m(c.weak_cnt_m), dealloc_m(c.dealloc_m) {}
+		shared_count_impl(shared_count_impl&& c)  noexcept : shared_cnt_m(c.shared_cnt_m), weak_cnt_m(c.weak_cnt_m), dealloc_m(c.dealloc_m) { c.dealloc_m = nullptr; }
+		~shared_count_impl() { dealloc_m->destroy(); }
+
+		size_t inc() { return ++shared_cnt_m; }
+		size_t dec() { return --shared_cnt_m; }					// 仕様上，負数になることはない
+		size_t weak_inc() { return ++weak_cnt_m; }
+		size_t weak_dec() { return --weak_cnt_m; }
+		size_t shared_count() { return shared_cnt_m; }
+		size_t weak_count() { return weak_cnt_m; }
+
+		shared_count_impl& operator=(const shared_count_impl&) = delete;
+		shared_count_impl& operator=(shared_count_impl&& c) noexcept {
+			this->shared_cnt_m = c.shared_cnt_m;
+			this->weak_cnt_m = c.weak_cnt_m;
+			this->dealloc_m = c.dealloc_m;
+			c.dealloc_m = nullptr;
+			return *this;
+		}
+	};
 	class shared_count {
-		template <class _T, size_t _N>
 		friend class weak_count;
 
-		//カウンタ実装部
-		struct impl {
-			//実装とデリーター
-			template<class... Args>
-			constexpr explicit impl(T* p, Args... args) :shared_cnt(1), weak_cnt(0), dealloc(deallocator<T>::get<N>(p, iml::forward<Args>(args)...)) {}
-			template<class S, class... Args>
-			constexpr explicit impl(S* p, Args... args) :shared_cnt(1), weak_cnt(0), dealloc(deallocator<T>::get<N>(static_cast<T*>(p), iml::forward<Args>(args)...)) {}
-			constexpr impl(const impl& c) :shared_cnt(c.shared_cnt), weak_cnt(c.weak_cnt), dealloc(c.dealloc) {}
-			impl(impl&& c) { *this = move(c); }
-			~impl() { dealloc->destroy(); }
-
-			size_t inc() { return ++shared_cnt; }
-			size_t dec() { return --shared_cnt; }
-			size_t weak_inc() { return ++weak_cnt; }
-			size_t weak_dec() { return --weak_cnt; }
-			size_t shared_count() { return shared_cnt; }
-			size_t weak_count() { return weak_cnt; }
-
-			size_t			shared_cnt;			//シェアカウンタ
-			size_t			weak_cnt;			//ウィークカウンタ
-			deallocator<T>		*dealloc;
-
-			impl& operator=(const impl&) = delete;
-			impl& operator=(impl&& im) noexcept {
-				this->shared_cnt = im.shared_cnt;
-				this->weak_cnt = im.weak_cnt;
-				this->dealloc = im.dealloc;
-				im.dealloc = nullptr;
-				return *this;
-			}
-		};
-		impl*	pn;
+		shared_count_impl*	cnt_m;
 	public:
-		constexpr shared_count() :pn(nullptr) {}
-		shared_count(const shared_count& r) :pn(r.pn) { if (pn) pn->inc(); }
-		shared_count(shared_count&& r) { *this = move(r); }
-		template<class... Args>
-		constexpr explicit shared_count(T* p, Args... args) :pn(new impl(p, iml::forward<Args>(args)...)) {}
-		template<class S, class... Args>
-		constexpr explicit shared_count(S* p, Args... args) :pn(new impl(p, iml::forward<Args>(args)...)) {}
+		constexpr shared_count() : cnt_m(nullptr) {}
+		shared_count(const shared_count& s)  noexcept : cnt_m(s.cnt_m) { if (cnt_m) cnt_m->inc(); }
+		shared_count(shared_count&& s)  noexcept : cnt_m(s.cnt_m) { s.cnt_m = nullptr; }
+		shared_count(const weak_count& w) noexcept;
+		template <class T, size_t N, class... Types>
+		explicit shared_count(T* p, dealloc_ident<N> id, Types&&... args) : cnt_m(new shared_count_impl(p, id, forward<Types>(args)...)) {}
+		// deallocは実態をもたなければならない
+		template <class T>
+		explicit shared_count(T* p, deallocator_base* dealloc) : cnt_m(new shared_count_impl(p, dealloc)) {}
 		~shared_count() { release(); }
 
-		//弱参照とシェアカウンタが0ならば解放
+		// 弱参照とシェアカウンタが0(他にリソースを参照しているものが存在しない)ならば解放
 		void release() {
-			if (pn && !pn->dec() && !pn->weak_count()) {
-				pn->dealloc->dispose();
-				delete pn;
-				pn = nullptr;
-			}
+			if (cnt_m != nullptr)
+				if (cnt_m && !cnt_m->dec() && !cnt_m->weak_count()) {
+					cnt_m->dealloc_m->dispose();
+					delete cnt_m;
+					cnt_m = nullptr;
+				}
 		}
 		shared_count& operator=(const shared_count& r) {
-			impl* tmp = r.pn;
-			//同じでないならばthisをマイナスしてrをプラスする
-			if (tmp != pn) {
-				if (tmp != nullptr) tmp->inc();
+			shared_count_impl* temp = r.cnt_m;
+			// シェアカウンタが同一のものでないとき代入
+			if (temp != cnt_m) {
+				if (temp != nullptr) temp->inc();
 				release();
-				pn = tmp;
+				cnt_m = temp;
 			}
 			return *this;
 		}
 		shared_count& operator=(shared_count&& r) {
-			//同じでないならばthisをマイナス
-			if (r.pn != pn) {
+			// シェアカウンタが同一のものでないときインスタンスの移動
+			if (r.cnt_m != cnt_m) {
 				release();
-				pn = r.pn;
+				cnt_m = r.cnt_m;
+				r.cnt_m = nullptr;
 			}
 			return *this;
 		}
-		//スワップ
-		void swap(shared_count& r) { iml::swap(pn, r.pn); }
-		//インスタンスが唯一かの判定
+		// スワップ
+		void swap(shared_count& r) { iml::swap(cnt_m, r.cnt_m); }
+		// シェアしている数
+		size_t use_count() const { return cnt_m ? cnt_m->shared_count() : 0; }
+		// シェアしているインスタンスが唯一か
 		bool unique() const { return use_count() == 1; }
-		//カウントの取得
-		size_t use_count() const { return pn ? pn->shared_count() : 0; }
 	};
-	//所有権をシェア(共有)するスマートポインタ(デフォルトは通常変数)
-	template <class T, size_t N = deallocator<T>::variable>
-	class shared_ptr :public smart_base<T> {
-		template<class S, size_t N>
+
+
+	// 所有権をシェアするスマートポインタ
+	template <class T>
+	class shared_ptr {
+		template <class>
 		friend class shared_ptr;
-		template<class S, size_t N>
+		template <class>
 		friend class weak_ptr;
+		template <class>
+		friend class unique_ptr;
 
-		using smart_base<T>::p;
-
-		shared_count<T, N>	sc;			//シェアカウンタ
+		T*				p_m;		// 保持しているインスタンス
+		shared_count	sc_m;		// シェアカウンタ
 	public:
-		constexpr shared_ptr() noexcept : smart_base<T>(nullptr), sc() {}
-		shared_ptr(const shared_ptr& s) noexcept : smart_base<T>(s.p), sc(s.sc) {}
-		shared_ptr(shared_ptr&& s) noexcept { *this = move(s); }
-		template<class S>
-		shared_ptr(const shared_ptr<S, N>& s) noexcept : smart_base<T>(s.p), sc(s.sc) {}
-		template<class S>
-		shared_ptr(shared_ptr<S, N>&& s) noexcept { *this = move(s); }
-		template<class S, class... Args>
-		explicit shared_ptr(S* p, Args... args) :smart_base<T>(p), sc(p, iml::forward<Args>(args)...) {}
-		template <class S, size_t N>
-		shared_ptr(const weak_ptr<S, N>& r) : sc(*r.wc.pn) {}
+		constexpr shared_ptr() noexcept : p_m(nullptr), sc_m() {}
+		shared_ptr(const shared_ptr& s) noexcept : p_m(s.p_m), sc_m(s.sc_m) {}
+		shared_ptr(shared_ptr&& s) noexcept : p_m(s.p_m), sc_m(s.sc_m) { s.p_m = nullptr; }
+		template<class U>
+		shared_ptr(const shared_ptr<U>& s) noexcept : p_m(static_cast<const T*>(s.p_m)), sc_m(s.sc_m) {}
+		template<class U>
+		shared_ptr(shared_ptr<U>&& s) noexcept : p_m(static_cast<T*>(s.p_m)), sc_m(s.sc_m) { s.p_m = nullptr; }
+		template <class U>
+		shared_ptr(const weak_ptr<U>& w) : p_m(static_cast<T*>(w.p_m)), sc_m(w.wc_m) {}
+		template<class U>
+		shared_ptr(unique_ptr<U>&& u) noexcept : p_m(static_cast<T*>(u.p_m)), sc_m(u.p_m, u.dealloc_m) { u.p_m = u.dealloc_m = nullptr; }
+		template<class U>
+		explicit shared_ptr(U* p) : p_m(static_cast<T*>(p)), sc_m(p, dealloc_ident<dealloc::variable>()) {}
+		template<class U, size_t N, class... Types>
+		explicit shared_ptr(U* p, dealloc_ident<N> id, Types&&... args) : p_m(static_cast<T*>(p)), sc_m(p, id, forward<Types>(args)...) {}
 		~shared_ptr() {}
 
-		//所有権の破棄
+		//スワップ
+		void swap(shared_ptr& other) noexcept { iml::swap(p_m, other.p_m); sc_m.swap(other.sc_m); }
+
+		// 所有権を破棄して新しい所有権を得る
 		void reset() { shared_ptr().swap(*this); }
 		void reset(shared_ptr& s) { shared_ptr(s).swap(*this); }
-		template<class S>
-		void reset(S* p) { shared_ptr(p).swap(*this); }
-		template<class S, class D>
-		void reset(S* p, D d) { shared_ptr(p, d).swap(*this); }
-		//スワップ
-		void swap(shared_ptr& other) noexcept {
-			iml::swap(p, other.p);
-			sc.swap(other.sc);
+		template <class U>
+		void reset(U* p) { shared_ptr(p).swap(*this); }
+		template <class U, size_t N, class... Types>
+		void reset(U* p, dealloc_ident<N> id, Types&&... args) {
+			shared_ptr(p, id, forward<Types>(args)...).swap(*this);
 		}
 
-		//インスタンスが唯一かの判定
-		bool unique() const { return sc.unique(); }
-		//カウントの取得
-		size_t use_count() const { return sc.use_count(); }
+		// インスタンスが唯一かの判定
+		bool unique() const { return sc_m.unique(); }
+		// カウントの取得
+		size_t use_count() const { return sc_m.use_count(); }
 
-		//代入演算
+		// 代入演算
 		shared_ptr& operator=(const shared_ptr& s) {
-			this->sc = s.sc; this->p = s.p;
-			return *this;
-		}
-		template<class S>
-		shared_ptr& operator=(const shared_ptr<S, N>& s) {
-			this->sc = s.sc; this->p = s.p;
+			sc_m = s.sc_m; p_m = s.p_m;
 			return *this;
 		}
 		shared_ptr& operator=(shared_ptr&& s) noexcept {
-			this->sc = s.sc; this->p = s.p;
+			sc_m = s.sc_m; p_m = s.p_m;
+			p_m = nullptr;
 			return *this;
 		}
-		template<class S>
-		shared_ptr& operator=(shared_ptr<S, N>&& s) noexcept {
-			this->sc = s.sc; this->p = s.p;
+		template <class U>
+		shared_ptr& operator=(const shared_ptr<U>& s) {
+			sc_m = s.sc_m; p_m = s.p_m;
 			return *this;
 		}
+		template <class U>
+		shared_ptr& operator=(shared_ptr<U>&& s) noexcept {
+			sc_m = s.sc_m; p_m = s.p_m;
+			s.p_m = nullptr;
+			return *this;
+		}
+		template <class U>
+		shared_ptr& operator=(unique_ptr<U>&& u) noexcept {
+			shared_count(u.p_m, u.dealloc_m).swap(sc_m);
+			p_m = u.p_m;
+			u.p_m = u.dealloc_m = nullptr;
+			return *this;
+		}
+
+
+		// 各種参照
+		T* get() const { return p_m; }
+		T& operator*() const { return *get(); }
+		T* operator->() const { return get(); }
+
+		// リソースを所持しているかの判定
+		operator bool() const { return !!p_m; }
+		bool operator!() const { return !p_m; }
+
+		const T& operator[](size_t index) const { return p_m[index]; }
+		T& operator[](size_t index) { return p_m[index]; }
 	};
 }
 
-//shared_ptrの弱参照を保持するスマートポインタ(shared_ptrのオブサーバー)
+// shared_ptrの弱参照を保持するスマートポインタ(shared_ptrのオブサーバー)
 namespace iml {
 
-	//ウィークカウンタ
-	template <class T, size_t N>
+	// ウィークカウンタ
 	class weak_count {
-		typename shared_count<T, N>::impl* pn;
+		friend class shared_count;
+
+		shared_count_impl* cnt_m;
 	public:
-		constexpr weak_count() :pn(nullptr) {}
-		weak_count(const shared_count<T, N>& r) :pn(r.pn) { if (pn) pn->weak_inc(); }
-		weak_count(const weak_count& r) :pn(r.pn) { if (pn) pn->weak_inc(); }
-		weak_count(const weak_count&& r) :pn(r.pn) {}
+		constexpr weak_count() : cnt_m(nullptr) {}
+		weak_count(const shared_count& s) : cnt_m(s.cnt_m) { if (cnt_m) cnt_m->weak_inc(); }
+		weak_count(const weak_count& w) : cnt_m(w.cnt_m) { if (cnt_m) cnt_m->weak_inc(); }
+		weak_count(weak_count&& w) : cnt_m(w.cnt_m) { w.cnt_m = nullptr; }
 		~weak_count() { release(); }
 
-		//弱参照とシェアカウントが0ならば解放
+		// 弱参照とシェアカウントが0ならば解放
 		void release() {
-			if (pn && !pn->weak_dec() && !pn->shared_count()) {
-				pn->dealloc->dispose();
-				delete pn;
-				pn = nullptr;
+			if (cnt_m && !cnt_m->weak_dec() && !cnt_m->shared_count()) {
+				cnt_m->dealloc_m->dispose();
+				delete cnt_m;
+				cnt_m = nullptr;
 			}
 		}
 
-		weak_count& operator=(const shared_count<T, N>& r) {
-			typename shared_count<T, N>::impl* tmp = r.pn;
-			//同じでないならばthisをマイナスしてrをプラスする
-			if (tmp != pn) {
-				if (tmp != nullptr) tmp->weak_inc();
+		weak_count& operator=(const shared_count& s) {
+			shared_count_impl* temp = s.cnt_m;
+			if (temp != cnt_m) {
+				if (temp != nullptr) temp->weak_inc();
 				release();
-				pn = tmp;
+				cnt_m = temp;
 			}
 			return *this;
 		}
-		weak_count& operator=(shared_count<T, N>&& r) {
-			//同じでないならばthisをマイナス
-			if (r.pn != pn) {
-				pn = r.pn;
-				r.pn = nullptr;
-			}
-			return *this;
-		}
-		weak_count& operator=(const weak_count& r) {
-			typename shared_count<T, N>::impl* tmp = r.pn;
-			//同じでないならばthisをマイナスしてrをプラスする
-			if (tmp != pn) {
-				if (tmp) tmp->weak_inc();
+		weak_count& operator=(const weak_count& w) {
+			shared_count_impl* temp = w.cnt_m;
+			if (temp != cnt_m) {
+				if (temp) temp->weak_inc();
 				release();
-				pn = tmp;
+				cnt_m = temp;
 			}
 			return *this;
 		}
-		weak_count& operator=(weak_count&& r) {
-			//同じでないならばthisをマイナス
-			if (r.pn != pn) {
-				pn = r.pn;
-				r.pn = nullptr;
+		weak_count& operator=(weak_count&& w) {
+			if (w.cnt_m != cnt_m) {
+				cnt_m = w.cnt_m;
+				w.cnt_m = nullptr;
 			}
 			return *this;
 		}
 		//スワップ
-		void swap(weak_count& r) { iml::swap(pn, r.pn); }
-		//インスタンスが唯一かの判定
+		void swap(weak_count& w) { iml::swap(cnt_m, w.cnt_m); }
+		// 弱参照しているインスタンスのシェア数
+		size_t use_count() const { return cnt_m ? cnt_m->shared_count() : 0; }
+		// 弱参照しているインスタンスのシェアが唯一か
 		bool unique() const { return use_count() == 1; }
-		//カウントの取得
-		size_t use_count() const { return pn ? pn->shared_count() : 0; }
 	};
+	// シャアカウンタのコンストラクタの記述
+	inline shared_count::shared_count(const weak_count& w) noexcept : cnt_m(w.cnt_m) { if (cnt_m) cnt_m->inc(); }
+
 	//shared_ptrの弱参照を保持して循環参照を解決するスマートポインタ
-	template <class T, size_t N = deallocator<T>::variable>
-	class weak_ptr : public smart_base<T> {
-		template<class S, size_t N>
+	template <class T>
+	class weak_ptr {
+		template <class>
 		friend class weak_ptr;
-		template<class S, size_t N>
+		template <class>
 		friend class shared_ptr;
 
-		using smart_base<T>::p;
-
-		weak_count<T, N> wc;			//ウィークカウンタ
+		T*			p_m;		// 保持しているインスタンス
+		weak_count	wc_m;		// ウィークカウンタ
 	public:
-		constexpr weak_ptr() noexcept : smart_base<T>(nullptr), wc() {}
-		weak_ptr(const weak_ptr& r) noexcept : smart_base<T>(r.p), wc(r.wc) {}
-		weak_ptr(const weak_ptr&& r) noexcept { *this = move(r); }
-		template <class S>
-		weak_ptr(const weak_ptr<S, N>& r) noexcept : smart_base<T>(r.p), wc(r.wc) {}
-		template <class S>
-		weak_ptr(const weak_ptr<S, N>&& r) noexcept { *this = move(r); }
-		template <class S>
-		weak_ptr(const shared_ptr<S, N>& r) noexcept : smart_base<T>(r.p), wc(r.sc) {}
+		constexpr weak_ptr() noexcept : p_m(nullptr), wc() {}
+		weak_ptr(const weak_ptr& w) noexcept : p_m(w.p_m), wc_m(w.wc_m) {}
+		weak_ptr(const weak_ptr&& w) noexcept : p_m(w.p_m), wc_m(w.wc_m) { w.p_m = nullptr; }
+		template <class U>
+		weak_ptr(const weak_ptr<U>& w) noexcept : p_m(static_cast<const T*>(w.p_m)), wc_m(w.wc_m) {}
+		template <class U>
+		weak_ptr(const weak_ptr<U>&& w) noexcept : p_m(static_cast<const T*>(w.p_m)), wc_m(w.wc_m) { w.p_m = nullptr; }
+		template <class U>
+		weak_ptr(const shared_ptr<U>& s) noexcept : p_m(static_cast<const T*>(s.p_m)), wc_m(s.sc_m) {}
+		~weak_ptr() {}
 
-		//所有権の破棄
+		// スワップ
+		void swap(weak_ptr& w) noexcept {
+			iml::swap(p_m, w.p_m); wc_m.swap(w.wc_m);
+		}
+		// 所有権の破棄
 		void reset() { weak_ptr().swap(*this); }
-		void reset(const weak_ptr& s) { weak_ptr(s).swap(*this); }
-		//スワップ
-		void swap(weak_ptr& other) noexcept {
-			iml::swap(p, other.p);
-			wc.swap(other.wc);
-		}
-		//監視しているリソースのインスタンスの取得
-		shared_ptr<T, N> lock() const{
-			return shared_ptr<T, N>(*this);
-		}
+		void reset(const weak_ptr& w) { weak_ptr(w).swap(*this); }
+		// 監視しているリソースのインスタンスの取得
+		shared_ptr<T> lock() const { return shared_ptr<T>(*this); }
 
-		//インスタンスが唯一かの判定
-		bool unique() const { return wc.unique(); }
-		//カウントの取得
-		size_t use_count() const { return wc.use_count(); }
+		// 弱参照しているインスタンスのシェア数
+		size_t use_count() const { return wc_m.use_count(); }
+		// 弱参照しているインスタンスのシェアが唯一か
+		bool unique() const { return wc_m.unique(); }
 
 		//代入演算
-		template <class S>
-		weak_ptr& operator=(const shared_ptr<S, N>& s) {
-			this->p = s.p; this->wc = s.sc;
+		template <class U>
+		weak_ptr& operator=(const shared_ptr<U>& s) {
+			p_m = s.p_m; wc_m = s.sc_m;
 			return *this;
 		}
-		weak_ptr& operator=(const weak_ptr& s) {
-			this->p = s.p; this->wc = s.wc;
+		weak_ptr& operator=(const weak_ptr& w) {
+			p_m = w.p_m; wc_m = w.wc_m;
 			return *this;
 		}
-		weak_ptr& operator=(const weak_ptr&& s) {
-			this->p = s.p; this->wc = s.wc;
+		weak_ptr& operator=(weak_ptr&& w) {
+			p_m = w.p_m; wc_m = w.wc_m;
+			w.p_m = nullptr;
 			return *this;
 		}
-		template<class S>
-		weak_ptr& operator=(const weak_ptr<S, N>& s) {
-			this->p = s.p; this->wc = s.wc;
+		template <class U>
+		weak_ptr& operator=(const weak_ptr<U>& w) {
+			p_m = w.p_m; wc_m = w.wc_m;
 			return *this;
 		}
-		template<class S>
-		weak_ptr& operator=(const weak_ptr<S, N>&& s) {
-			this->p = s.p; this->wc = s.wc;
+		template <class U>
+		weak_ptr& operator=(weak_ptr<U>&& w) {
+			p_m = w.p_m; wc_m = w.wc_m;
+			w.p_m = nullptr;
 			return *this;
 		}
-	};
-}
 
-//インスタンスの所有権が唯一(ユニーク)なスマートポインタ
-namespace iml {
 
-	template <class T, size_t N = deallocator<T>::variable>
-	class unique_ptr : public smart_base<T> {
-		template<class _T, size_t _N>
-		friend class unique_ptr;
+		// 各種参照
+		T* get() const { return p_m; }
+		T& operator*() const { return *get(); }
+		T* operator->() const { return get(); }
 
-		using smart_base<T>::p;
+		// リソースを所持しているかの判定
+		operator bool() const { return !!p_m; }
+		bool operator!() const { return !p_m; }
 
-		deallocator<T> *dealloc;		//ディアロケーター
-	public:
-		constexpr unique_ptr() noexcept : smart_base<T>(nullptr), dealloc(deallocator<T>::get<N>(static_cast<T*>(nullptr))) {}
-		unique_ptr(unique_ptr&& r) noexcept { *this = move(r); }
-		template<class S>
-		unique_ptr(unique_ptr<S, N>&& r) noexcept { *this = move(r); }
-		template<class S, class... Args>
-		explicit unique_ptr(S* p, Args... args) :smart_base<T>(p), dealloc(deallocator<T>::get<N>(static_cast<T*>(p), iml::forward<Args>(args)...)) {}
-		~unique_ptr() { dealloc->dispose(); dealloc->destroy(); }
-
-		//リソースの所有権を破棄(解放はしない)
-		void release() noexcept { this->p = nullptr; }
-		//リソースの破棄
-		void reset() {
-			dealloc->dispose();
-			this->p = nullptr;
-		}
-		//リソースを破棄して再設定
-		void reset(T* p) {
-			if (this->p == p) return;
-			dealloc->dispose(p);
-			this->p = p;
-		}
-		void swap(unique_ptr& x) noexcept {
-			iml::swap(p, x.p);
-			iml::swap(dealloc, x.dealloc);
-		}
-
-		//コピー禁止
-		unique_ptr& operator=(const unique_ptr&) = delete;
-		unique_ptr& operator=(unique_ptr&& s) noexcept {
-			//同じポインタでないとき
-			if (this != &s) {
-				p = s.p; s.p = nullptr;
-				dealloc = s.dealloc; s.dealloc = nullptr;
-			}
-			return *this;
-		}
+		const T& operator[](size_t index) const { return p_m[index]; }
+		T& operator[](size_t index) { return p_m[index]; }
 	};
 }
 

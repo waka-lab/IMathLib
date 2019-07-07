@@ -1,7 +1,7 @@
-﻿#ifndef _FPS_HPP
-#define _FPS_HPP
+﻿#ifndef IMATHLIB_INTERFACE_FPS_HPP
+#define IMATHLIB_INTERFACE_FPS_HPP
 
-#include "IMathLib/interface/timer.hpp"
+#include "IMathLib/utility/timer.hpp"
 #include <thread>
 
 //FPS管理

@@ -3,15 +3,15 @@
 
 #include "IMathLib/math/math.hpp"
 
-//色の関数
+// 色の関数
 
-//0～1で正規化された色
+// 0～1で正規化された色
 namespace iml {
 
-	//0～1で正規化された色
+	// 0～1で正規化された色
 	template <class T>
 	struct normal_color {
-		T	v[4];						//配列化
+		T	v[4];						// 配列化
 		T	&r = v[0], &g = v[1], &b = v[2], &a = v[3];
 		constexpr normal_color() :v{ 1,1,1,1 } {}
 		constexpr normal_color(const normal_color& c) : v{ c.v[0],c.v[1],c.v[2],c.v[3] } {}
@@ -29,7 +29,7 @@ namespace iml {
 			return *this;
 		}
 	};
-	//HSVからRGBへの変換(0<=h<=360, 0<=s<=1, 0<=v<=1)
+	// HSVからRGBへの変換(0<=h<=360, 0<=s<=1, 0<=v<=1)
 	template <class T>
 	normal_color<T> HSV_TO_RGB(T& h, T& s, T& v) {
 		int hi;
@@ -52,19 +52,19 @@ namespace iml {
 		}
 		return normal_color<T>(r, g, b);
 	}
-	//CMYからRGBへの変換
+	// CMYからRGBへの変換
 	template <class T>
 	normal_color<T> CMY_TO_RGB(T& c, T& m, T& y) {
 		return normal_color<T>(1 - c, 1 - m, 1 - y);
 	}
-	//RGBコードに変換(24bitカラー)
+	// RGBコードに変換(24bitカラー)
 	template <class T>
 	unsigned int RGB_TO_CODE(const normal_color<T>& c) {
 		unsigned char r = static_cast<unsigned char>(c.r * 255), g = static_cast<unsigned char>(c.g * 255)
 			, b = static_cast<unsigned char>(c.b * 255);
 		return (r | (g << 8) | (b << 16));
 	}
-	//RGBAコードに変換(32bitカラー)
+	// RGBAコードに変換(32bitカラー)
 	template <class T>
 	unsigned int RGBA_TO_CODE(const normal_color<T>& c) {
 		unsigned char r = static_cast<unsigned char>(c.r * 255), g = static_cast<unsigned char>(c.g * 255)
@@ -72,24 +72,24 @@ namespace iml {
 		return (r | (g << 8) | (b << 16) | (a << 24));
 	}
 
-	//レベル補正
+	// レベル補正
 	template <class T>
 	inline normal_color<T> level_correction(const normal_color<T>& c, const T& in_min, const T& in_max, const T& out_min, const T& out_max, const T& g) {
 		T g_inv = (g < 0.00001) ? 100000 : 1 / g;
 		T in_min_cor, in_max_cor, out_min_cor, out_max_cor;
 		T in_length, out_length;
-		//色領域の補正
+		// 色領域の補正
 		in_min_cor = (in_min > 1) ? 1 : ((in_min < 0) ? 0 : in_min);
 		in_max_cor = (in_max > 1) ? 1 : ((in_max < 0) ? 0 : in_max);
 		in_min_cor = (in_min_cor > in_max_cor) ? in_max_cor : in_min_cor;
 		out_min_cor = (out_min > 1) ? 1 : ((out_min < 0) ? 0 : out_min);
 		out_max_cor = (out_max > 1) ? 1 : ((out_max < 0) ? 0 : out_max);
 		out_min_cor = (out_min_cor > out_max_cor) ? out_max_cor : out_min_cor;
-		//入出力領域
+		// 入出力領域
 		in_length = in_max_cor - in_min_cor;
 		out_length = out_max_cor - out_min_cor;
 
-		//線形補間で入出力領域を決めてガンマ補正
+		// 線形補間で入出力領域を決めてガンマ補正
 		T r = (in_length <= 0) ? 1 : (c.r - in_min_cor) / in_length;
 		r = (r > 1) ? 1 : r;
 		r = pow(r, g_inv);

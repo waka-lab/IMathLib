@@ -9,121 +9,119 @@
 namespace iml {
 	namespace op {
 
-		// 2項演算および単項演算とのみみなすことが可能な共用のタグ
+		//2項演算および単項演算とのみみなすことが可能な共用のタグ
 		template <size_t>
 		struct operation_tag {};
-		// 前置インクリメント(++)
+		//前置インクリメント(++)
 		using preincrement_tag = operation_tag<0>;
-		// 後置インクリメント(++)
+		//後置インクリメント(++)
 		using postincrement_tag = operation_tag<1>;
-		// 前置デクリメント(--)
+		//前置デクリメント(--)
 		using predecrement_tag = operation_tag<2>;
-		// 後置デクリメント(--)
+		//後置デクリメント(--)
 		using postdecrement_tag = operation_tag<3>;
-		// 添え字([])
+		//添え字([])
 		using subscript_tag = operation_tag<4>;
-		// 関数オブジェクト(())
+		//関数オブジェクト(())
 		struct functor_tag {};
-		// メンバアクセス(->)
+		//メンバアクセス(->)
 		using arrow_tag = operation_tag<5>;
-		// ビット反転(~)
+		//ビット反転(~)
 		using bit_flip_tag = operation_tag<6>;
-		// 論理反転(!)
+		//論理反転(!)
 		using flip_tag = operation_tag<7>;
-		// 加算(+)
+		//加算(+)
 		using add_tag = operation_tag<8>;
-		// 減算(-)
+		//減算(-)
 		using sub_tag = operation_tag<9>;
-		// 乗算(*)
+		//乗算(*)
 		using mul_tag = operation_tag<10>;
-		// 除算(/)
+		//除算(/)
 		using div_tag = operation_tag<11>;
-		// 剰余(%)
+		//剰余(%)
 		using surplus_tag = operation_tag<12>;
-		// メンバポインタアクセス(->*)
+		//メンバポインタアクセス(->*)
 		using arrow_ast_tag = operation_tag<13>;
-		// 左シフト(<<)
+		//左シフト(<<)
 		using lshift_tag = operation_tag<14>;
-		// 右シフト(>>)
+		//右シフト(>>)
 		using rshift_tag = operation_tag<15>;
-		// 小なり(<)
+		//小なり(<)
 		using less_than_tag = operation_tag<16>;
-		// 小なりイコール(<=)
+		//小なりイコール(<=)
 		using less_than_equal_tag = operation_tag<17>;
-		// 大なり(>)
+		//大なり(>)
 		using greater_than_tag = operation_tag<18>;
-		// 大なりイコール(>=)
+		//大なりイコール(>=)
 		using greater_than_equal_tag = operation_tag<19>;
-		// 等号(==)
+		//等号(==)
 		using equal_tag = operation_tag<20>;
-		// 不等号(!=)
+		//不等号(!=)
 		using not_equal_tag = operation_tag<21>;
-		// ビット積(&)
+		//ビット積(&)
 		using bit_and_tag = operation_tag<22>;
-		// 排他的ビット和(^)
+		//排他的ビット和(^)
 		using bit_xor_tag = operation_tag<23>;
-		// ビット和(|)
+		//ビット和(|)
 		using bit_or_tag = operation_tag<24>;
-		// 論理積(&&)
+		//論理積(&&)
 		using and_tag = operation_tag<25>;
-		// 論理和(||)
+		//論理和(||)
 		using or_tag = operation_tag<26>;
-		// 代入(=)
+		//代入(=)
 		using assign_tag = operation_tag<27>;
-		// 加算代入(+=)
+		//加算代入(+=)
 		using add_assign_tag = operation_tag<28>;
-		// 減算代入(-=)
+		//減算代入(-=)
 		using sub_assign_tag = operation_tag<29>;
-		// 乗算代入(*=)
+		//乗算代入(*=)
 		using mul_assign_tag = operation_tag<30>;
-		// 除算代入(/=)
+		//除算代入(/=)
 		using div_assign_tag = operation_tag<31>;
-		// 剰余代入(%=)
+		//剰余代入(%=)
 		using surplus_assign_tag = operation_tag<32>;
-		// 左シフト代入(<<=)
+		//左シフト代入(<<=)
 		using lshift_assign_tag = operation_tag<33>;
-		// 右シフト代入(>>=)
+		//右シフト代入(>>=)
 		using rshift_assign_tag = operation_tag<34>;
-		// ビット積代入(&=)
+		//ビット積代入(&=)
 		using bit_and_assign_tag = operation_tag<35>;
-		// ビット和代入(|=)
+		//ビット和代入(|=)
 		using bit_or_assign_tag = operation_tag<36>;
-		// 排他的ビット和代入(^=)
+		//排他的ビット和代入(^=)
 		using bit_xor_assign_tag = operation_tag<37>;
-		// コンマ(,)
+		//コンマ(,)
 		using comma_tag = operation_tag<38>;
 
 
-		// 演算を示すタグであるかの判定
+		//演算を示すタグであるかの判定
 		template <class>
 		struct is_operation_tag : false_type {};
 		template <size_t N>
 		struct is_operation_tag<operation_tag<N>> : true_type {};
-		template <class T>
-		constexpr bool is_operation_tag_v = is_operation_tag<T>::value;
 
 
-		// 識別子を示すタグ(ifとかforとかreturnとか)
+		//識別子を示すタグ
 		template <size_t>
 		struct ident_tag {};
 
-		// 識別子を示すタグであるかの判定
+		//識別子を示すタグであるかの判定
 		template <class>
 		struct is_ident_tag : false_type {};
 		template <size_t N>
 		struct is_ident_tag<ident_tag<N>> : true_type {};
 
 
-		// Expression templateのためのラッパー
+		//Expression templateのためのラッパー
 		template <class Op, class Expr>
 		struct expr_wrapper;
 
 
-		// 無し(変数)
+		//無し(変数)
 		struct none_tag {};
 
 
-		// 式のトップレベルのタグ
+		//式のトップレベルのタグ
 		template <class>
 		struct expr_tag {
 			using type = none_tag;
@@ -132,37 +130,34 @@ namespace iml {
 		struct expr_tag<expr_wrapper<Tag, Expr>> {
 			using type = Tag;
 		};
-		template <class T>
-		using expr_tag_t = typename expr_tag<T>::type;
 
 
-		// expr_wrapperの判定
+		//expr_wrapperでラップされているか判定
 		template <class>
 		struct is_expr_wrapper : false_type {};
 		template <class Op, class Expr>
 		struct is_expr_wrapper<expr_wrapper<Op, Expr>> : true_type {};
+
+
+		//expr_wrapperにおいて変数であることの判定
 		template <class T>
-		constexpr bool is_expr_wrapper_v = is_expr_wrapper<T>::value;
-		// 識別子のexpr_wrapperの判定
+		struct is_expr_variable : cat_bool<is_same<typename expr_tag<T>::type, none_tag>::value && is_expr_wrapper<T>::value> {};
+
+
+		//識別子のexpr_wrapperの判定
 		template <class>
 		struct is_ident_expr_wrapper : false_type {};
 		template <size_t N, class Expr>
 		struct is_ident_expr_wrapper<expr_wrapper<ident_tag<N>, Expr>> : true_type {};
-		template <class T>
-		constexpr bool is_ident_expr_wrapper_v = is_ident_expr_wrapper<T>::value;
-
-
-		// expr_wrapperにおいて変数であることの判定
-		template <class T>
-		struct is_expr_variable : cat_bool<is_same_v<expr_tag_t<T>, none_tag> && is_expr_wrapper_v<T>> {};
 
 
 
-		// 単項演算の定義
+		//単項演算の定義
 #define EXPR_WRAPPER_UNARY_OPERATION_IMPL(NAME, OP)\
 		constexpr expr_wrapper<NAME##_tag, type_tuple<expr_wrapper>> operator##OP() const {\
 			return expr_wrapper<NAME##_tag, type_tuple<expr_wrapper>>(*this);\
 		}
+
 #define EXPR_WRAPPER_UNARY_OPERATION \
 		EXPR_WRAPPER_UNARY_OPERATION_IMPL(add, +);\
 		EXPR_WRAPPER_UNARY_OPERATION_IMPL(sub, -);\
@@ -170,24 +165,26 @@ namespace iml {
 		EXPR_WRAPPER_UNARY_OPERATION_IMPL(flip, !);\
 		EXPR_WRAPPER_UNARY_OPERATION_IMPL(bit_flip, ~);
 
-		// インクリメント・デクリメントの定義
+		//インクリメント・デクリメントの定義
 #define EXPR_WRAPPER_INCREMENT_DECREMENT_IMPL(NAME, OP) \
 		constexpr expr_wrapper<pre##NAME##_tag, type_tuple<expr_wrapper>> operator##OP() const {\
 			return expr_wrapper<pre##NAME##_tag, type_tuple<expr_wrapper>>(*this);\
 		}\
 		constexpr expr_wrapper<post##NAME##_tag, type_tuple<expr_wrapper>> operator##OP(int) const {\
 			return expr_wrapper<post##NAME##_tag, type_tuple<expr_wrapper>>(*this);\
-		}
+		}\
+
 #define EXPR_WRAPPER_INCREMENT_DECREMENT \
 		EXPR_WRAPPER_INCREMENT_DECREMENT_IMPL(increment, ++);\
 		EXPR_WRAPPER_INCREMENT_DECREMENT_IMPL(decrement, --);
 
-		// 2項関係の定義
+		//2項関係の定義
 #define EXPR_WRAPPER_BINARY_RELATION_IMPL(NAME, OP) \
 		template <class U>\
 		constexpr expr_wrapper<NAME##_tag, type_tuple<expr_wrapper, U>> operator##OP(const U& expr) const {\
 			return expr_wrapper<NAME##_tag, type_tuple<expr_wrapper, U>>(*this, expr);\
 		}
+
 #define EXPR_WRAPPER_BINARY_RELATION \
 		EXPR_WRAPPER_BINARY_RELATION_IMPL(arrow_ast, ->*);\
 		EXPR_WRAPPER_BINARY_RELATION_IMPL(subscript, []);\
@@ -203,24 +200,24 @@ namespace iml {
 		EXPR_WRAPPER_BINARY_RELATION_IMPL(bit_or_assign, |=);\
 		EXPR_WRAPPER_BINARY_RELATION_IMPL(bit_xor_assign, ^=);
 
-		// expr_wrapperの全ての演算子のオーバーロード
+		//expr_wrapperの全ての演算子のオーバーロード
 #define EXPR_WRAPPER_OPERATOR_OVERLOAD \
 		EXPR_WRAPPER_UNARY_OPERATION \
 		EXPR_WRAPPER_INCREMENT_DECREMENT \
 		EXPR_WRAPPER_BINARY_RELATION \
-		/* コンマ演算子 */ \
+		/*コンマ演算子*/ \
 		template <class Expr>\
 		constexpr expr_wrapper<comma_tag, type_tuple<expr_wrapper, Expr>> operator,(const Expr& expr) const {\
 			return expr_wrapper<comma_tag, type_tuple<expr_wrapper, Expr>>(*this, expr);\
 		}\
-		/* 関数オブジェクト呼び出し */ \
+		/*関数オブジェクト呼び出し*/ \
 		template <class... Args>\
 		constexpr expr_wrapper<functor_tag, type_tuple<expr_wrapper, tuple<Args...>, typename tuple<Args...>::sequence_type>> operator()(Args&&... args) const {\
 			return expr_wrapper<functor_tag, type_tuple<expr_wrapper, tuple<Args...>, typename tuple<Args...>::sequence_type>>(*this, forward<Args>(args)...);\
 		}
 
 
-		// 変数
+		//変数
 		template <size_t N>
 		struct expr_wrapper<none_tag, type_tuple<index_tuple<size_t, N>>> {
 			char name_m;
@@ -229,12 +226,12 @@ namespace iml {
 
 			EXPR_WRAPPER_OPERATOR_OVERLOAD;
 		};
-		// 変数宣言のためのエイリアス
+		//変数宣言のためのエイリアス
 		template <size_t N>
 		using expr_variable = expr_wrapper<none_tag, type_tuple<index_tuple<size_t, N>>>;
 
 
-		// 単項演算
+		//単項演算
 		template <size_t N, class T>
 		struct expr_wrapper<operation_tag<N>, type_tuple<T>> {
 			T terms_m;
@@ -243,7 +240,7 @@ namespace iml {
 
 			EXPR_WRAPPER_OPERATOR_OVERLOAD;
 		};
-		// 2項演算
+		//2項演算
 		template <size_t N, class First, class Second, class... Types>
 		struct expr_wrapper<operation_tag<N>, type_tuple<First, Second, Types...>> {
 			tuple<First, Second, Types...> terms_m;
@@ -257,7 +254,7 @@ namespace iml {
 
 			static constexpr size_t size() { return sizeof...(Types) + 2; }
 		};
-		// 関数オブジェクト
+		//関数オブジェクト
 		template <class Expr, class Args, class Sequence>
 		struct expr_wrapper<functor_tag, type_tuple<Expr, Args, Sequence>> {
 			Expr terms_m;
@@ -270,73 +267,70 @@ namespace iml {
 		};
 
 
-		// Opによる2項演算であるかの判定
+		//Opによる2項演算であるかの判定
 		template <class, class>
 		struct is_binary_operation : false_type {};
 		template <class Op, class First, class Second, class... Types>
-		struct is_binary_operation<Op, expr_wrapper<Op, type_tuple<First, Second, Types...>>> : cat_bool<is_operation_tag_v<Op>> {};
-		template <class Op, class Expr>
-		constexpr bool is_binary_operation_v = is_binary_operation<Op, Expr>::value;
+		struct is_binary_operation<Op, expr_wrapper<Op, type_tuple<First, Second, Types...>>> : cat_bool<is_operation_tag<Op>::value> {};
 
 
-		// 数式の2項演算の木を演算子ごとにまとめるための補助
-		// lhsとrhsがともにexpr_wrapperである場合
-		template <class Op, class L, class R, bool = is_binary_operation_v<Op, L>, bool = is_binary_operation_v<Op, R>>
+		//lhsとrhsがともにexpr_wrapperである場合
+		template <class Op, class L, class R, bool = is_binary_operation<Op, L>::value, bool = is_binary_operation<Op, R>::value>
 		struct Binary1 {
-			// LとR共にOpではない
-			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<L, R>> {
-				return expr_wrapper<Op, type_tuple<L, R>>(lhs, rhs);
+			//LとR共にOpではない
+			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<R, L>> {
+				return expr_wrapper<Op, type_tuple<R, L>>(rhs, lhs);
 			}
 		};
 		template <class Op, class L1, class L2, class... Ls, class R1, class R2, class... Rs>
 		struct Binary1<Op, expr_wrapper<Op, type_tuple<L1, L2, Ls...>>, expr_wrapper<Op, type_tuple<R1, R2, Rs...>>, true, true> {
 			//LとR共にOpである
-			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, tuple<R1, R2, Rs...>>> {
-				return expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, tuple<R1, R2, Rs...>>>(lhs.terms_m, rhs.terms_m);
+			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, tuple<L1, L2, Ls...>>> {
+				return expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, tuple<L1, L2, Ls...>>>(rhs.terms_m, lhs.terms_m);
 			}
 		};
 		template <class Op, class L1, class L2, class... Ls, class R>
 		struct Binary1<Op, expr_wrapper<Op, type_tuple<L1, L2, Ls...>>, R, true, false> {
 			//LのみOpである
-			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, R>> {
-				return expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, R>>(lhs.terms_m, rhs);
+			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<R, tuple<L1, L2, Ls...>>> {
+				return expr_wrapper<Op, type_tuple<R, tuple<L1, L2, Ls...>>>(rhs, lhs.terms_m);
 			}
 		};
 		template <class Op, class L, class R1, class R2, class... Rs>
 		struct Binary1<Op, L, expr_wrapper<Op, type_tuple<R1, R2, Rs...>>, false, true> {
 			//RのみOpである
-			static constexpr auto operation(const L& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<L, tuple<R1, R2, Rs...>>> {
-				return expr_wrapper<Op, type_tuple<L, tuple<R1, R2, Rs...>>>(lhs, rhs.terms_m);
+			static constexpr auto operation(const L& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, L>> {
+				return expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, L>>(rhs.terms_m, lhs);
 			}
 		};
 		//lhsのみがexpr_wrapperである場合
 		template <class Op, class L, class R>
 		struct Binary2 {
 			//LがOpではない
-			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<L, R>> {
-				return expr_wrapper<Op, type_tuple<L, R>>(lhs, rhs);
+			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<R, L>> {
+				return expr_wrapper<Op, type_tuple<R, L>>(rhs, lhs);
 			}
 		};
 		template <class Op, class L1, class L2, class... Ls, class R>
 		struct Binary2<Op, expr_wrapper<Op, type_tuple<L1, L2, Ls...>>, R> {
 			//LがOpである
-			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, R>> {
-				return expr_wrapper<Op, type_tuple<tuple<L1, L2, Ls...>, R>>(lhs.terms_m, rhs);
+			static constexpr auto operation(const expr_wrapper<Op, type_tuple<L1, L2, Ls...>>& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<R, tuple<L1, L2, Ls...>>> {
+				return expr_wrapper<Op, type_tuple<R, tuple<L1, L2, Ls...>>>(rhs, lhs.terms_m);
 			}
 		};
 		//rhsのみがexpr_wrapperである場合
 		template <class Op, class L, class R>
 		struct Binary3 {
 			//RがOpではない
-			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<L, R>> {
-				return expr_wrapper<Op, type_tuple<L, R>>(lhs, rhs);
+			static constexpr auto operation(const L& lhs, const R& rhs)  -> expr_wrapper<Op, type_tuple<R, L>> {
+				return expr_wrapper<Op, type_tuple<R, L>>(rhs, lhs);
 			}
 		};
 		template <class Op, class L, class R1, class R2, class... Rs>
 		struct Binary3<Op, L, expr_wrapper<Op, type_tuple<R1, R2, Rs...>>> {
 			//RがOpである
-			static constexpr auto operation(const L& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<L, tuple<R1, R2, Rs...>>> {
-				return expr_wrapper<Op, type_tuple<L, tuple<R1, R2, Rs...>>>(lhs, rhs.terms_m);
+			static constexpr auto operation(const L& lhs, const expr_wrapper<Op, type_tuple<R1, R2, Rs...>>& rhs)  -> expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, L>> {
+				return expr_wrapper<Op, type_tuple<tuple<R1, R2, Rs...>, L>>(rhs.terms_m, lhs);
 			}
 		};
 
@@ -355,6 +349,7 @@ namespace iml {
 		inline constexpr auto operator##OP(const L& lhs, const expr_wrapper<ROp, RExpr>& rhs) -> decltype(Binary3<NAME##_tag, L, expr_wrapper<ROp, RExpr>>::operation(lhs, rhs)) {\
 			return Binary3<NAME##_tag, L, expr_wrapper<ROp, RExpr>>::operation(lhs, rhs);\
 		}
+
 		BINARY_OPERATION(add, +);
 		BINARY_OPERATION(sub, -);
 		BINARY_OPERATION(mul, *);
@@ -373,242 +368,15 @@ namespace iml {
 		BINARY_OPERATION(bit_xor, ^);
 		BINARY_OPERATION(and, &&);
 		BINARY_OPERATION(or, ||);
+
 #undef BINARY_OPERATION
 
 
-		// expr_wrapperの作成
+		//expr_wrapperの作成
 		template <class Op, class... Exprs>
 		inline constexpr expr_wrapper<Op, type_tuple<Exprs...>> make_expr_wrapper(const Exprs&... exprs) {
 			return expr_wrapper<Op, type_tuple<Exprs...>>(exprs...);
 		}
-
-
-		// トップレベルの演算の優先順位の定義
-		// 変数もしくは定数
-		template <class T>
-		struct operator_precedence {
-			static constexpr size_t value = 0;
-		};
-		template <class T>
-		struct operator_precedence<expr_wrapper<none_tag, type_tuple<T>>> {
-			static constexpr size_t value = 0;
-		};
-		// 単項演算
-		template <class Expr>
-		struct operator_precedence<expr_wrapper<add_tag, type_tuple<Expr>>> {
-			static constexpr size_t value = 3;
-		};
-		template <class Expr>
-		struct operator_precedence<expr_wrapper<sub_tag, type_tuple<Expr>>> {
-			static constexpr size_t value = 3;
-		};
-		// 2項演算
-		template <class First, class Second, class... Types>
-		struct operator_precedence<expr_wrapper<add_tag, type_tuple<First, Second, Types...>>> {
-			static constexpr size_t value = 6;
-		};
-		template <class First, class Second, class... Types>
-		struct operator_precedence<expr_wrapper<sub_tag, type_tuple<First, Second, Types...>>> {
-			static constexpr size_t value = 6;
-		};
-		template <class First, class Second, class... Types>
-		struct operator_precedence<expr_wrapper<mul_tag, type_tuple<First, Second, Types...>>> {
-			static constexpr size_t value = 5;
-		};
-		template <class First, class Second, class... Types>
-		struct operator_precedence<expr_wrapper<div_tag, type_tuple<First, Second, Types...>>> {
-			static constexpr size_t value = 5;
-		};
-		// 添え字
-		template <class Expr1, class Expr2>
-		struct operator_precedence<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>> {
-			static constexpr size_t value = 2;
-		};
-
-
-		// expr_wrapperの実行
-		template <class T>
-		struct Eval {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result&, const T& expr, Tuple&&) { return expr; }
-			template <class Tuple>
-			static constexpr auto eval(const T& expr, Tuple&&) { return expr; }
-		};
-		template <size_t N>
-		struct Eval<expr_variable<N>> {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result&, const expr_variable<N>&, Tuple&& t) { return t.get<N>(); }
-			template <class Tuple>
-			static constexpr auto eval(const expr_variable<N>&, Tuple&& t) { return t.get<N>(); }
-		};
-		// 単項演算
-#define EVAL_UNARY_OPERATION(NAME, OP)\
-		template <class Expr>\
-		struct Eval<expr_wrapper<NAME##_tag, type_tuple<Expr>>> {\
-			template <class Result, class Tuple>\
-			static constexpr auto eval(Result&, const expr_wrapper<NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
-			}\
-			template <class Tuple>\
-			static constexpr auto eval(const expr_wrapper<NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
-			}\
-		};
-		EVAL_UNARY_OPERATION(add, +);
-		EVAL_UNARY_OPERATION(sub, -);
-		EVAL_UNARY_OPERATION(mul, *);
-		EVAL_UNARY_OPERATION(flip, !);
-		EVAL_UNARY_OPERATION(bit_flip, ~);
-#undef EVAL_UNARY_OPERATION
-		// インクリメント・デクリメント
-#define EVAL_INCREMENT_DECREMENT(NAME, OP)\
-		template <class Expr>\
-		struct Eval<expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>> {\
-			template <class Result, class Tuple>\
-			static constexpr auto eval(Result&, const expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
-			}\
-			template <class Tuple>\
-			static constexpr auto eval(const expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
-			}\
-		};\
-		template <class Expr>\
-		struct Eval<expr_wrapper<post##NAME##_tag, type_tuple<Expr>>> {\
-			template <class Result, class Tuple>\
-			static constexpr auto eval(Result&, const expr_wrapper<post##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))##OP;\
-			}\
-			template <class Tuple>\
-			static constexpr auto eval(const expr_wrapper<post##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
-				return Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))##OP;\
-			}\
-		};
-		EVAL_INCREMENT_DECREMENT(increment, ++);
-		EVAL_INCREMENT_DECREMENT(decrement, --);
-#undef EVAL_INCREMENT_DECREMENT
-		// 添え字アクセス
-		template <class Expr1, class Expr2>
-		struct Eval<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>> {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result&, const expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
-				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))[Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t))];
-			}
-			template <class Tuple>
-			static constexpr auto eval(const expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
-				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))[Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t))];
-			}
-		};
-		// 2項関係
-#define EVAL_BINARY_RELATION(NAME, OP) \
-		template <class Expr1, class Expr2>\
-		struct Eval<expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>> {\
-			template <class Result, class Tuple>\
-			static constexpr auto eval(Result&, const expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {\
-				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))##OP##Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));\
-			}\
-			template <class Tuple>\
-			static constexpr auto eval(const expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {\
-				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))##OP##Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));\
-			}\
-		};
-		EVAL_BINARY_RELATION(arrow_ast, ->*);
-		EVAL_BINARY_RELATION(assign, =);
-		EVAL_BINARY_RELATION(add_assign, +=);
-		EVAL_BINARY_RELATION(sub_assign, -=);
-		EVAL_BINARY_RELATION(mul_assign, *=);
-		EVAL_BINARY_RELATION(div_assign, /=);
-		EVAL_BINARY_RELATION(surplus_assign, %=);
-		EVAL_BINARY_RELATION(lshift_assign, <<=);
-		EVAL_BINARY_RELATION(rshift_assign, >>=);
-		EVAL_BINARY_RELATION(bit_and_assign, &=);
-		EVAL_BINARY_RELATION(bit_or_assign, |=);
-		EVAL_BINARY_RELATION(bit_xor_assign, ^=);
-#undef EVAL_BINARY_RELATION
-		// コンマ演算子
-		template <class Expr1, class Expr2>
-		struct Eval<expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>> {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result& result, const expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
-				using result_type = decltype(Eval<Expr2>::eval(expr.rhs_m, forward<Tuple>(t)));
-				Eval<Expr1>::eval(result, expr.terms_m.get<0>(), forward<Tuple>(t));
-				return (result.second) ? Eval<Expr2>::eval(result, expr.terms_m.get<1>(), forward<Tuple>(t)) : result_type();
-			}
-			template <class Tuple>
-			static constexpr auto eval(const expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
-				Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t));
-				return Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));
-			}
-		};
-		// 関数オブジェクト
-		template <class Expr, class... Types, size_t... Indices>
-		struct Eval<expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>> {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result&, const expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>& expr, Tuple&& t) {
-				return invoke(Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))
-					, Eval<Types>::eval(expr.args_m.get<Indices>, forward<Tuple>(t))...);
-			}
-			template <class Tuple>
-			static constexpr auto eval(const expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>& expr, Tuple&& t) {
-				return invoke(Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))
-					, Eval<Types>::eval(expr.args_m.get<Indices>, forward<Tuple>(t))...);
-			}
-		};
-		// 2項関係の特に2項演算
-		template <class, class T>
-		struct Eval_tuple {
-			template <class Tuple>
-			static constexpr auto eval(const T& x, Tuple&& t, index_tuple<size_t>) { return Eval<T>::eval(x, forward<Tuple>(t)); }
-		};
-#define EVAL_BINARY_OPERATION(NAME, OP)\
-		template <class... Types>\
-		struct Eval_tuple<NAME##_tag, tuple<Types...>> {\
-			template <class Tuple, size_t... Indices>\
-			static constexpr auto eval(const tuple<Types...>& x, Tuple&& t, index_tuple<size_t, Indices...>) {\
-				/* 畳み込み式で一気に展開して計算 */\
-				return (...##OP##Eval_tuple<NAME##_tag, Types>::eval(x.get<Indices>(), forward<Tuple>(t)\
-						, index_range_t<size_t, 0, tuple_size_v<Types>>()));\
-			}\
-		};
-		EVAL_BINARY_OPERATION(add, +);
-		EVAL_BINARY_OPERATION(sub, -);
-		EVAL_BINARY_OPERATION(mul, *);
-		EVAL_BINARY_OPERATION(div, /);
-		EVAL_BINARY_OPERATION(surplus, %);
-		EVAL_BINARY_OPERATION(lshift, <<);
-		EVAL_BINARY_OPERATION(rshift, >>);
-		EVAL_BINARY_OPERATION(less_than, <);
-		EVAL_BINARY_OPERATION(less_than_equal, <=);
-		EVAL_BINARY_OPERATION(greater_than, >);
-		EVAL_BINARY_OPERATION(greater_than_equal, >=);
-		EVAL_BINARY_OPERATION(equal, ==);
-		EVAL_BINARY_OPERATION(not_equal, !=);
-		EVAL_BINARY_OPERATION(bit_and, &);
-		EVAL_BINARY_OPERATION(bit_or, |);
-		EVAL_BINARY_OPERATION(bit_xor, ^);
-		EVAL_BINARY_OPERATION(and, &&);
-		EVAL_BINARY_OPERATION(or, ||);
-#undef EVAL_BINARY_OPERATION
-		template <class Op, class First, class Second, class... Types>
-		struct Eval<expr_wrapper<Op, type_tuple<First, Second, Types...>>> {
-			template <class Result, class Tuple>
-			static constexpr auto eval(Result&, const expr_wrapper<Op, type_tuple<First, Second, Types...>>& expr, Tuple&& t) {
-				// 階層構造となっているtupleを展開する
-				return Eval_tuple<Op, tuple<First, Second, Types...>>::eval(expr.terms_m, forward<Tuple>(t)
-					, index_range_t<size_t, 0, 2 + sizeof...(Types)>());
-			}
-			template <class Tuple>
-			static constexpr auto eval(const expr_wrapper<Op, type_tuple<First, Second, Types...>>& expr, Tuple&& t) {
-				return Eval_tuple<Op, tuple<First, Second, Types...>>::eval(expr.terms_m, forward<Tuple>(t)
-					, index_range_t<size_t, 0, 2 + sizeof...(Types)>());
-			}
-		};
-	
-		template <class Expr, class... Types>
-		inline constexpr auto eval(const Expr& expr, Types&&... args) {
-			return Eval<Expr>::eval(expr, forward_as_tuple(args...));
-		}
-
 
 
 		template <class, class>
@@ -640,9 +408,9 @@ namespace iml {
 		OPERATION_FUNCTION_BINARY_OPERATION(add, +);
 		OPERATION_FUNCTION_BINARY_OPERATION(sub, -);
 		OPERATION_FUNCTION_BINARY_OPERATION(mul, *);
-		OPERATION_FUNCTION_BINARY_OPERATION(div, / );
+		OPERATION_FUNCTION_BINARY_OPERATION(div, /);
 #undef OPERATION_FUNCTION_BINARY_OPERATION
-		// 演算子に対応する演算の実行
+		//演算子に対応する演算の実行
 		template <class Op, class... Exprs>
 		inline constexpr auto operation(const Exprs&... exprs) { return Operation<Op, type_tuple<Exprs...>>::operation(exprs...); }
 
@@ -674,11 +442,307 @@ namespace iml {
 		REVERSE_OPERATION_FUNCTION_BINARY_OPERATION(add, +);
 		REVERSE_OPERATION_FUNCTION_BINARY_OPERATION(sub, -);
 		REVERSE_OPERATION_FUNCTION_BINARY_OPERATION(mul, *);
-		REVERSE_OPERATION_FUNCTION_BINARY_OPERATION(div, / );
+		REVERSE_OPERATION_FUNCTION_BINARY_OPERATION(div, /);
 #undef REVERSE_OPERATION_FUNCTION_BINARY_OPERATION
-		// 演算子に対応する演算を逆順で実行
+		//演算子に対応する演算を逆順で実行
 		template <class Op, class... Exprs>
 		inline constexpr auto reverse_operation(const Exprs&... exprs) { return Reverse_operation<Op, type_tuple<Exprs...>>::reverse_operation(exprs...); }
+
+
+		//トップレベルの演算の優先順位の定義
+		//変数もしくは定数
+		template <class T>
+		struct operator_precedence {
+			static constexpr size_t value = 0;
+		};
+		template <class T>
+		struct operator_precedence<expr_wrapper<none_tag, type_tuple<T>>> {
+			static constexpr size_t value = 0;
+		};
+		//単項演算
+		template <class Expr>
+		struct operator_precedence<expr_wrapper<add_tag, type_tuple<Expr>>> {
+			static constexpr size_t value = 3;
+		};
+		template <class Expr>
+		struct operator_precedence<expr_wrapper<sub_tag, type_tuple<Expr>>> {
+			static constexpr size_t value = 3;
+		};
+		//2項演算
+		template <class First, class Second, class... Types>
+		struct operator_precedence<expr_wrapper<add_tag, type_tuple<First, Second, Types...>>> {
+			static constexpr size_t value = 6;
+		};
+		template <class First, class Second, class... Types>
+		struct operator_precedence<expr_wrapper<sub_tag, type_tuple<First, Second, Types...>>> {
+			static constexpr size_t value = 6;
+		};
+		template <class First, class Second, class... Types>
+		struct operator_precedence<expr_wrapper<mul_tag, type_tuple<First, Second, Types...>>> {
+			static constexpr size_t value = 5;
+		};
+		template <class First, class Second, class... Types>
+		struct operator_precedence<expr_wrapper<div_tag, type_tuple<First, Second, Types...>>> {
+			static constexpr size_t value = 5;
+		};
+		//添え字
+		template <class Expr1, class Expr2>
+		struct operator_precedence<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr size_t value = 2;
+		};
+
+
+		//expr_wrapperのトップレベルの演算に対して下層の方が演算の優先順位が低いかの判定
+		//変数もしくは定数
+		template <class T>
+		struct is_underlayer_low_precedence {
+			static constexpr bool lhs_value = false;		//2項演算のときの左辺
+			static constexpr bool rhs_value = false;		//*右辺
+			static constexpr bool mhs_value = false;		//単項演算
+		};
+		template <class T>
+		struct is_underlayer_low_precedence<expr_wrapper<none_tag, type_tuple<T>>> {
+			static constexpr bool lhs_value = false;
+			static constexpr bool rhs_value = false;
+			static constexpr bool mhs_value = false;
+		};
+		//単項演算
+		template <class Expr>
+		struct is_underlayer_low_precedence<expr_wrapper<add_tag, type_tuple<Expr>>> {
+			static constexpr bool lhs_value = false;
+			static constexpr bool rhs_value = false;
+			static constexpr bool mhs_value = (operator_precedence<Expr>::value > operator_precedence<expr_wrapper<add_tag, type_tuple<Expr>>>::value);
+		};
+		template <class Expr>
+		struct is_underlayer_low_precedence<expr_wrapper<sub_tag, type_tuple<Expr>>> {
+			static constexpr bool lhs_value = false;
+			static constexpr bool rhs_value = false;
+			static constexpr bool mhs_value = (operator_precedence<Expr>::value > operator_precedence<expr_wrapper<sub_tag, type_tuple<Expr>>>::value);
+		};
+		//2項演算
+		template <class Expr1, class Expr2>
+		struct is_underlayer_low_precedence<expr_wrapper<add_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr bool lhs_value = (operator_precedence<Expr1>::value > operator_precedence<expr_wrapper<add_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool rhs_value = (operator_precedence<Expr2>::value > operator_precedence<expr_wrapper<add_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool mhs_value = false;
+		};
+		template <class Expr1, class Expr2>
+		struct is_underlayer_low_precedence<expr_wrapper<sub_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr bool lhs_value = (operator_precedence<Expr1>::value > operator_precedence<expr_wrapper<sub_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool rhs_value = (operator_precedence<Expr2>::value > operator_precedence<expr_wrapper<sub_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool mhs_value = false;
+		};
+		template <class Expr1, class Expr2>
+		struct is_underlayer_low_precedence<expr_wrapper<mul_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr bool lhs_value = (operator_precedence<Expr1>::value > operator_precedence<expr_wrapper<mul_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool rhs_value = (operator_precedence<Expr2>::value > operator_precedence<expr_wrapper<mul_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool mhs_value = false;
+		};
+		template <class Expr1, class Expr2>
+		struct is_underlayer_low_precedence<expr_wrapper<div_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr bool lhs_value = (operator_precedence<Expr1>::value > operator_precedence<expr_wrapper<div_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool rhs_value = (operator_precedence<Expr2>::value > operator_precedence<expr_wrapper<div_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool mhs_value = false;
+		};
+		//添え字(x_m[index_m]でそれぞれ左辺・右辺と扱う)
+		template <class Expr1, class Expr2>
+		struct is_underlayer_low_precedence<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>> {
+			static constexpr bool lhs_value = (operator_precedence<Expr1>::value > operator_precedence<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool rhs_value = (operator_precedence<Expr2>::value > operator_precedence<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>>::value);
+			static constexpr bool mhs_value = false;
+		};
+
+
+
+
+		//expr_wrapperの実行
+		template <class T>
+		struct Eval {
+			template <class Result, class Tuple>
+			static constexpr auto eval(Result&, const T& expr, Tuple&&) { return expr; }
+			template <class Tuple>
+			static constexpr auto eval(const T& expr, Tuple&&) { return expr; }
+		};
+		template <size_t N>
+		struct Eval<expr_variable<N>> {
+			template <class Result, class Tuple>
+			static constexpr auto eval(Result&, const expr_variable<N>&, Tuple&& t) { return t.get<N>(); }
+			template <class Tuple>
+			static constexpr auto eval(const expr_variable<N>&, Tuple&& t) { return t.get<N>(); }
+		};
+		//単項演算
+#define EVAL_UNARY_OPERATION(NAME, OP)\
+		template <class Expr>\
+		struct Eval<expr_wrapper<NAME##_tag, type_tuple<Expr>>> {\
+			template <class Result, class Tuple>\
+			static constexpr auto eval(Result&, const expr_wrapper<NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(const expr_wrapper<NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
+			}\
+		};
+		EVAL_UNARY_OPERATION(add, +);
+		EVAL_UNARY_OPERATION(sub, -);
+		EVAL_UNARY_OPERATION(mul, *);
+		EVAL_UNARY_OPERATION(flip, !);
+		EVAL_UNARY_OPERATION(bit_flip, ~);
+#undef EVAL_UNARY_OPERATION
+		//インクリメント・デクリメント
+#define EVAL_INCREMENT_DECREMENT(NAME, OP)\
+		template <class Expr>\
+		struct Eval<expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>> {\
+			template <class Result, class Tuple>\
+			static constexpr auto eval(Result&, const expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(const expr_wrapper<pre##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return OP##Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t));\
+			}\
+		};\
+		template <class Expr>\
+		struct Eval<expr_wrapper<post##NAME##_tag, type_tuple<Expr>>> {\
+			template <class Result, class Tuple>\
+			static constexpr auto eval(Result&, const expr_wrapper<post##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))##OP;\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(const expr_wrapper<post##NAME##_tag, type_tuple<Expr>>& expr, Tuple&& t) {\
+				return Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))##OP;\
+			}\
+		};
+		EVAL_INCREMENT_DECREMENT(increment, ++);
+		EVAL_INCREMENT_DECREMENT(decrement, --);
+#undef EVAL_INCREMENT_DECREMENT
+		//添え字アクセス
+		template <class Expr1, class Expr2>
+		struct Eval<expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>> {
+			template <class Result, class Tuple>
+			static constexpr auto eval(Result&, const expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
+				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))[Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t))];
+			}
+			template <class Tuple>
+			static constexpr auto eval(const expr_wrapper<subscript_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
+				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))[Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t))];
+			}
+		};
+		//2項関係
+#define EVAL_BINARY_RELATION(NAME, OP) \
+		template <class Expr1, class Expr2>\
+		struct Eval<expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>> {\
+			template <class Result, class Tuple>\
+			static constexpr auto eval(Result&, const expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {\
+				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))##OP##Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(const expr_wrapper<NAME##_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {\
+				return Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t))##OP##Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));\
+			}\
+		};
+		EVAL_BINARY_RELATION(arrow_ast, ->*);
+		EVAL_BINARY_RELATION(assign, =);
+		EVAL_BINARY_RELATION(add_assign, +=);
+		EVAL_BINARY_RELATION(sub_assign, -=);
+		EVAL_BINARY_RELATION(mul_assign, *=);
+		EVAL_BINARY_RELATION(div_assign, /=);
+		EVAL_BINARY_RELATION(surplus_assign, %=);
+		EVAL_BINARY_RELATION(lshift_assign, <<=);
+		EVAL_BINARY_RELATION(rshift_assign, >>=);
+		EVAL_BINARY_RELATION(bit_and_assign, &=);
+		EVAL_BINARY_RELATION(bit_or_assign, |=);
+		EVAL_BINARY_RELATION(bit_xor_assign, ^=);
+#undef EVAL_BINARY_RELATION
+		//コンマ演算子
+		template <class Expr1, class Expr2>
+		struct Eval<expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>> {
+			template <class Result, class Tuple>
+			static constexpr auto eval(Result& result, const expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
+				using result_type = decltype(Eval<Expr2>::eval(expr.rhs_m, forward<Tuple>(t)));
+				Eval<Expr1>::eval(result, expr.terms_m.get<0>(), forward<Tuple>(t));
+				return (result.second) ? Eval<Expr2>::eval(result, expr.terms_m.get<1>(), forward<Tuple>(t)) : result_type();
+			}
+			template <class Tuple>
+			static constexpr auto eval(const expr_wrapper<comma_tag, type_tuple<Expr1, Expr2>>& expr, Tuple&& t) {
+				Eval<Expr1>::eval(expr.terms_m.get<0>(), forward<Tuple>(t));
+				return Eval<Expr2>::eval(expr.terms_m.get<1>(), forward<Tuple>(t));
+			}
+		};
+		//関数オブジェクト
+		template <class Expr, class... Types, size_t... Indices>
+		struct Eval<expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>> {
+			template <class Result, class Tuple>
+			static constexpr auto eval(Result&, const expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>& expr, Tuple&& t) {
+				return invoke(Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))
+					, Eval<Types>::eval(expr.args_m.get<Indices>, forward<Tuple>(t))...);
+			}
+			template <class Tuple>
+			static constexpr auto eval(const expr_wrapper<functor_tag, type_tuple<Expr, tuple<Types...>, index_tuple<size_t, Indices...>>>& expr, Tuple&& t) {
+				return invoke(Eval<Expr>::eval(expr.terms_m, forward<Tuple>(t))
+					, Eval<Types>::eval(expr.args_m.get<Indices>, forward<Tuple>(t))...);
+			}
+		};
+
+
+		//2項関係の特に2項演算
+		template <class, class T>
+		struct Eval_tuple {
+			template <class Tuple>
+			static constexpr auto eval(Tuple&& t, const T& x) { return Eval<T>::eval(x, forward<Tuple>(t)); }
+		};
+#define EVAL_BINARY_OPERATION(NAME, OP)\
+		template <class... Types>\
+		struct Eval_tuple<NAME##_tag, tuple<Types...>> {\
+			template <class Tuple, class First>\
+			static constexpr auto eval_impl(Tuple&& t, const First& first) {\
+				return Eval_tuple<NAME##_tag, First>::eval(forward<Tuple>(t), first);\
+			}\
+			template <class Tuple, class First, class Second, class... Args>\
+			static constexpr auto eval_impl(Tuple&& t, const First& first, const Second& second, const Args&... args) {\
+				return eval_impl(forward<Tuple>(t), second, args...)##OP##eval_impl(forward<Tuple>(t), first);\
+			}\
+			/*Evalのためのapply*/\
+			template <class Tuple, size_t... Indices>\
+			static constexpr auto apply(Tuple&& t, const tuple<Types...>& x, index_tuple<size_t, Indices...>) {\
+				return invoke(eval_impl<Tuple, Types...>, forward<Tuple>(t), x.get<Indices>()...);\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(Tuple&& t, const tuple<Types...>& x) {\
+				return apply(forward<Tuple>(t), x, typename tuple<Types...>::sequence_type());\
+			}\
+		};\
+		template <class First, class Second, class... Types>\
+		struct Eval<expr_wrapper<NAME##_tag, type_tuple<First, Second, Types...>>> {\
+			template <class Result, class Tuple>\
+			static constexpr auto eval(Result&, const expr_wrapper<NAME##_tag, type_tuple<First, Second, Types...>>& expr, Tuple&& t) {\
+				return Eval_tuple<NAME##_tag, tuple<First, Second, Types...>>::eval(forward<Tuple>(t), expr.terms_m);\
+			}\
+			template <class Tuple>\
+			static constexpr auto eval(const expr_wrapper<NAME##_tag, type_tuple<First, Second, Types...>>& expr, Tuple&& t) {\
+				return Eval_tuple<NAME##_tag, tuple<First, Second, Types...>>::eval(forward<Tuple>(t), expr.terms_m);\
+			}\
+		};
+		EVAL_BINARY_OPERATION(add, +);
+		EVAL_BINARY_OPERATION(sub, -);
+		EVAL_BINARY_OPERATION(mul, *);
+		EVAL_BINARY_OPERATION(div, /);
+		EVAL_BINARY_OPERATION(surplus, %);
+		EVAL_BINARY_OPERATION(lshift, <<);
+		EVAL_BINARY_OPERATION(rshift, >>);
+		EVAL_BINARY_OPERATION(less_than, <);
+		EVAL_BINARY_OPERATION(less_than_equal, <=);
+		EVAL_BINARY_OPERATION(greater_than, >);
+		EVAL_BINARY_OPERATION(greater_than_equal, >=);
+		EVAL_BINARY_OPERATION(equal, ==);
+		EVAL_BINARY_OPERATION(not_equal, !=);
+		EVAL_BINARY_OPERATION(bit_and, &);
+		EVAL_BINARY_OPERATION(bit_or, |);
+		EVAL_BINARY_OPERATION(bit_xor, ^);
+		EVAL_BINARY_OPERATION(and, &&);
+		EVAL_BINARY_OPERATION(or, ||);
+#undef EVAL_BINARY_OPERATION
+	
 
 	}
 }

@@ -1,7 +1,6 @@
 ﻿#ifndef IMATH_UTILITY_FUNCTIONAL_HPP
 #define IMATH_UTILITY_FUNCTIONAL_HPP
 
-#include "IMathLib/utility/smart_ptr.hpp"
 #include "IMathLib/utility/utility.hpp"
 
 namespace iml {
@@ -21,7 +20,7 @@ namespace iml {
 			virtual const std::type_info& target_type() const = 0;
 			virtual void* target() = 0;
 			//関数呼び出し
-			virtual result_type invoke(Args...) = 0;
+			virtual result_type invoke(Args&&...) = 0;
 		};
 		//一般の関数
 		template <class F>
@@ -33,7 +32,7 @@ namespace iml {
 			virtual const std::type_info& target_type() const { return typeid(F); }
 			virtual void* target() { return &f; }
 
-			virtual result_type invoke(Args... args) { return f(iml::forward<Args>(args)...); }
+			virtual result_type invoke(Args&&... args) { return f(iml::forward<Args>(args)...); }
 		private:
 			F f;
 		};
@@ -47,9 +46,9 @@ namespace iml {
 			virtual const std::type_info& target_type() const { return typeid(f); }
 			virtual void* target() { return &f; }
 
-			result_type invoke_impl(T t1, Types... args) { return (t1.*f)(iml::forward<Types>(args)...); }
-			result_type invoke_impl(T* t1, Types... args) { return ((*t1).*f)(iml::forward<Types>(args)...); }
-			virtual result_type invoke(Args ... args) { return invoke_impl(iml::forward<Args>(args)...); }
+			result_type invoke_impl(T t1, Types&&... args) { return (t1.*f)(iml::forward<Types>(args)...); }
+			result_type invoke_impl(T* t1, Types&&... args) { return ((*t1).*f)(iml::forward<Types>(args)...); }
+			virtual result_type invoke(Args&& ... args) { return invoke_impl(iml::forward<Args>(args)...); }
 
 		private:
 			holder_R(T::*f)(Types...);
@@ -66,7 +65,7 @@ namespace iml {
 
 			result_type invoke_impl(T & t1) { return t1.*f; }
 			result_type invoke_impl(T * const t1) { return (*t1).*f; }
-			virtual result_type invoke(Args ... args) { return invoke_impl(args...); }
+			virtual result_type invoke(Args&& ... args) { return invoke_impl(args...); }
 
 		private:
 			DATA T::*f;
@@ -136,7 +135,7 @@ namespace iml {
 		bool operator!() const { return ptr == nullptr; }
 		//関数呼び出し
 		result_type operator()(Args... args) const {
-			if (ptr != nullptr) return ptr->invoke(iml::forward<Args>(args)...);
+			if (ptr != nullptr) return ptr->invoke(forward<Args>(args)...);
 			throw;
 		}
 
@@ -157,26 +156,6 @@ namespace iml {
 		void swap(function& f) {
 			iml::swap(this->ptr, f.ptr);
 		}
-	};
-
-
-	//シングルトンを実装するための基底クラス
-	template <class T>
-	class singleton {
-		singleton(const singleton &) = delete;
-		singleton(singleton &&) = delete;
-		singleton& operator=(const singleton &) = delete;
-		singleton& operator=(singleton &&) = delete;
-	public:
-		virtual ~singleton() = 0 {}
-
-		//インスタンスの取得
-		static T* inst() {
-			static unique_ptr<T> instance(new T());
-			return instance.get();
-		}
-	protected:
-		constexpr singleton() {}
 	};
 }
 

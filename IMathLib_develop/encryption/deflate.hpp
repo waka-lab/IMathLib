@@ -15,7 +15,7 @@ namespace iml {
 	class _Slide_window {
 		unsigned					m_top = 0;
 		const size_t				m_maxbufferSize;
-		std::vector<unsigned char>	m_buffer;
+		dynamic_array<unsigned char>	m_buffer;
 	public:
 		_Slide_window(size_t buffersize) :m_maxbufferSize(buffersize) {
 			m_buffer.reserve(buffersize);
@@ -28,17 +28,20 @@ namespace iml {
 				m_buffer.push_back(value);
 			// 2周目以降
 			else {
-				m_buffer.at(m_top) = value;
+				//m_buffer.at(m_top) = value;
+				m_buffer[m_top] = value;
 				m_top = (m_top + 1) % m_maxbufferSize;
 			}
 		}
 		unsigned char& at(size_t index) {
 			//本当はバッファサイズを２の乗数に固定することで
 			//「%」を「&」の計算に置き換えられる
-			return m_buffer.at((index + m_top) % m_maxbufferSize);
+			//return m_buffer.at((index + m_top) % m_maxbufferSize);
+			return m_buffer[(index + m_top) % m_maxbufferSize];
 		}
 		const unsigned char& at(size_t index) const {
-			return m_buffer.at((index + m_top) % m_maxbufferSize);
+			//return m_buffer.at((index + m_top) % m_maxbufferSize);
+			return m_buffer[(index + m_top) % m_maxbufferSize];
 		}
 		size_t size() const { return m_buffer.size(); }
 	};
@@ -46,8 +49,8 @@ namespace iml {
 	//長さ/距離に該当するデータパターンを返す
 	//長さ > 距離に対応できるようにする
 	//新しくpush_back()された値ほど、距離は短い
-	inline shared_array<unsigned char> get_pattern(const _Slide_window& slide, size_t length, size_t distance) {
-		shared_array<unsigned char> vec;
+	inline dynamic_array<unsigned char> get_pattern(const _Slide_window& slide, size_t length, size_t distance) {
+		dynamic_array<unsigned char> vec;
 		vec.resize(length);
 		//スライド窓の後ろから距離分の長さを循環させて代入
 		for (size_t i = 0; i < length; ++i) vec[i] = slide.at(slide.size() - (distance - (i % distance)));
@@ -55,7 +58,7 @@ namespace iml {
 	}
 
 	//データパターンを記録する
-	inline void push_back_pattern(_Slide_window* slide, const shared_array<unsigned char> substr) {
+	inline void push_back_pattern(_Slide_window* slide, const dynamic_array<unsigned char> substr) {
 		for (auto itr = substr.begin(); itr != substr.end(); ++itr) slide->push_back(*itr);
 	}
 
@@ -187,7 +190,7 @@ namespace iml {
 		}
 
 		//固定ハフマン符号によるパース処理
-		static void _Decode_fixed_huffman(_Bit_stream& bitstream, _Slide_window& slide, shared_array<unsigned char>& resultbuffer){
+		static void _Decode_fixed_huffman(_Bit_stream& bitstream, _Slide_window& slide, dynamic_array<unsigned char>& resultbuffer){
 			//固定ハフマンツリー作成
 			static const auto tree = make_fixed_huffman_tree();
 
@@ -212,7 +215,7 @@ namespace iml {
 				size_t distance = read_distance_code(extra_value, bitstream);
 
 				//一致した値パターンを抽出
-				shared_array<unsigned char> pattern = get_pattern(slide, length, distance);
+				dynamic_array<unsigned char> pattern = get_pattern(slide, length, distance);
 
 				resultbuffer.insert(resultbuffer.end(), pattern.begin(), pattern.end());
 				push_back_pattern(&slide, pattern);
@@ -346,7 +349,7 @@ namespace iml {
 
 		//@brief カスタムハフマン符号によるパース処理
 		//-------------------------------------------------------------
-		static void DecodeWithCustomHuffman(_Bit_stream& bitstream, _Slide_window& slide, shared_array<unsigned char>& resultbuffer){
+		static void DecodeWithCustomHuffman(_Bit_stream& bitstream, _Slide_window& slide, dynamic_array<unsigned char>& resultbuffer){
 			// HLIT:　記録されたリテラル符号個数(257 ～ 286)
 			int numLiteralCode = bitstream.get_range(5) + 257;
 
@@ -387,7 +390,7 @@ namespace iml {
 
 		//@brief 無圧縮データ読み出し
 		//-------------------------------------------------------------
-		static void _Decode_non_compressed(_Bit_stream& bitstream, _Slide_window& slide, shared_array<unsigned char>& resultbuffer){
+		static void _Decode_non_compressed(_Bit_stream& bitstream, _Slide_window& slide, dynamic_array<unsigned char>& resultbuffer){
 			//次のbyte境界位置に移動
 			bitstream.skip_byte();
 			size_t length = bitstream.get_range(16);
@@ -402,11 +405,11 @@ namespace iml {
 		}
 	public:
 		//デコード
-		static shared_array<unsigned char> decode(const unsigned char* binary, size_t numByte, size_t slideWindowSize) {
+		static dynamic_array<unsigned char> decode(const unsigned char* binary, size_t numByte, size_t slideWindowSize) {
 			_Bit_stream	bitstream(binary, numByte);
 			_Slide_window	slide(slideWindowSize);
 
-			shared_array<unsigned char> result;
+			dynamic_array<unsigned char> result;
 
 			while (!bitstream.eof()) {
 				bool isLast = (bitstream.get() == 1);

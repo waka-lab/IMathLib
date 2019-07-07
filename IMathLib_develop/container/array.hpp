@@ -1,27 +1,18 @@
-﻿#ifndef _ARRAY_HPP
-#define _ARRAY_HPP
+﻿#ifndef IMATHLIB_CONTAINER_ARRAY_HPP
+#define IMATHLIB_CONTAINER_ARRAY_HPP
 
 #include "IMathLib/utility/algorithm.hpp"
-#include "IMathLib/container/container.hpp"
+#include "IMathLib/container/allocator.hpp"
 #include "IMathLib/utility/smart_ptr.hpp"
 
-//配列リストを扱うクラス
 
+//  配列リスト
 namespace iml {
 
-	//配列リストのイテレータ
+	//  配列リストのイテレータ
 	template <class T>
-	class array_iterator : public iterator_base<random_access_iterator_tag, T> {
-		template <class> friend class array_iterator;
-
-		using this_type = array_iterator<T>;
-
-		T*	current;
-
-	public:
-		//直接データの取得
-		T* _Ptr() { return current; }
-		T* _Ptr() const { return current; }
+	struct array_iterator {
+		T*	current_m;
 
 		using iterator_category = random_access_iterator_tag;
 		using value_type = T;
@@ -29,471 +20,386 @@ namespace iml {
 		using pointer = T*;
 		using reference = T&;
 
-		template<class Other>
+		template <class Other>
 		struct rebind {
 			using other = array_iterator<Other>;
 		};
+		template <class Other>
+		using rebind_t = array_iterator<Other>;
 
-		constexpr array_iterator() :current(nullptr) {}
-		constexpr array_iterator(T* itr) : current(itr) {}
-		template <class S>
-		constexpr array_iterator(const array_iterator<S>& itr) :current(reinterpret_cast<S*>(itr.current)) {}
-
-		reference operator*() const { return *current; }
-		pointer operator->() const { return current; }
-		this_type& operator++() { ++current; return *this; }
-		this_type operator++(int) { this_type temp = *this; ++*this; return temp; }
-		this_type& operator--() { --current; return *this; }
-		this_type operator--(int) { this_type temp = *this; --*this; return temp; }
-
-		this_type& operator+=(difference_type n) { current += n; return *this; }
-		this_type& operator-=(difference_type n) { current -= n; return *this; }
-		this_type operator+(difference_type n) const { this_type temp = *this; return temp += n; }
-		this_type operator-(difference_type n) const { this_type temp = *this; return temp -= n; }
-		difference_type operator-(const this_type& itr) const { return current - itr.current; }
-
-		reference operator[](difference_type n) const { return *next(*this, n); }
-
-		bool operator==(const this_type& itr) const { return current == itr.current; }
-		bool operator!=(const this_type& itr) const { return !(*this == itr); }
-		bool operator<(const this_type& itr) const { return current < itr.current; }
-		bool operator>(const this_type& itr) const { return itr < *this; }
-		bool operator<=(const this_type& itr) const { return !(itr < *this); }
-		bool operator>=(const this_type& itr) const { return !(*this < itr); }
-
-		//operator T*() { return current; }
-		//operator const T*() const { return current; }
-	};
-
-	//静的配列リスト用コンテナ
-	template <class T, class Allocator>
-	class static_array_container :public container_base<T, array_iterator<T>, Allocator> {
-	public:
-		using typename container_base<T, array_iterator<T>, Allocator>::value_type;
-		using typename container_base<T, array_iterator<T>, Allocator>::iterator;
-		using typename container_base<T, array_iterator<T>, Allocator>::const_iterator;
-		using typename container_base<T, array_iterator<T>, Allocator>::allocator_type;
-	protected:
-		Allocator	_allo;				//アロケータ
-		iterator	_p = nullptr;		//確保したメモリの先頭アドレス
-		size_t	_size = 0;			//確保したメモリサイズ
-		size_t	_use_size = 0;		//使用中のメモリサイズ
-
-	public:
-		constexpr static_array_container() {}
-		virtual ~static_array_container() = 0 {}
-
-		virtual iterator begin() noexcept = 0;
-		virtual const_iterator begin() const noexcept = 0;
-		virtual iterator end() noexcept = 0;
-		virtual const_iterator end() const noexcept = 0;
-
-		//使用中のサイズの取得
-		size_t size() const { return _use_size; }
-
-		//内部イテレータ
-		template <class F>
-		F for_each(F f) const { return iml::for_each(begin(), end(), f); }
-	};
-
-	//動的配列リスト用コンテナ
-	template <class T, class Allocator>
-	class dynamic_array_container : public static_array_container<T, Allocator> {
-	protected:
-		//xより大きい2の冪乗の取得
-		static size_t get_power_of_2(size_t x) {
-			size_t result = 0;
-			for (size_t i = (sizeof(size_t) << 3); result < i; ++result)
-				if ((x >> result) == 0) break;
-			return (1 << result);
-		}
-	public:
-		using static_array_container<T, Allocator>::static_array_container;
-		virtual ~dynamic_array_container() {}
-
-		using typename static_array_container<T, Allocator>::value_type;
-		using typename static_array_container<T, Allocator>::iterator;
-		using typename static_array_container<T, Allocator>::const_iterator;
-		using typename static_array_container<T, Allocator>::allocator_type;
-
-		virtual iterator begin() noexcept = 0;
-		virtual const_iterator begin() const noexcept = 0;
-		virtual iterator end() noexcept = 0;
-		virtual const_iterator end() const noexcept = 0;
-
-		//空かの判定
-		virtual bool empty() const noexcept = 0;
-
-		//メモリの解放
-		void clear() { _allo.destroy(_p, _size); _size = _use_size = 0; _p = nullptr; }
-
-		//要素の削除(posからn個)
-		void erase(size_t pos = 0, size_t n = npos) {
-			if (_use_size <= pos) return;
-			copy_order(&this->_p[pos], &this->_p[(iml::min)(pos + n, _use_size)], &this->_p[_use_size]);
-			_use_size -= (_use_size - pos <= n) ? (this->end() - (this->begin() + pos)) : n;
-		}
-		//itrの位置
-		void erase(const_iterator itr) {
-			if (!((this->begin() <= itr) || (itr < this->end()))) return;		//イテレータの範囲外
-			copy_order(to_iterator(itr), itr + 1, &this->_p[_use_size]);
-			--_use_size;
-		}
-		//[first,last)の範囲
-		void erase(const_iterator first, const_iterator last) {
-			if (!((this->begin() <= first) || (first < this->end()))) return;		//イテレータの範囲外
-			if (first >= last) return;												//イテレータの順序
-			copy_order(to_iterator(first), last, &this->_p[_use_size]);
-			_use_size -= (last >= this->end()) ? (this->end() - first) : (last - first);
-		}
-
-		//要素の挿入(posに対してc)
-		void insert(size_t pos, const T& c) {
-			//配列シフトを必要としないとき
-			if (_use_size == 0) {
-				if (this->_size < this->_use_size + 1) this->reserve(get_power_of_2(this->_use_size + 1));
-				this->_p[pos] = c;
-				++this->_use_size;
-				return;
-			}
-			if (_use_size < pos) return;
-			if (this->_size < this->_use_size + 1) this->reserve(get_power_of_2(this->_use_size + 1));
-			copy_reverse_order(&this->_p[pos + 1], &this->_p[pos], &this->_p[_use_size]);
-			this->_p[pos] = c;
-			++this->_use_size;
-		}
-		//posに対して[first,last)
-		template <class InputIterator>
-		void insert(size_t pos, InputIterator first, InputIterator last) {
-			//入力イテレータでなければならない
-			static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value
-				, "The type of iterator is different.");
-			size_t size = distance(first, last);
-
-			//配列シフトを必要としないとき
-			if ((_use_size == 0) && (pos == 0)) {
-				if (this->_size < size) this->reserve(get_power_of_2(size));
-				copy_order(&this->_p[pos], first, last);
-				this->_use_size = size;
-				return;
-			}
-			if (_use_size < pos) return;
-			if (this->_size < this->_use_size + size) this->reserve(get_power_of_2(this->_use_size + size));
-			copy_reverse_order(&this->_p[pos + size], &this->_p[pos], &this->_p[_use_size]);
-			copy_order(&this->_p[pos], first, last);
-			this->_use_size += size;
-		}
-		//itrに対してc
-		void insert(const_iterator itr, const T& c) {
-			if (!((this->begin() <= itr) && (itr <= this->end()))) return;		//イテレータの範囲外
-			if (this->_size < this->_use_size + 1) this->reserve(get_power_of_2(this->_use_size + 1));
-			copy_reverse_order(to_iterator(itr), itr + 1, &this->_p[_use_size]);
-			*to_iterator(itr) = c;
-			++this->_use_size;
-		}
-		//itrに対して[first,last)
-		template <class InputIterator>
-		void insert(const_iterator itr, InputIterator first, InputIterator last) {
-			//入力イテレータでなければならない
-			static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value
-				, "The type of iterator is different.");
-			insert(to_iterator(itr) - begin(), first, last);
-		}
-
-		//メモリの再確保
-		void reserve(size_t size) {
-			T* buf = _allo.create(size);
-			copy_order(buf, _p, _use_size);
-			_allo.destroy(_p, _size);
-			_size = size;
-			_p = buf;
-		}
-		void reserve(size_t size, const_iterator data, size_t data_size) {
-			T* buf = _allo.create(size);
-			copy_order(buf, data, (iml::min)(size, data_size));
-			_allo.destroy(_p, _size);
-			_size = size; _use_size = data_size;
-			_p = buf;
-		}
-		void reserve(size_t size, const T* data, size_t data_size) {
-			T* buf = _allo.create(size);
-			copy_order(buf, data, data_size);
-			_allo.destroy(_p, _size);
-			_size = size; _use_size = data_size;
-			_p = buf;
-		}
-		void reserve(size_t size, const dynamic_array_container& c) {
-			T* buf = _allo.create(size);
-			copy_order(buf, c._p, c._use_size);
-			_allo.destroy(_p, _size);
-			_size = size; _use_size = c._use_size;
-			_p = buf;
-		}
-		//メモリの再設定
-		void resize(size_t size) {
-			//確保されているメモリが十分に大きいときはそのまま
-			if (_size >= size) {
-				_use_size = size;
-				return;
-			}
-			T* temp = _allo.create(size);
-			copy_order(temp, _p, _use_size);
-			_allo.destroy(_p, _size);
-			_size = _use_size = size;
-			_p = temp;
-		}
-		//後方にデータの挿入
-		virtual void push_back(const T& data) = 0;
-		//後方のデータの削除
-		virtual void pop_back() = 0;
-		//メモリを使用サイズにフィットさせる
-		void shrink_to_fit() {
-			if (_size == _use_size) return;
-			this->resize(_use_size);
-		}
-	};
-
-	//固定長アロケータ(static_array専用)
-	template <class T, class Iterator, size_t N>
-	class static_allocator : public allocator_base<T, Iterator> {
-		using typename allocator_base<T, Iterator>::_Pointer;
-		using typename allocator_base<T, Iterator>::_Value_type;
-
-		_Value_type		_array[N];
-		bool			_use[N] = {};		//メモリの使用状態
-	public:
-		static_allocator() {}
-		static_allocator(static_allocator& allocator) {}
+		constexpr array_iterator() : current_m(nullptr) {}
 		template <class U>
-		static_allocator(static_allocator<U, Iterator, N>& allocator) {}
-		~static_allocator() {}
+		constexpr array_iterator(U* itr) : current_m(static_cast<T*>(itr)) {}
+		constexpr array_iterator(const array_iterator& itr) : current_m(itr.current_m) {}
+		template <class U>
+		constexpr array_iterator(const array_iterator<U>& itr) : current_m(reinterpret_cast<T*>(itr.current_m)) {}
 
-		//メモリ確保
-		_Pointer allocate(size_t n) {
-			return _array;
-			for (size_t i = 0, j = 0; i < N; ++i) {
-				j = (_use[i]) ? 0 : j + 1;
-				if (j == n) return &_array[i - j];
-			}
-			return nullptr;
-		}
-		//メモリ解放
-		void deallocate(Iterator p, size_t n) {}
+		constexpr reference operator*() const { return *current_m; }
+		constexpr pointer operator->() const { return current_m; }
+		constexpr array_iterator& operator++() { ++current_m; return *this; }
+		constexpr array_iterator operator++(int) { array_iterator temp = *this; ++*this; return temp; }
+		constexpr array_iterator& operator--() { --current_m; return *this; }
+		constexpr array_iterator operator--(int) { array_iterator temp = *this; --*this; return temp; }
+
+		constexpr array_iterator operator+(difference_type n) const { return array_iterator(current_m + n); }
+		constexpr array_iterator operator-(difference_type n) const { return array_iterator(current_m - n); }
+		constexpr difference_type operator-(const array_iterator& itr) const { return current_m - itr.current_m; }
+
+		array_iterator& operator+=(difference_type n) { current_m += n; return *this; }
+		array_iterator& operator-=(difference_type n) { current_m -= n; return *this; }
+
+		constexpr reference operator[](difference_type n) const { return *next(*this, n); }
+
+		constexpr bool operator==(const array_iterator& itr) const { return current_m == itr.current_m; }
+		constexpr bool operator!=(const array_iterator& itr) const { return current_m != itr.current_m; }
+		constexpr bool operator<(const array_iterator& itr) const { return current_m < itr.current_m; }
+		constexpr bool operator>(const array_iterator& itr) const { return current_m < itr.current_m; }
+		constexpr bool operator<=(const array_iterator& itr) const { return current_m <= itr.current_m; }
+		constexpr bool operator>=(const array_iterator& itr) const { return current_m >= itr.current_m; }
 	};
-	//比較演算
-	template <class T, class U, class Iterator1, class Iterator2, size_t N>
-	bool operator==(const static_allocator<T, Iterator1, N>&, const static_allocator<U, Iterator2, N>&) {
-		return true;
-	}
-	template <class T, class U, class Iterator1, class Iterator2, size_t N>
-	bool operator!=(const static_allocator<T, Iterator1, N>&, const static_allocator<U, Iterator2, N>&) {
-		return false;
-	}
 
-	//静的配列リスト
+
+	//  静的配列リスト
 	template <class T, size_t N>
-	class static_array : public static_array_container<T, static_allocator<T, array_iterator<T>, N>>, public value_list_input<array_iterator<T>> {
-	public:
-		static_array() {
-			this->_p = this->_allo.create(N);
-			this->_size = this->_use_size = N;
-		}
-		template <class InputIterator>
-		static_array(InputIterator first, InputIterator last) {
-			this->_p = this->_allo.create(N);
-			this->_size = this->_use_size = N;
-			size_t dis = distance(first, last);
-			copy_order(this->_p, first, iml::min(N, dis));
-		}
-		static_array(const static_array& s) {
-			this->_p = this->_allo.create(N);
-			this->_size = this->_use_size = N;
-			copy_order(this->_p, s._p, N);
-		}
-		static_array(static_array&& s) {
-			this->_size = this->_use_size = N;
-			*this = move(s);
-		}
-		~static_array() { _allo.destroy(_p, N); }
+	struct static_array {
+		T elements[N];
 
-		using typename static_array_container<T, static_allocator<T, array_iterator<T>, N>>::value_type;
-		using typename static_array_container<T, static_allocator<T, array_iterator<T>, N>>::iterator;
-		using typename static_array_container<T, static_allocator<T, array_iterator<T>, N>>::const_iterator;
-		using typename static_array_container<T, static_allocator<T, array_iterator<T>, N>>::allocator_type;
-
-		//イテレータの取得
-		iterator begin() noexcept { return _p; }
-		const_iterator begin() const noexcept { return _p; }
-		iterator end() noexcept { return &_p[N]; }
-		const_iterator end() const noexcept { return &_p[N]; }
-
-		//配列を同一要素で埋める
-		void fill(const T& n) { iml::fill(begin(), end(), n); }
-
-		//代入
-		static_array& operator=(const static_array& s) {
-			copy_order(this->_p, s._p, N);
-			return *this;
-		}
-		static_array& operator=(static_array&& s) {
-			if (s._p == this->_p) return *this;
-			//this->_p = s._p;
-			this->_allo = s._allo;
-			return *this;
-		}
-
-		//コンテナの中身の入れ替え
-		void swap(static_array& c) {
-			for (iterator itr1 = this->_p, itr2 = c._p; itr1 != end(); ++itr1, ++itr2)
-				iml::swap(*itr1, *itr2);
-		}
-
-		T& operator[](size_t index) noexcept { return _p[index]; }
-		const T& operator[](size_t index) const noexcept { return _p[index]; }
-	};
-
-	//動的配列リスト
-	template <class T, class Allocator = allocator<T, array_iterator<T>>>
-	class dynamic_array : public dynamic_array_container<T, Allocator>, public value_list_input<array_iterator<T>> {
-	public:
-		dynamic_array() {}
-		dynamic_array(size_t size) { this->reserve(size); }
-		dynamic_array(const T* s, size_t size) { this->reserve(get_power_of_2(size), s, size); }
-		dynamic_array(const dynamic_array& s) { *this = s; }
-		~dynamic_array() { clear(); }
-
-		using typename dynamic_array_container<T, Allocator>::value_type;
-		using typename dynamic_array_container<T, Allocator>::iterator;
-		using typename dynamic_array_container<T, Allocator>::const_iterator;
-		using typename dynamic_array_container<T, Allocator>::allocator_type;
-
-		//イテレータの取得
-		iterator begin() noexcept { return _p; }
-		const_iterator begin() const noexcept { return _p; }
-		iterator end() noexcept { return &_p[_use_size]; }
-		const_iterator end() const noexcept { return &_p[_use_size]; }
-
-		//空かの判定
-		bool empty() const noexcept { return ((_use_size == 0) || (_p == nullptr)); }
-
-		//後方にデータの挿入
-		void push_back(const T& data) {
-			if (this->_size < this->_use_size + 1) this->reserve(get_power_of_2(this->_use_size + 1));
-			this->_p[this->_use_size] = data;
-			++this->_use_size;
-			return;
-		}
-		//後方のデータの削除
-		void pop_back() {
-			if (_use_size == 0) return;
-			--_use_size;
-		}
-
-		//代入
-		dynamic_array& operator=(const dynamic_array& s) {
-			if (s._p == this->_p) return *this;
-			this->_allo = s._allo;
-			if (this->_size < s._use_size) {
-				this->reserve(get_power_of_2(s._use_size), s);
-				return *this;
-			}
-			this->_use_size = s._use_size;
-			copy_order(this->_p, s._p, this->_use_size);
-			return *this;
-		}
-		dynamic_array& operator=(dynamic_array&& s) {
-			if (s._p == this->_p) return *this;
-			this->_allo = s._allo;
-			this->_size = s._size;
-			this->_use_size = s._use_size;
-			this->_p = s._p;
-			return *this;
-		}
-
-		//コンテナの中身の入れ替え
-		void swap(dynamic_array& c) {
-			iml::swap(*this, c);
-		}
-
-		T& operator[](size_t index) noexcept { return _p[index]; }
-		const T& operator[](size_t index) const noexcept { return _p[index]; }
-	};
-
-	//シェア配列リスト
-	template <class T, class Allocator = allocator<T, array_iterator<T>>>
-	class shared_array : public dynamic_array_container<T, Allocator>, public value_list_input<array_iterator<T>> {
-		shared_count<T, deallocator<T>::function>	sc;			//シェアカウンタ(clearで解放のためハンドルを渡す必要はない)
-	public:
-		shared_array() :sc(nullptr, [&](T*) {clear(); }) {}
-		shared_array(size_t size) :sc(nullptr, [&](T*) {clear(); }) { this->reserve(size); }
-		shared_array(const T* s, size_t size) :sc(nullptr, [&](T*) {clear(); }) { this->reserve(get_power_of_2(size), s, size); }
-		shared_array(const shared_array& s) :sc(nullptr, [&](T*) {clear(); }) { *this = s; }
-		~shared_array() {}
+		//  集成体による初期化をする
 
 		using value_type = T;
+		using reference = T & ;
+		using const_reference = const T & ;
+		using iterator = array_iterator<T>;
+		using const_iterator = typename iterator::rebind_t<const T>;
+
+		//  イテレータの取得
+		constexpr iterator begin() noexcept { return iterator(elements); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(elements); }
+		constexpr iterator end() noexcept { return iterator(elements + N); }
+		constexpr const_iterator end() const noexcept { return const_iterator(elements + N); }
+
+		//  同一要素で埋める
+		void fill(const T& n) { iml::fill(begin(), end(), n); }
+		//  使用中のサイズの取得
+		constexpr size_t size() const { return N; }
+		//  コンテナが空かの判定
+		[[nodiscard]] constexpr bool empty() const noexcept { return N == 0; }
+		// 内部イテレータ
+		template <class F>
+		constexpr F for_each(F f) const { return iml::for_each(begin(), end(), f); }
+
+		static_array& operator=(const static_array& s) {
+			copy_order(begin(), s.begin(), s.end());
+			return *this;
+		}
+
+		//  コンテナの中身の入れ替え
+		constexpr void swap(static_array& c) {
+			for (auto itr1 = begin(), itr2 = c.begin(); itr1 != end(); ++itr1, ++itr2) iml::swap(*itr1, *itr2);
+		}
+
+		constexpr reference operator[](size_t index) noexcept { return elements[index]; }
+		constexpr const_reference operator[](size_t index) const noexcept { return elements[index]; }
+	};
+	template <class T, class U, size_t N>
+	constexpr bool operator==(const static_array<T, N>& a1, const static_array<U, N>& a2) {
+		for (size_t i = 0; i < N; ++i) if (a1[i] != a1[i]) return false;
+		return true;
+	}
+	template <class T, class U, size_t N>
+	constexpr bool operator!=(const static_array<T, N>& a1, const static_array<U, N>& a2) {
+		return !(a1 == a2);
+	}
+
+	//  動的配列リスト(厳密にはアロケータによる配列リスト)
+	template <class T, class Allocator = allocator<T>>
+	class dynamic_array {
+	public:
+		using value_type = T;
+		using reference = T & ;
+		using const_reference = const T &;
 		using iterator = array_iterator<T>;
 		using const_iterator = array_iterator<const T>;
-
-		//イテレータの取得
-		iterator begin() noexcept { return _p; }
-		const_iterator begin() const noexcept { return _p; }
-		iterator end() noexcept { return &_p[_use_size]; }
-		const_iterator end() const noexcept { return &_p[_use_size]; }
-
-		//空かの判定
-		bool empty() const noexcept { return ((_use_size == 0) || (_p == nullptr)); }
-
-		//後方にデータの挿入
-		void push_back(const T& data) {
-			if (this->_size < this->_use_size + 1) this->reserve(get_power_of_2(this->_use_size + 1));
-			this->_p[this->_use_size] = data;
-			++this->_use_size;
-			return;
+		using allocator_type = Allocator;
+		using size_type = typename allocator_traits<Allocator>::size_type;
+	private:
+		T*			p_m;
+		size_type	size_m;				//  確保したメモリサイズ
+		size_type	use_size_m;			//  確保したメモリのうち使用中のサイズ
+		Allocator	alloc_m;
+	public:
+		constexpr dynamic_array() : p_m(nullptr), size_m(0), use_size_m(0), alloc_m() {}
+		explicit dynamic_array(const Allocator& alloc) : p_m(nullptr), size_m(0), use_size_m(0)
+			, alloc_m(allocator_traits<Allocator>::select_on_container_copy_construction(alloc)) {}
+		dynamic_array(size_type size, const Allocator& alloc = Allocator()) : p_m(nullptr), size_m(0), use_size_m(size)
+			, alloc_m(allocator_traits<Allocator>::select_on_container_copy_construction(alloc)) {
+			p_m = alloc_m.allocate(size_m);
 		}
-		//後方のデータの削除
-		void pop_back() {
-			if (_use_size == 0) return;
-			--_use_size;
+		template <class InputIterator>
+		dynamic_array(InputIterator first, InputIterator last) : alloc_m() {
+			static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
+
+			size_type dist = distance(first, last);
+			if (max_size() < dist) throw std::length_error("size exceeds max_size().");
+			size_m = (iml::min)(max_size(), dist * 2);				//  基本は領域設定量の2倍分だけ確保
+			use_size_m = dist;
+			p_m = alloc_m.allocate(size_m);
+			allocator_traits<Allocator>::copy_construct(alloc_m, p_m, p_m + use_size_m, first, last);
+		}
+		dynamic_array(const dynamic_array& a) : p_m(nullptr), size_m(a.size_m), use_size_m(a.use_size_m)
+			, alloc_m(allocator_traits<Allocator>::select_on_container_copy_construction(a.alloc_m)) {
+			p_m = alloc_m.allocate(size_m);
+			allocator_traits<Allocator>::copy_construct(alloc_m, p_m, p_m + use_size_m, a.p_m, a.p_m + use_size_m);
+		}
+		dynamic_array(dynamic_array&& a) : p_m(a.p_m), size_m(a.size_m), use_size_m(a.use_size_m), alloc_m(a.alloc_m) { a.p_m = nullptr; a.use_size_m = a.size_m = 0; }
+		~dynamic_array() {
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);		//  デストラクタを作用
+			alloc_m.deallocate(p_m, size_m);											//  メモリ解放
 		}
 
-		//代入
-		shared_array& operator=(const shared_array& s) {
-			if (s._p == this->_p) return *this;
-			this->sc = s.sc;
-			this->_allo = s._allo;
-			this->_size = s._size;
-			this->_use_size = s._use_size;
-			this->_p = s._p;
+		iterator begin() noexcept { return iterator(p_m); }
+		const_iterator begin() const noexcept { return const_iterator(p_m); }
+		iterator end() noexcept { return iterator(p_m + use_size_m); }
+		const_iterator end() const noexcept { return const_iterator(p_m + use_size_m); }
+
+		//  空かの判定
+		[[nodiscard]] bool empty() const noexcept { return use_size_m == 0; }
+		//  データの破棄
+		void clear() {
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			alloc_m.deallocate(p_m, size_m);
+			size_m = use_size_m = 0;
+			p_m = nullptr;
+		}
+		//  同一要素で埋める
+		void fill(const T& n) { iml::fill(p_m, p_m + use_size_m, n); }
+		//  使用中のサイズの取得
+		size_type size() const { return use_size_m; }
+		//  容量
+		size_type capacity() const { return size_m; }
+		//  コンテナに格納可能な最大サイズ
+		constexpr size_type max_size() const { return allocator_traits<Allocator>::max_size(alloc_m); }
+
+
+		//  要素数の再設定
+		void resize(size_type size) {
+			//  確保されているメモリが十分に大きいときは余剰分にデフォルトコンストラクタかデストラクタを作用
+			if (use_size_m >= size) {
+				allocator_traits<Allocator>::destroy(alloc_m, p_m + size, p_m + use_size_m);
+				use_size_m = size;
+				return;
+			}
+			else if (size_m >= size) {
+				allocator_traits<Allocator>::construct_all(alloc_m, p_m + use_size_m, p_m + size);
+				use_size_m = size;
+				return;
+			}
+			if (max_size() < size) throw std::length_error("size exceeds max_size().");
+			//  メモリを再確保して構築
+			auto temp = alloc_m.allocate(size);
+			allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + size, p_m, p_m + use_size_m);
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			alloc_m.deallocate(p_m, size_m);
+			size_m = use_size_m = size;
+			p_m = temp;
+		}
+		void resize(size_type size, const T& c) {
+			//  確保されているメモリが十分に大きいときは余剰分にコピーコンストラクタかデストラクタを作用
+			if (use_size_m >= size) {
+				allocator_traits<Allocator>::destroy(alloc_m, p_m + size, p_m + use_size_m);
+				use_szie_m = size;
+				return;
+			}
+			else if (size_m >= size) {
+				allocator_traits<Allocator>::construct_all(alloc_m, p_m + use_size_m, p_m + size, c);
+				use_size_m = size;
+				return;
+			}
+			if (max_size() < size) throw std::length_error("size exceeds max_size().");
+			//  メモリを再確保して構築
+			auto temp = alloc_m.allocate(size);
+			allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + use_size_m, p_m, p_m + use_size_m);
+			allocator_traits<Allocator>::construct_all(alloc_m, temp + use_size_m, temp + size, c);
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			alloc_m.deallocate(p_m, size_m);
+			size_m = use_size_m = size;
+			p_m = temp;
+		}
+		//  capacityよりもsizeが大きいときメモリの再確保
+		void reserve(size_type size) {
+			if (size < size_m) return;
+			if (max_size() < size) throw std::length_error("size exceeds max_size().");
+			auto temp = alloc_m.allocate(size);
+			allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + use_size_m, p_m, p_m + use_size_m);
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			alloc_m.deallocate(p_m, size_m);
+			size_m = size;
+			p_m = temp;
+		}
+
+
+		//  要素の挿入(emptyなときはiteratorが無効であるため挿入不可)
+		//  itrに対してc
+		void insert(const_iterator itr, const T& c) {
+			if (!((begin() <= to_iterator(itr)) && (to_iterator(itr) <= end()))) return;		// イテレータの範囲外
+			//  メモリを再確保する必要がある場合
+			if (size_m == use_size_m) {
+				if (max_size() == size_m) throw std::length_error("size exceeds max_size().");
+				size_type alloc_size = (iml::min)(max_size(), (size_m + 1) * 2);
+				auto temp = alloc_m.allocate(size_m);
+				auto itr_pos = distance(begin(), to_iterator(itr));
+				allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + itr_pos, begin(), to_iterator(itr));
+				allocator_traits<Allocator>::construct(alloc_m, temp + itr_pos, c);
+				allocator_traits<Allocator>::move_construct(alloc_m, temp + itr_pos + 1, temp + use_size_m + 1, to_iterator(itr), end());
+				allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+				alloc_m.deallocate(p_m, size_m);
+				size_m = alloc_size;
+				p_m = temp;
+			}
+			else {
+				allocator_traits<Allocator>::construct(alloc_m, p_m + use_size_m);
+				move_reverse_order(to_iterator(itr) + 1, to_iterator(itr), end());
+				*to_iterator(itr) = c;
+			}
+			++use_size_m;
+		}
+		//  itrに対して[first,last)
+		template <class InputIterator>
+		void insert(const_iterator itr, InputIterator first, InputIterator last) {
+			static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
+			
+			if (!((begin() <= to_iterator(itr)) && (to_iterator(itr) <= end()))) return;		// イテレータの範囲外
+			size_type dist = distance(first, last);
+			size_type alloc_size = dist + use_size_m;			//  必要なメモリ領域
+			//  メモリを再確保する必要がある場合
+			if (size_m < alloc_size) {
+				if (max_size()  < alloc_size) throw std::length_error("size exceeds max_size().");
+				alloc_size = (iml::min)(max_size(), alloc_size * 2);
+				auto temp = alloc_m.allocate(alloc_size);
+				auto itr_pos = distance(begin(), to_iterator(itr));
+				allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + itr_pos, begin(), to_iterator(itr));
+				allocator_traits<Allocator>::copy_construct(alloc_m, temp + itr_pos, temp + itr_pos + dist, first, last);
+				allocator_traits<Allocator>::move_construct(alloc_m, temp + itr_pos + dist, temp + use_size_m + dist, to_iterator(itr), end());
+				allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+				alloc_m.deallocate(p_m, size_m);
+				size_m = alloc_size;
+				p_m = temp;
+			}
+			else {
+				allocator_traits<Allocator>::construct_all(alloc_m, p_m + use_size_m, p_m + use_size_m + dist);
+				move_reverse_order(to_iterator(itr) + dist, to_iterator(itr), end());
+				copy_order(to_iterator(itr), first, last);
+			}
+			use_size_m += dist;
+		}
+		//  要素の削除(emptyなときはiteratorが無効であるため削除不可)
+		//  itrの位置
+		void erase(const_iterator itr) {
+			//  itrの分だけ前に詰めて後ろを除去する
+			move_order(to_iterator(itr), to_iterator(itr + 1), end());
+			allocator_traits<Allocator>::destroy(alloc_m, p_m + use_size_m - 1);
+			--use_size_m;
+		}
+		//  [first,last)の範囲
+		void erase(const_iterator first, const_iterator last) {
+			move_order(to_iterator(first), to_iterator(last), end());
+			size_type dist = distance(first, last);
+			allocator_traits<Allocator>::destroy(alloc_m, p_m + use_size_m - dist, p_m + use_size_m);
+			use_size_m -= dist;
+		}
+
+
+		// 後方にデータの挿入
+		dynamic_array& push_back(const T& v) {
+			//  領域が足りないときはメモリ再確保
+			if (size_m == use_size_m) {
+				if (max_size() == size_m) throw std::length_error("size exceeds max_size().");
+				reserve((iml::min)(max_size(), (size_m + 1) * 2));
+			}
+			allocator_traits<Allocator>::construct(alloc_m, p_m + use_size_m, v);
+			++use_size_m;
 			return *this;
 		}
-		shared_array& operator=(shared_array&& s) {
-			if (s._p == this->_p) return *this;
-			this->sc = s.sc;
-			this->_allo = s._allo;
-			this->_size = s._size;
-			this->_use_size = s._use_size;
-			this->_p = s._p;
+		//  後方のデータの削除
+		dynamic_array& pop_back() {
+			if (use_size_m == 0) return *this;
+			allocator_traits<Allocator>::destroy(alloc_m, p_m  + use_size_m - 1);
+			--use_size_m;
 			return *this;
 		}
 
-		//コンテナの中身の入れ替え
-		void swap(shared_array& c) {
-			iml::swap(*this, c);
+
+		//  メモリを使用サイズにフィットさせる
+		void shrink_to_fit() {
+			if (size_m == use_size_m) return;
+			auto temp = alloc_m.allocate(use_size_m);
+			allocator_traits<Allocator>::move_construct(alloc_m, temp, temp + use_size_m, p_m, p_m + use_size_m);
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			alloc_m.deallocate(p_m, size_m);
+			size_m = use_size_m;
+			p_m = temp;
 		}
 
-		//インスタンスが唯一かの判定
-		bool unique() const { return sc.unique(); }
-		//カウントの取得
-		size_t use_count() const { return sc.use_count(); }
 
-		T& operator[](size_t index) noexcept { return _p[index]; }
-		const T& operator[](size_t index) const noexcept { return _p[index]; }
+		//  コンテナの中身の入れ替え
+		void swap(dynamic_array& a) {
+			iml::swap(p_m, a.p_m);
+			iml::swap(size_m, a.size_m);
+			iml::swap(use_size_m, a.use_size_m);
+			iml::swap(alloc_m, a.alloc_m);
+		}
+
+		//  代入
+		dynamic_array& operator=(const dynamic_array& a) {
+			if (a.p_m == p_m) return *this;
+			allocator_traits<Allocator>::destroy(alloc_m, p_m, p_m + use_size_m);
+			//  メモリを確保する必要があるならば確保する
+			if (size_m < a.use_size_m) {
+				alloc_m.deallocate(p_m, size_m);
+				alloc_m = allocator_traits<Allocator>::select_on_container_copy_construction(a.alloc_m);
+				size_m = a.size_m;
+				p_m = alloc_m.allocate(size_m);
+			}
+			else {
+				alloc_m = allocator_traits<Allocator>::select_on_container_copy_construction(a.alloc_m);
+			}
+			use_size_m = a.use_size_m;
+			allocator_traits<Allocator>::copy_construct(alloc_m, p_m, p_m + use_size_m, a.p_m, a.p_m + use_size_m);
+			return *this;
+		}
+		dynamic_array& operator=(dynamic_array&& a) {
+			if (a.p_m == p_m) return *this;
+			alloc_m = a.alloc_m;
+			size_m = a.size_m;
+			use_size_m = a.use_size_m;
+			p_m = a.p_m;
+			a.p_m = nullptr;
+			a.use_size_m = a.size_m = 0;
+			return *this;
+		}
+
+		reference operator[](size_type index) noexcept { return p_m[index]; }
+		const_reference operator[](size_type index) const noexcept { return p_m[index]; }
+
+		//  内部イテレータ
+		template <class F>
+		F for_each(F f) const { return iml::for_each(p_m, p_m + use_size_m, f); }
 	};
-}
+	template <class T, class U, class TAllocator, class UAllocator>
+	constexpr bool operator==(const dynamic_array<T, TAllocator>& a1, const dynamic_array<U, UAllocator>& a2) {
+		if (a1.size() != a2.size()) return false;
+		auto itr1 = a1.begin();
+		auto itr2 = a2.begin();
+		for (; itr1 != a1.end(); ++itr1, ++itr2) if (*itr1 != *itr2) return false;
+		return true;
+	}
+	template <class T, class U, class TAllocator, class UAllocator>
+	constexpr bool operator!=(const dynamic_array<T, TAllocator>& a1, const dynamic_array<U, UAllocator>& a2) {
+		return !(a1 == a2);
+	}
 
-namespace iml {
 
-	//配列の判定の登録
+	//  配列の判定の登録
 	template<class T, size_t N>
 	struct is_array<static_array<T, N>> : true_type {};
 	template<class T, class Allocator>

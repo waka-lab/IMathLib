@@ -3,11 +3,11 @@
 
 #include "IMathLib/container/list.hpp"
 
-//キュー
+// キュー
 
 namespace iml {
 
-	//キュー
+	// キュー
 	template <class T, class Container = list<T>>
 	class queue {
 	protected:

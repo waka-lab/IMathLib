@@ -85,10 +85,10 @@ namespace iml {
 		template <class Other>
 		using rebind_t = complex<Other>;
 
-		constexpr iterator begin() noexcept { return iterator(&x_m[0]); }
-		constexpr const_iterator begin() const noexcept { return const_iterator(&x_m[0]); }
-		constexpr iterator end() noexcept { return iterator(&x_m[1] + 1); }
-		constexpr const_iterator end() const noexcept { return const_iterator(&x_m[1] + 1); }
+		constexpr iterator begin() noexcept { return iterator(x_m); }
+		constexpr const_iterator begin() const noexcept { return const_iterator(x_m); }
+		constexpr iterator end() noexcept { return iterator(x_m + 2); }
+		constexpr const_iterator end() const noexcept { return const_iterator(x_m + 2); }
 
 		//単項演算
 		template <class = enable_if_t<is_exist_additive_inverse_v<T>>>

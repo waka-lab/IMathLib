@@ -4,13 +4,13 @@
 #include "IMathLib/math/expression_template/expr_wrapper.hpp"
 
 
-// 分配法則の適用
+//分配法則の適用
 
 namespace iml {
 	namespace op {
 
 
-		// 変数及び定数(分配法則適用なし)
+		//変数及び定数
 		template <class T>
 		struct Distributive {
 			static constexpr auto distributive(const T& expr) { return expr; }
@@ -19,24 +19,26 @@ namespace iml {
 		struct Distributive<expr_variable<N>> {
 			static constexpr auto distributive(const expr_variable<N>& expr) { return expr; }
 		};
-		// 単項演算(下層に対して再帰的に分配法則適用)
+		//単項演算
 		template <class Expr>
 		struct Distributive<expr_wrapper<add_tag, type_tuple<Expr>>> {
 			using expr_type = expr_wrapper<add_tag, type_tuple<Expr>>;
 			static constexpr auto distributive(const expr_type& expr) {
-				auto temp = +expr.terms_m;
-				return Distributive<decay_t<decltype(temp)>>::distributive(temp);
+				auto temp = 1 * expr.terms_m;
+				using temp_type = typename decay<decltype(temp)>::type;
+				return Distributive<temp_type>::distributive(temp);
 			}
 		};
 		template <class Expr>
 		struct Distributive<expr_wrapper<sub_tag, type_tuple<Expr>>> {
 			using expr_type = expr_wrapper<sub_tag, type_tuple<Expr>>;
 			static constexpr auto distributive(const expr_type& expr) {
-				auto temp = -expr.terms_m;
+				auto temp = -1 * expr.terms_m;
+				using temp_type = typename decay<decltype(temp)>::type;
 				return Distributive<temp_type>::distributive(temp);
 			}
 		};
-		// 加減算
+		//加減算
 		template <class First, class Second, class... Types>
 		struct Distributive<expr_wrapper<add_tag, type_tuple<First, Second, Types...>>> {
 			using expr_type = expr_wrapper<add_tag, type_tuple<First, Second, Types...>>;
@@ -49,8 +51,8 @@ namespace iml {
 		};
 
 
-		// 分配法則を作用
-		// Op1:分配する演算(乗除算等)，Op2:分配される演算(加減算等)
+		//分配法則を作用
+		//Op1:分配する演算(乗除算等)，Op2:分配される演算(加減算等)
 		template <class, class, class T, size_t, class, class, bool = is_tuple<T>::value>
 		struct Distributive_tuple3 {};
 		template <class Op1, class Op2, class T, size_t N, size_t... Indices1, size_t... Indices2>
@@ -72,7 +74,7 @@ namespace iml {
 				return reverse_operation<Op2>(distributive_impl(t, first), distributive_impl(t, second, args...));
 			}
 
-			// Distributiveのためのapply
+			//Distributiveのためのapply
 			template <class Tuple, size_t... Indices>
 			static constexpr auto apply(const Tuple& t, const tuple<Types...>& x, index_tuple<size_t, Indices...>) {
 				return invoke(distributive_impl<Tuple, Types...>, t, x.get<Indices>()...);
@@ -87,8 +89,8 @@ namespace iml {
 		struct Distributive_tuple2 {};
 
 
-		// タプルの全ての要素に対してDistributive_tuple2を作用させてOp2で結合
-		// Expr1:分配する演算(乗除算等)，Expr2:分配される演算(加減算等)
+		//タプルの全ての要素に対してDistributive_tuple2を作用させてOp2で結合
+		//Expr1:分配する演算(乗除算等)，Expr2:分配される演算(加減算等)
 		template <class Expr1, class Expr2, class T, size_t N>
 		struct Distributive_tuple2_impl {
 			static constexpr auto distributive(const T& x) {
@@ -113,9 +115,9 @@ namespace iml {
 			}
 		};
 
-		// タプルの要素が展開可能かの識別
-		// bool1:走査の終端判定，bool2:分配可能判定
-		// <false, false>
+		//タプルの要素が展開可能かの識別
+		//bool1:走査の終端判定，bool2:分配可能判定
+		//<false, false>
 		template <class Expr, class Tuple, size_t N>
 		struct Distributive_tuple2<Expr, Tuple, N, false, false> {
 			static constexpr auto distributive(const Tuple& x) {
@@ -131,16 +133,16 @@ namespace iml {
 				return expr_wrapper<op_type, typename Tuple::type_tuple_type>(x);
 			}
 		};
-		// <false, true>
+		//<false, true>
 		template <class Expr, class Tuple, size_t N>
 		struct Distributive_tuple2<Expr, Tuple, N, false, true> {
 			using op_type = typename expr_tag<Expr>::type;
 
 			static constexpr auto distributive(const Tuple& x) {
-				// 左右からかけるためのシーケンスの用意
+				//左右からかけるためのシーケンスの用意
 				using low_index = typename index_range<size_t, 0, N>::type;
 				using high_index = typename index_range<size_t, N + 1, Tuple::size()>::type;
-				// 分配法則の適用
+				//分配法則の適用
 				using tuple_type = typename decay<decltype(x.get<N>().terms_m)>::type;
 				auto temp = Distributive_tuple3<op_type, typename expr_tag<typename at_type_tuple<N, Tuple>::type>::type, tuple_type
 					, N, low_index, high_index>::distributive(x, x.get<N>().terms_m);
@@ -150,16 +152,16 @@ namespace iml {
 					, temp_type, N>::distributive(temp.terms_m);
 			}
 		};
-		// <true, true>
+		//<true, true>
 		template <class Expr, class Tuple, size_t N>
 		struct Distributive_tuple2<Expr, Tuple, N, true, true> {
 			using op_type = typename expr_tag<Expr>::type;
 
 			static constexpr auto distributive(const Tuple& x) {
-				// 左右からかけるためのシーケンスの用意
+				//左右からかけるためのシーケンスの用意
 				using low_index = typename index_range<size_t, 0, N>::type;
 				using high_index = typename index_range<size_t, N + 1, Tuple::size()>::type;
-				// 分配法則の適用
+				//分配法則の適用
 				using tuple_type = typename decay<decltype(x.get<N>().terms_m)>::type;
 				return Distributive_tuple3<op_type, typename expr_tag<typename at_type_tuple<N, Tuple>::type>::type, tuple_type
 					, N, low_index, high_index>::distributive(x, x.get<N>().terms_m);
@@ -167,9 +169,9 @@ namespace iml {
 		};
 
 
-		// タプルの要素を分配法則を適用済みのものにして再構成
-		// bool1:走査の終端判定，bool2:走査する要素がタプルか判定
-		// <false, false>
+		//タプルの要素を分配法則を適用済みのものにして再構成
+		//bool1:走査の終端判定，bool2:走査する要素がタプルか判定
+		//<false, false>
 		template <class Op, class Tuple, size_t N = 0, bool = (N == tuple_size<Tuple>::value - 1), bool = is_tuple<typename at_type_tuple<N, Tuple>::type>::value>
 		struct Distributive_tuple1 {
 			static constexpr auto distributive(const Tuple& x) {
@@ -177,41 +179,41 @@ namespace iml {
 					, Distributive_tuple1<Op, Tuple, N + 1>::distributive(x));
 			}
 		};
-		// <true, false>
+		//<true, false>
 		template <class Op, class Tuple, size_t N>
 		struct Distributive_tuple1<Op, Tuple, N, true, false> {
 			static constexpr auto distributive(const Tuple& x) {
 				return Distributive<typename at_type_tuple<N, Tuple>::type>::distributive(x.get<N>());
 			}
 		};
-		// <false, true>
+		//<false, true>
 		template <class Op, class Tuple, size_t N>
 		struct Distributive_tuple1<Op, Tuple, N, false, true> {
 			static constexpr auto distributive(const Tuple& x) {
-				// 更にタプルを展開
+				//更にタプルを展開
 				return reverse_operation<Op>(Distributive_tuple1<Op, typename at_type_tuple<N, Tuple>::type>::distributive(x.get<N>())
 					, Distributive_tuple1<Op, Tuple, N + 1>::distributive(x));
 			}
 		};
-		// <true, true>
+		//<true, true>
 		template <class Op, class Tuple, size_t N>
 		struct Distributive_tuple1<Op, Tuple, N, true, true> {
 			static constexpr auto distributive(const Tuple& x) {
-				// 更にタプルを展開
+				//更にタプルを展開
 				return Distributive_tuple1<Op, typename at_type_tuple<N, Tuple>::type>::distributive(x.get<N>());
 			}
 		};
 
-		// 乗除算
+		//乗除算
 		template <class First, class Second, class... Types>
 		struct Distributive<expr_wrapper<mul_tag, type_tuple<First, Second, Types...>>> {
 			using expr_type = expr_wrapper<mul_tag, type_tuple<First, Second, Types...>>;
 
 			static constexpr auto distributive(const expr_type& expr) {
-				// 予めタプルの要素に対して分配法則を適用
+				//予めタプルの要素に対して分配法則を適用
 				auto temp = Distributive_tuple1<mul_tag, tuple<First, Second, Types...>>::distributive(expr.terms_m);
 				using temp_tuple_type = typename decay<decltype(temp.terms_m)>::type;
-				// メインの分配法則の適用と式の再構築
+				//メインの分配法則の適用と式の再構築
 				return Distributive_tuple2<expr_type, temp_tuple_type>::distributive(temp.terms_m);
 			}
 		};
@@ -220,10 +222,10 @@ namespace iml {
 			using expr_type = expr_wrapper<div_tag, type_tuple<First, Second, Types...>>;
 
 			static constexpr auto distributive(const expr_type& expr) {
-				// 予めタプルの要素に対して分配法則を適用
+				//予めタプルの要素に対して分配法則を適用
 				auto temp = Distributive_tuple1<div_tag, tuple<First, Second, Types...>>::distributive(expr.terms_m);
 				using temp_tuple_type = typename decay<decltype(temp.terms_m)>::type;
-				// メインの分配法則の適用と式の再構築
+				//メインの分配法則の適用と式の再構築
 				return Distributive_tuple2<expr_type, temp_tuple_type>::distributive(temp.terms_m);
 			}
 		};

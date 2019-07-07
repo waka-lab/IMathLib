@@ -196,15 +196,14 @@ namespace iml {
 
 }
 
-//線型探索
+// 線型探索
 namespace iml {
 
-	//イテレータ範囲からvを探索
+	// イテレータ範囲からvを探索
 	template <class InputIterator, class T, class Predicate = type_comparison<typename iterator_traits<InputIterator>::value_type>>
 	inline constexpr InputIterator find(InputIterator first, InputIterator last, const T& v) {
-		//入力イテレータでなければならない
-		static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator>::iterator_category>::value
-			, "The type of iterator is different.");
+		// 入力イテレータでなければならない
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
 		for (; first != last; ++first) if (Predicate::eq(*first, v)) return first;
 		return last;
@@ -213,17 +212,15 @@ namespace iml {
 	template <class InputIterator1, class InputIterator2, class Predicate = type_comparison<void>>
 	inline constexpr InputIterator1 find(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, InputIterator2 last2) {
 		//入力イテレータでなければならない
-		static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator1>::iterator_category>::value
-			, "The type of iterator is different.");
-		static_assert(is_base_of<input_iterator_tag, typename iterator_traits<InputIterator1>::iterator_category>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator1, input_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator2, input_iterator_tag>, "The type of iterator is different.");
 
 		InputIterator1 temp1 = first1;
 		InputIterator2 temp2 = first2;
-		InputIterator1 temp3 = find(next(temp1), last1, *first2);		//平行して探索するためのバッファ
-		InputIterator1 temp4 = temp3;									//temp3が次に探索すべき位置の記録
-		InputIterator2 temp5 = first2;									//平行して探索する要素の次に探索する文字(temp3==last1対策に2文字目にはしない)
 		while (first1 != last1) {
+			InputIterator1 temp3 = find(next(temp1), last1, *first2);		//平行して探索するためのバッファ
+			InputIterator1 temp4 = temp3;									//temp3が次に探索すべき位置の記録
+			InputIterator2 temp5 = first2;									//平行して探索する要素の次に探索する文字(temp3==last1対策に2文字目にはしない)
 			for (; (temp1 != last1) && (temp2 != last2); ++temp1, ++temp2) {
 				if (!Predicate::eq(*temp1, *temp2)) break;
 
@@ -242,9 +239,6 @@ namespace iml {
 			first1 = temp4;
 			temp1 = temp3;
 			temp2 = temp5;
-			temp3 = find(next(temp1), last1, *first2);
-			temp4 = temp3;
-			temp5 = first2;
 		}
 		return last1;
 	}
@@ -253,21 +247,17 @@ namespace iml {
 	template <class BidirectionalIterator, class T, class Predicate = type_comparison<void>>
 	inline constexpr BidirectionalIterator rfind(BidirectionalIterator first, BidirectionalIterator last, const T& v) {
 		//双方向イテレータでなければならない
-		static_assert(is_base_of<bidirectional_iterator_tag, typename iterator_traits<BidirectionalIterator>::iterator_category>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator, bidirectional_iterator_tag>, "The type of iterator is different.");
 
-		for (BidirectionalIterator itr = prev(last); first != itr; --itr)
-			if (Predicate::eq(*itr, v)) return itr;
+		for (auto itr = prev(last); first != itr; --itr) if (Predicate::eq(*itr, v)) return itr;
 		return (Predicate::eq(*first, v)) ? first : last;
 	}
 	//イテレータ範囲1からイテレータ範囲2を後方探索
 	template <class BidirectionalIterator1, class BidirectionalIterator2, class Predicate = type_comparison<void>>
 	inline constexpr BidirectionalIterator1 rfind(BidirectionalIterator1 first1, BidirectionalIterator1 last1, BidirectionalIterator2 first2, BidirectionalIterator2 last2) {
-		//入力イテレータでなければならない
-		static_assert(is_base_of<bidirectional_iterator_tag, typename iterator_traits<BidirectionalIterator1>::iterator_category>::value
-			, "The type of iterator is different.");
-		static_assert(is_base_of<bidirectional_iterator_tag, typename iterator_traits<BidirectionalIterator2>::iterator_category>::value
-			, "The type of iterator is different.");
+		//双方向イテレータでなければならない
+		static_assert(is_iterator_v<BidirectionalIterator1, bidirectional_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator2, bidirectional_iterator_tag>, "The type of iterator is different.");
 
 		BidirectionalIterator1 itr = last1;
 		BidirectionalIterator1 temp1 = rfind(first1, last1, *first2);
@@ -306,8 +296,7 @@ namespace iml {
 	template <class InputIterator, class Predicate>
 	inline constexpr InputIterator find_if(InputIterator first, InputIterator last, Predicate pred) {
 		//入力イテレータでなければならない
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
 		for (; first != last; ++first)
 			if (pred(*first)) return first;
@@ -317,8 +306,7 @@ namespace iml {
 	template <class BidirectionalIterator, class Predicate>
 	inline constexpr BidirectionalIterator rfind_if(BidirectionalIterator first, BidirectionalIterator last, Predicate pred) {
 		//双方向イテレータでなければならない
-		static_assert(is_iterator<BidirectionalIterator, bidirectional_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator, bidirectional_iterator_tag>, "The type of iterator is different.");
 
 		for (BidirectionalIterator itr = prev(last); first != itr; --itr)
 			if (pred(*itr)) return itr;
@@ -329,8 +317,7 @@ namespace iml {
 	template <class ForwardIterator>
 	inline constexpr ForwardIterator max_element(ForwardIterator first, ForwardIterator last) {
 		//前方向イテレータでなければならない
-		static_assert(is_base_of_v<forward_iterator_tag, typename iterator_traits<ForwardIterator>::iterator_category>
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<ForwardIterator, forward_iterator_tag>, "The type of iterator is different.");
 
 		ForwardIterator p = first++;
 		if (first == last) return first;
@@ -344,8 +331,7 @@ namespace iml {
 	template <class ForwardIterator>
 	inline constexpr ForwardIterator min_element(ForwardIterator first, ForwardIterator last) {
 		//前方向イテレータでなければならない
-		static_assert(is_base_of_v<forward_iterator_tag, typename iterator_traits<ForwardIterator>::iterator_category>
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<ForwardIterator, forward_iterator_tag>, "The type of iterator is different.");
 
 		ForwardIterator p = first++;
 		if (first == last) return first;
@@ -357,102 +343,130 @@ namespace iml {
 	}
 }
 
-//コピー
+
 namespace iml {
 
-	//配列のコピー(順)
+	// データのコピー(順)
 	template <class OutputIterator, class InputIterator>
 	inline constexpr OutputIterator copy_order(OutputIterator first1, InputIterator first2, size_t n) {
-		static_assert(is_iterator<OutputIterator, output_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		for (size_t i = 0; i < n; ++i, ++first1, ++first2)
-			*first1 = *first2;
+		for (size_t i = 0; i < n; ++i, ++first1, ++first2) *first1 = *first2;
 		return first1;
 	}
 	template <class OutputIterator, class InputIterator>
 	inline constexpr OutputIterator copy_order(OutputIterator first1, InputIterator first2, InputIterator last2) {
-		static_assert(is_iterator<OutputIterator, output_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		for (; first2 != last2; ++first1, ++first2)
-			*first1 = *first2;
+		for (; first2 != last2; ++first1, ++first2) *first1 = *first2;
 		return first1;
 	}
-	//配列のコピー(逆順)
+	// データのムーブ(順)
+	template <class OutputIterator, class ForwardIterator>
+	inline constexpr OutputIterator move_order(OutputIterator first1, ForwardIterator first2, size_t n) {
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<ForwardIterator, forward_iterator_tag>, "The type of iterator is different.");
+
+		for (size_t i = 0; i < n; ++i, ++first1, ++first2) *first1 = move(*first2);
+		return first1;
+	}
+	template <class OutputIterator, class ForwardIterator>
+	inline constexpr OutputIterator move_order(OutputIterator first1, ForwardIterator first2, ForwardIterator last2) {
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<ForwardIterator, forward_iterator_tag>, "The type of iterator is different.");
+
+		for (; first2 != last2; ++first1, ++first2) *first1 = move(*first2);
+		return first1;
+	}
+	// データのコピー(逆順→first2の順序を逆にして挿入するのではなく後ろから挿入するという意)
 	template <class BidirectionalIterator1, class BidirectionalIterator2>
 	inline constexpr BidirectionalIterator1 copy_reverse_order(BidirectionalIterator1 first1, BidirectionalIterator2 first2, size_t n) {
-		static_assert(is_iterator<BidirectionalIterator1, bidirectional_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<BidirectionalIterator2, bidirectional_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator1, bidirectional_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator2, bidirectional_iterator_tag>, "The type of iterator is different.");
 		//判定をしなければならない
 		if (n == 0) return first1;
 
 		advance(first1, n - 1);
 		BidirectionalIterator1 result = next(first1);
 		BidirectionalIterator2 itr = next(first2, n - 1);
-		for (; itr != first2; --itr, --first1)
-			*first1 = *itr;
+		for (; itr != first2; --itr, --first1) *first1 = *itr;
 		*first1 = *first2;
 
 		return result;
 	}
 	template <class BidirectionalIterator1, class BidirectionalIterator2>
 	inline constexpr BidirectionalIterator1 copy_reverse_order(BidirectionalIterator1 first1, BidirectionalIterator2 first2, BidirectionalIterator2 last2) {
-		static_assert(is_iterator<BidirectionalIterator1, bidirectional_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<BidirectionalIterator2, bidirectional_iterator_tag>::value
-			, "The type of iterator is different.");
-		//判定をしなければならない
+		static_assert(is_iterator_v<BidirectionalIterator1, bidirectional_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator2, bidirectional_iterator_tag>, "The type of iterator is different.");
+		// 判定をしなければならない
 		if (first2 == last2) return first1;
 
 		advance(first1, distance(first2, last2) - 1);
 		BidirectionalIterator1 result = next(first1);
 		--last2;
-		for (; last2 != first2; --last2, --first1)
-			*first1 = *last2;
+		for (; last2 != first2; --last2, --first1) *first1 = *last2;
+		*first1 = *first2;
+
+		return result;
+	}
+	// データのムーブ(逆順→first2の順序を逆にして挿入するのではなく後ろから挿入するという意)
+	template <class BidirectionalIterator1, class BidirectionalIterator2>
+	inline constexpr BidirectionalIterator1 move_reverse_order(BidirectionalIterator1 first1, BidirectionalIterator2 first2, size_t n) {
+		static_assert(is_iterator_v<BidirectionalIterator1, bidirectional_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator2, bidirectional_iterator_tag>, "The type of iterator is different.");
+		//判定をしなければならない
+		if (n == 0) return first1;
+
+		advance(first1, n - 1);
+		BidirectionalIterator1 result = next(first1);
+		BidirectionalIterator2 itr = next(first2, n - 1);
+		for (; itr != first2; --itr, --first1) *first1 = move(*itr);
+		*first1 = *first2;
+
+		return result;
+	}
+	template <class BidirectionalIterator1, class BidirectionalIterator2>
+	inline constexpr BidirectionalIterator1 move_reverse_order(BidirectionalIterator1 first1, BidirectionalIterator2 first2, BidirectionalIterator2 last2) {
+		static_assert(is_iterator_v<BidirectionalIterator1, bidirectional_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<BidirectionalIterator2, bidirectional_iterator_tag>, "The type of iterator is different.");
+		// 判定をしなければならない
+		if (first2 == last2) return first1;
+
+		advance(first1, distance(first2, last2) - 1);
+		BidirectionalIterator1 result = next(first1);
+		--last2;
+		for (; last2 != first2; --last2, --first1) *first1 = move(*last2);
 		*first1 = *first2;
 
 		return result;
 	}
 
-	//条件が真のもののみコピー
+	// 条件が真のもののみコピー
 	template <class OutputIterator, class InputIterator, class F>
 	inline constexpr OutputIterator copy_if(OutputIterator first1, InputIterator first2, size_t n, F f) {
-		static_assert(is_iterator<OutputIterator, output_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		for (size_t i = 0; i < n; ++i, ++first2)
-			if (f(*first2)) { *first1 = *first2; ++first1; }
+		for (size_t i = 0; i < n; ++i, ++first2) if (f(*first2)) { *first1 = *first2; ++first1; }
 		return first1;
 	}
 	template <class OutputIterator, class InputIterator, class F>
 	inline constexpr OutputIterator copy_if(OutputIterator first1, InputIterator first2, InputIterator last2, F f) {
-		static_assert(is_iterator<OutputIterator, output_iterator_tag>::value
-			, "The type of iterator is different.");
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<OutputIterator, output_iterator_tag>, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		for (; first2 != last2; ++first2)
-			if (f(*first2)) { *first1 = *first2; ++first1; }
+		for (; first2 != last2; ++first2) if (f(*first2)) { *first1 = *first2; ++first1; }
 		return first1;
 	}
 
 	//指定された値でイテレータ範囲を埋める
 	template <class ForwardIterator, class T>
 	inline constexpr ForwardIterator fill(ForwardIterator first, ForwardIterator last, const T& v) {
-		static_assert(is_iterator<ForwardIterator, forward_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<ForwardIterator, forward_iterator_tag>, "The type of iterator is different.");
 
-		for (; first != last; ++first)
-			*first = v;
+		for (; first != last; ++first) *first = v;
 		return last;
 	}
 }
@@ -463,11 +477,9 @@ namespace iml {
 	//範囲の全てに関数の適応
 	template<class InputIterator, class F>
 	inline constexpr F for_each(InputIterator first, InputIterator last, F f) {
-		static_assert(is_iterator<InputIterator, input_iterator_tag>::value
-			, "The type of iterator is different.");
+		static_assert(is_iterator_v<InputIterator, input_iterator_tag>, "The type of iterator is different.");
 
-		for (; first != last; ++first)
-			f(*first);
+		for (; first != last; ++first) f(*first);
 		return f;
 	}
 }
